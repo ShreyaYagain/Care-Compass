@@ -273,7 +273,12 @@ class TriageViewModel(
     /** Submits the collected module-card answers as a structured follow-up turn. */
     fun submitModuleAnswers(moduleId: String, answers: Map<String, String>) {
         val state = _uiState.value
-        _uiState.value = state.copy(isLoading = true, errorMessage = null, moduleCard = null, lastModuleAnswers = answers)
+        // Accumulate answers across cards: the backend may return a second
+        // targeted card (e.g. "how did you fall") whose answers must not
+        // discard the first card's answers.
+        val previous = state.lastModuleAnswers ?: emptyMap()
+        val merged = previous + answers
+        _uiState.value = state.copy(isLoading = true, errorMessage = null, moduleCard = null, lastModuleAnswers = merged)
         viewModelScope.launch {
             val req = TriageRequest(
                 userInput = state.lastSubmittedInput ?: moduleId,
@@ -283,7 +288,7 @@ class TriageViewModel(
                 clientTime = getCurrentClientTime(),
                 contextConsent = state.contextConsent,
                 moduleId = moduleId,
-                moduleAnswers = answers
+                moduleAnswers = merged
             )
             logTriageRequest("TriageModule", req)
             repository.triage(req).fold(

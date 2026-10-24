@@ -371,4 +371,57 @@ class CareCompassUnitTest {
         assertEquals("Spray or balm", viewModel.uiState.value.lastModuleAnswers?.get("meds_used"))
     }
 
+    @Test
+    fun testSubmitModuleAnswers_accumulatesAcrossSecondCard() = runTest {
+        // First card -> backend returns the targeted fall-type card; the second
+        // submission must carry BOTH cards' answers (meds + fall_type).
+        val captured = mutableListOf<TriageRequest>()
+        val fallCard = ModuleCard(
+            moduleId = "injury",
+            label = "Injury / fall",
+            fields = listOf(ModuleField(id = "fall_type", type = "choice", question = "How did you fall?", options = listOf("Ground level", "From height", "Road accident")))
+        )
+        val repo = object : Repository(ApiService.create()) {
+            override suspend fun triage(request: TriageRequest): Result<TriageResponse> {
+                captured.add(request)
+                return if (request.moduleAnswers?.containsKey("fall_type") == true) {
+                    Result.success(
+                        TriageResponse(
+                            careType = "paramedic_home_visit",
+                            urgency = "same_day",
+                            reasoning = "Fall from height: a medic home visit is recommended."
+                        )
+                    )
+                } else {
+                    Result.success(
+                        TriageResponse(followUpQuestion = "Injury / fall", moduleCard = fallCard)
+                    )
+                }
+            }
+        }
+        val viewModel = TriageViewModel(repo)
+
+        val first = mapOf(
+            "pain_level" to "5",
+            "swelling" to "No",
+            "weight_bearing" to "With pain",
+            "meds_used" to "Painkiller"
+        )
+        viewModel.submitModuleAnswers("injury", first)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(ScreenDestination.ModuleCard, viewModel.uiState.value.destination)
+
+        viewModel.submitModuleAnswers("injury", mapOf("fall_type" to "From height"))
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(2, captured.size)
+        val secondRequest = captured[1]
+        assertEquals("From height", secondRequest.moduleAnswers?.get("fall_type"))
+        assertEquals("5", secondRequest.moduleAnswers?.get("pain_level"))
+        assertEquals("Painkiller", secondRequest.moduleAnswers?.get("meds_used"))
+        assertEquals("paramedic_home_visit", viewModel.uiState.value.latestResponse?.careType)
+        assertEquals("Painkiller", viewModel.uiState.value.lastModuleAnswers?.get("meds_used"))
+    }
+
 }

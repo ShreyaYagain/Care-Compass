@@ -327,6 +327,16 @@ def rule_based_extract(text: str, history: list[dict] = None) -> dict:
         if "restlessness" not in detected_symptoms:
             detected_symptoms.append("restlessness")
 
+    # Dizziness (chakkar / dizzy / vertigo) is a real symptom, never "no health info"
+    if any(re.search(rf"\b{re.escape(w)}\b", norm) for w in ["dizziness", "dizzy", "vertigo", "chakkar", "ghoomta", "ghoom"]):
+        if "dizziness" not in detected_symptoms:
+            detected_symptoms.append("dizziness")
+
+    # Weakness / fatigue is a real symptom, never "no health info"
+    if any(re.search(rf"\b{re.escape(w)}\b", norm) for w in ["weakness", "kamzori", "kamjor", "thakan", "thakavat", "fatigue"]):
+        if "weakness" not in detected_symptoms:
+            detected_symptoms.append("weakness")
+
     # Service intents & procedures
     combined_lower = combined_text.lower()
     if any(re.search(rf"\b{re.escape(w)}\b", norm) or re.search(rf"\b{re.escape(w)}\b", combined_lower) for w in ["injection", "im injection", "iv drip", "drip", "dressing", "patti", "catheter", "tanke", "stitches", "bedsore", "wound cleaning", "ghaav", "wound"]):
@@ -374,11 +384,11 @@ def rule_based_extract(text: str, history: list[dict] = None) -> dict:
     # Severity keywords
     if any(re.search(rf"\b{w}\b", norm) for w in ["halka", "mild", "thoda", "kam"]):
         slots["severity"] = "mild"
-    elif any(re.search(rf"\b{w}\b", norm) for w in ["acute", "tez", "severe", "bahut zyada", "unbearable"]):
+    elif any(re.search(rf"\b{w}\b", norm) for w in ["acute", "tez", "severe", "bahut zyada", "unbearable", "bahut", "zyada", "bohot"]):
         slots["severity"] = "severe"
 
-    # Pregnancy
-    if any(re.search(rf"\b{w}\b", norm) for w in ["pregnant", "pregnancy", "garbh", "garbhvati"]):
+    # Pregnancy (incl. Devanagari/ITRANS forms of गर्भवती / गर्भावस्था)
+    if any(re.search(rf"\b{w}\b", norm) for w in ["pregnant", "pregnancy", "garbh", "garbhvati", "garbhavati", "garbhavastha"]):
         slots["pregnancy"] = True
 
     # Duration
@@ -409,8 +419,12 @@ def rule_based_extract(text: str, history: list[dict] = None) -> dict:
     elif slots["patient_relation"] in ["grandmother", "grandfather", "senior", "dada", "dadi"]:
         slots["age_group"] = "senior"
 
-    # Check for explicit age mentions e.g. age 70
-    age_match = re.search(r"\b(?:age|umar|saal)\s*(\d{1,3})\b|\b(\d{1,3})\s*(?:saal|years?)\b", norm)
+    # Check for explicit age mentions e.g. age 70, "38 saal", "umra 38 sal" (ITRANS)
+    age_match = re.search(
+        r"\b(?:age|umar|umra|saal|sal|varsh|varash)\s*(\d{1,3})\b"
+        r"|\b(\d{1,3})\s*(?:saal|sal|varsh|varash|years?)\b",
+        norm,
+    )
     if age_match:
         age_num = int(age_match.group(1) or age_match.group(2))
         if age_num < 5:
@@ -518,61 +532,56 @@ def has_question_been_asked(history: list[dict], pattern_words: list[str]) -> bo
 def _select_question_id(slots: dict, history: list[dict] | None, context: dict | None = None) -> str | None:
     """
     Returns the next question bank id to ask, or None if no question is needed.
-    The closed bank (app/data/symptoms.yaml) is the ONLY source of questions.
+
+    Follow-up policy (strict):
+      - A question is NEVER asked when the answer is already in the message or
+        the conversation history.
+      - Pregnancy: never ask, always decide.
+      - Symptom (or service request) + any context (severity / duration / age /
+        relation / pregnancy / chronic condition) => sufficient, decide.
+      - One red-flag screening question at most, and only for symptoms that
+        could be serious (stomach pain, headache, dizziness/restlessness).
+      - No health information at all => symptom clue buttons (at most once).
     """
     history = history or []
     asked = get_asked_ids(history)
-    assistant_turns = count_assistant_turns(history)
     symptoms = slots.get("symptoms", [])
+    service = slots.get("service_requested")
 
-    has_health_info = bool(
-        symptoms
-        or slots.get("service_requested") in ["nursing", "lab"]
-        or slots.get("unfamiliar_care_type_mapped")
-    )
+    has_symptom = bool(symptoms)
+    has_service = service in ("nursing", "lab")
+    has_health_info = has_symptom or has_service or slots.get("unfamiliar_care_type_mapped")
 
-    # (c) No health information at all -> symptom-style clue buttons.
+    # Pregnancy is always decided by the pregnancy layer / classifier.
+    if slots.get("pregnancy"):
+        return None
+
+    # (a) No health information at all -> symptom clue buttons, at most once.
     if not has_health_info:
         return "main_symptom_buttons" if "main_symptom_buttons" not in asked else None
 
-    # (a) Red-flag screens, in priority order. A screen is only asked when it
-    # could change the decision; a clear multi-symptom picture (e.g. fever+cough
-    # with duration) is decided immediately.
-    if (
-        slots.get("breathing_difficulty") is None
-        and any(s in symptoms for s in ["cough", "fever", "breathlessness", "restlessness"])
-        and len(symptoms) == 1
-        and not slots.get("duration")
-        and "breathing_difficulty" not in asked
-    ):
-        return "breathing_difficulty"
+    # (b) Sufficiency: symptom + context => decide without asking.
+    has_context = bool(
+        slots.get("severity")
+        or slots.get("duration")
+        or slots.get("age_group")
+        or (slots.get("patient_relation") not in (None, "self", ""))
+        or slots.get("pregnancy")
+        or slots.get("chronic_conditions")
+    )
+    if has_symptom and has_context:
+        return None
 
-    if (
-        "chest_pain" in symptoms
-        and slots.get("chest_pain") is None
-        and "chest_pain_check" not in asked
-    ):
-        return "chest_pain_check"
+    # (c) At most ONE red-flag screening question, only for symptoms that could
+    # be serious. Everything else is decided by the model directly.
+    if has_symptom and not has_context:
+        if "stomach_pain" in symptoms and "who_for_age_group" not in asked:
+            return "who_for_age_group"
+        if any(s in symptoms for s in ("headache", "restlessness")) and "consciousness_check" not in asked:
+            return "consciousness_check"
+        return None
 
-    # (b) Who it is for / age group, when unknown and it changes risk (acute abdomen).
-    if (
-        slots.get("patient_relation") == "self"
-        and slots.get("age_group") is None
-        and "stomach_pain" in symptoms
-        and "who_for_age_group" not in asked
-    ):
-        return "who_for_age_group"
-
-    # (d) Duration, only on an isolated single symptom on the first turn.
-    if (
-        assistant_turns == 0
-        and len(symptoms) == 1
-        and symptoms[0] in ["fever", "cough"]
-        and not slots.get("duration")
-        and "duration_days" not in asked
-    ):
-        return "duration_days"
-
+    # (d) Service requested without symptoms: the model decides.
     return None
 
 
@@ -580,14 +589,16 @@ def needs_more_info(slots: dict, history_turns: int, history: list[dict] = None)
     """
     Check if a follow-up question is needed, under the strict policy:
     1. Hard turn cap: never more than settings.MAX_FOLLOWUPS assistant questions.
-    2. Questions only gather FACTS about the patient, NEVER the care type or service.
-    3. Every question must come from the closed bank; no severity / service / treatment
-       / scheduling / medicine questions are ever asked.
-    `history_turns` is interpreted as the number of assistant turns already asked.
+    2. Symptom + context (severity/duration/age/relation/pregnancy/chronic) is
+       sufficient -> decide, never ask.
+    3. At most ONE red-flag screening question, only for symptoms that could be
+       serious; at most TWO questions when there is no symptom at all.
+    4. Questions only gather FACTS; they never ask for the care type or service,
+       and never repeat something already stated in the conversation.
     """
     history = history or []
 
-    # Hard cap: MAX_FOLLOWUPS (2) assistant questions max, then decide.
+    # Hard cap: MAX_FOLLOWUPS assistant questions max, then decide.
     if history_turns >= settings.MAX_FOLLOWUPS:
         return False
 

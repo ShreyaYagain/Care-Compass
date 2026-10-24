@@ -16,15 +16,17 @@ class TestTriagePipeline(unittest.TestCase):
         self.assertTrue(any("112" in step for step in resp.emergency_steps))
         self.assertEqual(len(resp.matched_caregivers), 0)
 
-    def test_follow_up_on_vague_symptom(self):
+    def test_decides_on_symptom_with_relation_context(self):
+        # "papa ko bukhar hai" -> fever + relation context is sufficient: DECIDE,
+        # never ask a follow-up (sufficiency rule).
         req = TriageRequest(
             user_input="papa ko bukhar hai",
             conversation_history=[],
         )
         resp = run_triage_pipeline(req)
-        self.assertIsNotNone(resp.follow_up_question)
-        self.assertTrue(len(resp.follow_up_options) > 0)
-        self.assertIsNone(resp.care_type)
+        self.assertIsNone(resp.follow_up_question)
+        self.assertIsNotNone(resp.care_type)
+        self.assertEqual(resp.urgency, "same_day")
         self.assertEqual(resp.emergency_steps, [])
 
     def test_final_decision_paramedic_home_visit(self):

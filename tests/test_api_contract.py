@@ -92,10 +92,12 @@ class TestApiContract(unittest.TestCase):
         self.assertEqual(resp.emergency_steps, [])
 
     def test_smoke_test_cases(self):
-        # (d.1) Case 1: Simple vague fever -> asks follow-up
+        # (d.1) Case 1: Fever with relation context -> sufficiency rule decides,
+        # no follow-up question is asked.
         req1 = TriageRequest(user_input="papa ko bukhar hai", conversation_history=[])
         resp1 = run_triage_pipeline(req1)
-        self.assertIsNotNone(resp1.follow_up_question)
+        self.assertIsNone(resp1.follow_up_question)
+        self.assertIsNotNone(resp1.care_type)
         self.assertEqual(resp1.emergency_steps, [])
 
         # (d.2) Case 2: Chest pain Hinglish -> emergency_112 + emergency + high red flag

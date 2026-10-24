@@ -37,7 +37,8 @@ class TestTriageLevels(unittest.TestCase):
         self.assertEqual(resp.emergency_steps, [])
 
     def test_child_mild_fever(self):
-        # "bachhe ko halka bukhar hai" -> vague, asks follow-up, never emergency
+        # "bachhe ko halka bukhar hai" -> fever + age group + severity is
+        # sufficient context: DECIDE, never emergency.
         req = TriageRequest(
             user_input="bachhe ko halka bukhar hai",
             location=self.default_loc,
@@ -45,14 +46,14 @@ class TestTriageLevels(unittest.TestCase):
         resp = run_triage_pipeline(req)
         self.assertNotEqual(resp.urgency, "emergency")
         self.assertNotEqual(resp.care_type, "emergency_112")
-        self.assertIsNotNone(resp.follow_up_question)
-        self.assertIsNone(resp.care_type)
-        self.assertIsNone(resp.urgency)
+        self.assertIsNone(resp.follow_up_question)
+        self.assertIsNotNone(resp.care_type)
         self.assertEqual(resp.red_flags, [])
         self.assertEqual(resp.emergency_steps, [])
 
     def test_stomach_pain_3_days(self):
-        # "pet mein dard hai 3 din se" -> vague, asks follow-up, never emergency
+        # "pet mein dard hai 3 din se" -> stomach pain + duration is sufficient
+        # context: DECIDE, never emergency.
         req = TriageRequest(
             user_input="pet mein dard hai 3 din se",
             location=self.default_loc,
@@ -60,9 +61,8 @@ class TestTriageLevels(unittest.TestCase):
         resp = run_triage_pipeline(req)
         self.assertNotEqual(resp.urgency, "emergency")
         self.assertNotEqual(resp.care_type, "emergency_112")
-        self.assertIsNotNone(resp.follow_up_question)
-        self.assertIsNone(resp.care_type)
-        self.assertIsNone(resp.urgency)
+        self.assertIsNone(resp.follow_up_question)
+        self.assertIsNotNone(resp.care_type)
         self.assertEqual(resp.red_flags, [])
         self.assertEqual(resp.emergency_steps, [])
 

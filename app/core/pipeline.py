@@ -11,8 +11,9 @@ from app.schemas import (
     TriageResponse,
     MatchedCaregiver,
 )
-from app.core.language import detect_and_normalise
+from app.core.language import detect_and_normalise, normalise_text
 from app.core.red_flags import check_red_flags
+from app.core.pregnancy import check_pregnancy
 from app.core.intake import (
     extract_slots,
     needs_more_info,
@@ -122,6 +123,30 @@ def run_triage_pipeline(
 
     high_flags = list(set(high_flags_orig + high_flags_clean))
     is_high_emergency = is_high_orig or is_high_clean
+
+    # 2.1 Sticky red flags: rebuild flags from the WHOLE conversation on every
+    # turn so an earlier emergency can never be lowered by a later answer
+    # (e.g. turn 1 "dad cant breath", turn 2 "old person").
+    history_user_texts = [
+        (m.text or m.content or "") for m in request.conversation_history if m.role == "user"
+    ]
+    history_text = " . ".join(t.strip() for t in history_user_texts if t.strip())
+    if history_text:
+        high_flags_hist, medium_hist, _, is_high_hist = check_red_flags(
+            history_text, normalise_text(history_text), return_medium=True
+        )
+        high_flags = list(set(high_flags + high_flags_hist))
+        medium_flags = list(set(medium_flags + medium_hist))
+        is_high_emergency = is_high_emergency or is_high_hist
+
+    # 2.2 Deterministic pregnancy risk layer (before the LLM and the classifier).
+    preg_input = f"{user_input} . {history_text}" if history_text else user_input
+    pregnancy_risk = check_pregnancy(preg_input)
+    if pregnancy_risk.emergency_flags or pregnancy_risk.force_emergency:
+        high_flags = list(set(high_flags + pregnancy_risk.emergency_flags))
+        is_high_emergency = True
+    if pregnancy_risk.is_pregnant and pregnancy_risk.reason:
+        reasons.append(f"Pregnancy layer: {pregnancy_risk.reason}")
 
     # Emergency branch (Immediate 112)
     if is_high_emergency:
@@ -266,6 +291,13 @@ def run_triage_pipeline(
     slots = extract_slots(norm_text, history_dicts)
     if medium_flags:
         slots["medium_red_flags"] = medium_flags
+
+    # 3.1 Merge the deterministic pregnancy layer result into slots so the
+    # follow-up policy and the risk modifiers can act on it.
+    if pregnancy_risk.is_pregnant:
+        slots["pregnancy"] = True
+        if pregnancy_risk.reason:
+            slots["pregnancy_reason"] = pregnancy_risk.reason
 
     # 4. Check if follow-up question is needed
     if needs_more_info(slots, history_turns, history_dicts):
@@ -520,7 +552,16 @@ def run_triage_pipeline(
         if final_care_type == "emergency_112":
             final_care_type = "paramedic_home_visit" if ("fever" in slots.get("symptoms", [])) else "teleconsultation"
 
+        # Pregnancy floor: never "scheduled"; same_day teleconsultation at minimum.
+        if slots.get("pregnancy"):
+            if final_care_type == "lab_test_home":
+                final_care_type = "teleconsultation"
+                reasons.append("Pregnancy floor: lab test replaced by same_day teleconsultation.")
+
         final_urgency = settings.CARE_TO_URGENCY.get(final_care_type, "same_day")
+        if slots.get("pregnancy") and final_urgency == "scheduled":
+            final_urgency = "same_day"
+            reasons.append("Pregnancy floor: urgency raised to same_day.")
 
         if (
             context

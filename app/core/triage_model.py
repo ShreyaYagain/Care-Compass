@@ -83,7 +83,7 @@ def rule_based_predict(slots: dict, text: str) -> tuple[str, str, dict, float]:
     is_senior = slots.get("age_group") == "senior" or slots.get("patient_relation") in ["father", "mother", "grandmother", "grandfather", "senior", "dada", "dadi"]
     if ("fever" in symptoms and "cough" in symptoms) or (
         "fever" in symptoms and ("2 days" in str(duration) or "3 days" in str(duration) or is_senior)
-    ) or "joint_pain" in symptoms or any(k in text_norm or k in text.lower() for k in ["moch", "sprain", "twisted ankle", "knee hurts", "joint pain", "stairs"]):
+    ) or "joint_pain" in symptoms or ("dizziness" in symptoms and is_senior) or ("weakness" in symptoms and is_senior) or any(k in text_norm or k in text.lower() for k in ["moch", "sprain", "twisted ankle", "knee hurts", "joint pain", "stairs"]):
         care_type = "paramedic_home_visit"
         urgency = settings.CARE_TO_URGENCY["paramedic_home_visit"]
         probs = {c: 0.03 for c in settings.CARE_TYPES}
@@ -95,7 +95,9 @@ def rule_based_predict(slots: dict, text: str) -> tuple[str, str, dict, float]:
         "teleconsultation_query" in symptoms
         or "headache" in symptoms
         or "restlessness" in symptoms
-        or any(k in text_norm or k in text.lower() for k in ["sir dard", "headache", "acidity", "gas", "doctor consult", "second opinion", "dawai", "prescription", "ghabrahat", "palpitation"])
+        or "dizziness" in symptoms
+        or "weakness" in symptoms
+        or any(k in text_norm or k in text.lower() for k in ["sir dard", "headache", "acidity", "gas", "doctor consult", "second opinion", "dawai", "prescription", "ghabrahat", "palpitation", "dizzy", "vertigo", "chakkar", "kamzori", "thakan"])
     ):
         care_type = "teleconsultation"
         urgency = settings.CARE_TO_URGENCY["teleconsultation"]

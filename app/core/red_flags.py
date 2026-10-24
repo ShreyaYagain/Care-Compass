@@ -6,6 +6,31 @@ from app.core.language import transliterate_devanagari_to_roman, normalise_text,
 
 _RED_FLAGS: list[dict] = []
 
+# ---------------------------------------------------------------------------
+# Fuzzy breathlessness matching (typos like breath/breathe/brethe, "cant",
+# third-person subjects like dad/papa/maa/etc. are matched text-wide).
+# ---------------------------------------------------------------------------
+
+_BREATH_FUZZY_PATTERNS = [
+    r"(?:cant|can t|cannot)\s+(?:breath|breathe|brethe|breth|breathing|brething|breating|breathin)\b",
+    r"(?:not able to|unable to|struggling to)\s+(?:breath|breathe|brethe|breth|breathing|brething|breating|breathin)\b",
+    r"\b(?:breathing|brething|breating)\s+(?:problem|me problem|mein problem|difficulty|me dikkat|mein dikkat)\b",
+    r"\b(?:saans|sans)\s+(?:nahi aa|nahi le pa|phool|phul|atak|ruk)\s+\w+",
+    r"\b(?:dum|dam)\s+ghut\s+\w+",
+]
+
+
+def _fuzzy_breathless(text: str) -> bool:
+    """Typo-tolerant breathlessness detection used as an extra matching surface
+    for the official breathlessness red flag."""
+    for pat in _BREATH_FUZZY_PATTERNS:
+        for m in re.finditer(pat, text):
+            phrase = m.group(0)
+            if is_phrase_negated(phrase, text):
+                continue
+            return True
+    return False
+
 
 def _load_red_flags():
     global _RED_FLAGS
@@ -96,6 +121,11 @@ def check_red_flags(
                         continue
                     found = True
                     break
+
+        # 4. Fuzzy breathlessness surface (typo-tolerant, negation-aware)
+        if not found and flag_id == "breathlessness":
+            if _fuzzy_breathless(combined_roman):
+                found = True
 
         if found:
             if severity == "high":

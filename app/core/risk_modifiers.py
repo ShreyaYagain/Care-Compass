@@ -21,7 +21,8 @@ def apply_risk_modifiers(
     """
     Applies clinical risk modifiers.
     Rule E: Total bump is at most +1 level, capped at same_day.
-    Never produces emergency or emergency_112.
+    Exception: pregnancy with acute severe pain/bleeding escalates to
+    emergency_112 (deterministic safety rule).
     """
     applied = []
     final_urgency = urgency
@@ -29,6 +30,22 @@ def apply_risk_modifiers(
 
     symptoms = slots.get("symptoms", [])
     triggered = False
+
+    # 3. Pregnancy (detected by the deterministic pregnancy layer or the profile):
+    #    acute severe pain/bleeding -> emergency_112, otherwise a hard floor of
+    #    same_day with teleconsultation at minimum (never "scheduled").
+    is_pregnant = bool(slots.get("pregnancy") or (patient and patient.pregnant))
+    if is_pregnant:
+        if slots.get("bleeding") or "severe" in str(slots.get("severity")) or "acute" in str(slots.get("severity")):
+            final_urgency = "emergency"
+            final_care_type = "emergency_112"
+            applied.append("pregnancy_acute_risk")
+        else:
+            if final_care_type == "lab_test_home":
+                final_care_type = "teleconsultation"
+            if final_urgency == "scheduled":
+                final_urgency = "same_day"
+            applied.append("pregnancy_min_same_day")
 
     if not patient:
         # Check if age group was extracted in slots
@@ -52,13 +69,6 @@ def apply_risk_modifiers(
         if has_high_risk and ("fever" in symptoms or slots.get("breathing_difficulty")):
             triggered = True
             applied.append("chronic_condition_with_acute_symptoms")
-
-        # 3. Pregnancy with acute severe pain or bleeding -> emergency
-        if patient.pregnant or slots.get("pregnancy"):
-            if slots.get("bleeding") or "severe" in str(slots.get("severity")) or "acute" in str(slots.get("severity")):
-                final_urgency = "emergency"
-                final_care_type = "emergency_112"
-                applied.append("pregnancy_acute_risk")
 
     # 4. Symptoms > 5 days -> at least same_day
     duration = slots.get("duration", "")

@@ -74,7 +74,7 @@ try:
         }
 
         # Safety & Triage Tunables
-        CONF_THRESHOLD: float = 0.55
+        CONF_THRESHOLD: float = 0.5
         MAX_FOLLOWUPS: int = 2
         MAX_KM: float = 35.0
 
@@ -157,7 +157,7 @@ except ImportError:
             "lab_test_home": "scheduled",
         }
 
-        CONF_THRESHOLD: float = 0.55
+        CONF_THRESHOLD: float = 0.5
         MAX_FOLLOWUPS: int = 2
         MAX_KM: float = 35.0
 

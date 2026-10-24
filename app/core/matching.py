@@ -7,7 +7,6 @@ from app.schemas import MatchedCaregiver, Location
 
 _CAREGIVERS_CACHE: list[dict] = []
 
-
 def load_caregivers() -> list[dict]:
     global _CAREGIVERS_CACHE
     if not _CAREGIVERS_CACHE:
@@ -64,6 +63,79 @@ ROLE_MAPPING = {
     "teleconsultation": "doctor",
 }
 
+# Which synthetic venue may serve each care type. Hospital OPD rows never enter
+# care-type matching (they stay in the secondary "other ways" list).
+SYNTHETIC_VENUE_FOR_CARE_TYPE = {
+    "paramedic_home_visit": "home",
+    "home_nursing": "home",
+    "teleconsultation": "virtual",
+    "lab_test_home": None,
+}
+
+VENUE_LABELS = {"home": "home consult", "virtual": "video consult", "hospital": "OPD"}
+
+
+def _normalise_synthetic(row: dict) -> dict:
+    """Synthetic rows use the official columns plus venue/facility/department.
+    Normalised to the same dict shape as official caregivers so one ranking
+    loop handles both. A radius of 0 means 'no radius stated' -> 15 km."""
+    try:
+        radius = float(row.get("max_radius_km") or 15.0)
+        if radius <= 0:
+            radius = 15.0
+        return {
+            "caregiver_id": row["caregiver_id"],
+            "name": row.get("name", ""),
+            "role": row.get("role") or "doctor",
+            "qualification": row.get("qualification", ""),
+            "gender": row.get("gender", ""),
+            "languages": [l.strip() for l in (row.get("languages") or "").split(";") if l.strip()],
+            "skills": [s.strip() for s in (row.get("skills") or "").split(";") if s.strip()],
+            "base_area": row.get("base_area", ""),
+            "base_lat": float(row.get("base_lat") or 28.54),
+            "base_lng": float(row.get("base_lng") or 77.27),
+            "max_radius_km": radius,
+            "tier": row.get("tier", "").strip() or "base",
+            "rating": float(row.get("rating") or 4.0),
+            "experience_years": int(row.get("experience_years") or 1),
+            "free_from": row.get("free_from", "09:00"),
+            "free_until": row.get("free_until", "18:00"),
+            "active": str(row.get("active", "True")).strip().lower() in ["true", "1", "yes"],
+            "venue": row.get("venue", ""),
+            "department": row.get("department", ""),
+            "facility_name": row.get("facility_name", ""),
+            "source": "synthetic",
+        }
+    except Exception:
+        return None
+
+
+def _synthetic_pool(care_type: str) -> list[dict]:
+    """Synthetic doctors eligible for this care type (home-consult doctors for
+    home visits, virtual doctors for teleconsultation). Empty when the flag is
+    off or the care type has no synthetic venue."""
+    if not settings.USE_SYNTHETIC_CAREGIVERS:
+        return []
+    venue = SYNTHETIC_VENUE_FOR_CARE_TYPE.get(care_type)
+    if not venue:
+        return []
+    from app.core.synthetic import load_synthetic_caregivers
+    out = []
+    for row in load_synthetic_caregivers():
+        if row.get("venue") != venue:
+            continue
+        norm = _normalise_synthetic(row)
+        if norm:
+            out.append(norm)
+    return out
+
+
+def window_open(free_from: str, free_until: str) -> bool:
+    """True when the caregiver's window covers the current IST time."""
+    ist_now = datetime.now(timezone.utc) + timedelta(hours=5, minutes=30)
+    current = ist_now.strftime("%H:%M")
+    return free_from <= current <= free_until
+
 
 def rank_caregivers(
     care_type: str,
@@ -87,6 +159,8 @@ def rank_caregivers(
         return []
 
     caregivers = load_caregivers()
+    if settings.USE_SYNTHETIC_CAREGIVERS:
+        caregivers = caregivers + _synthetic_pool(care_type)
     if not caregivers:
         return []
 
@@ -123,9 +197,18 @@ def rank_caregivers(
     candidates = []
 
     for cg in caregivers:
-        # 1. Role filter & Active status filter
-        if cg["role"] != target_role:
-            continue
+        is_synthetic = cg.get("source") == "synthetic"
+
+        # 1. Role filter & Active status filter. Synthetic rows are doctors
+        # allowed only for the venue mapped to the care type.
+        if is_synthetic:
+            if cg["role"] != "doctor":
+                continue
+            if cg.get("venue") != SYNTHETIC_VENUE_FOR_CARE_TYPE.get(care_type):
+                continue
+        else:
+            if cg["role"] != target_role:
+                continue
         if not cg["active"]:
             continue
 
@@ -181,9 +264,19 @@ def rank_caregivers(
             skill_score = min(1.0, skill_score + tier_bonuses.get(cg["tier"], 0.0))
 
         elif care_type == "paramedic_home_visit":
-            preferred = ["vitals_monitoring", "elderly_care", "nebulization"]
-            matches = sum(1 for p in preferred if p in cg_skills)
-            skill_score = min(1.0, 0.75 + 0.08 * matches)
+            if is_synthetic:
+                # Home-consult doctor: department fit drives the skill score.
+                dept = cg.get("department", "")
+                if dept == "orthopaedics":
+                    skill_score = 0.9
+                elif dept == "general_medicine":
+                    skill_score = 0.8
+                else:
+                    skill_score = 0.7
+            else:
+                preferred = ["vitals_monitoring", "elderly_care", "nebulization"]
+                matches = sum(1 for p in preferred if p in cg_skills)
+                skill_score = min(1.0, 0.75 + 0.08 * matches)
 
         elif care_type == "lab_test_home":
             if any(s in cg_skills for s in ["sample_collection", "home_phlebotomy"]):
@@ -208,6 +301,14 @@ def rank_caregivers(
             reason = f"{primary_lang}-speaking, free {free_from}–{free_until}, ★{cg['rating']}"
         else:
             reason = f"{primary_lang}-speaking, {dist_km:.1f} km away, free {free_from}–{free_until}"
+        if is_synthetic:
+            venue_label = VENUE_LABELS.get(cg.get("venue"), cg.get("venue") or "consult")
+            dept_label = (cg.get("department") or "").replace("_", " ")
+            facility = cg.get("facility_name") or ""
+            if care_type == "teleconsultation":
+                reason = f"{primary_lang}-speaking, {venue_label}" + (f" · {dept_label}" if dept_label else "") + f", ★{cg['rating']}"
+            else:
+                reason = f"{primary_lang}-speaking, {dist_km:.1f} km away, {venue_label}" + (f" · {dept_label}" if dept_label else "") + f", free {free_from}–{free_until}"
 
         candidates.append({
             "caregiver_id": cg["caregiver_id"],
@@ -221,6 +322,9 @@ def rank_caregivers(
             "free_from": free_from,
             "free_until": free_until,
             "distance_km": None if care_type == "teleconsultation" else round(dist_km, 1),
+            "venue": cg.get("venue") if is_synthetic else None,
+            "department": cg.get("department") if is_synthetic else None,
+            "facility_name": cg.get("facility_name") if is_synthetic else None,
         })
 
     candidates.sort(key=lambda x: x["score"], reverse=True)
@@ -238,6 +342,9 @@ def rank_caregivers(
             free_from=c.get("free_from"),
             free_until=c.get("free_until"),
             distance_km=c.get("distance_km"),
+            venue=c.get("venue"),
+            department=c.get("department"),
+            facility_name=c.get("facility_name"),
         )
         for c in candidates[:limit]
     ]

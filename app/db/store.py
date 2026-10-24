@@ -376,6 +376,34 @@ def get_caregiver(caregiver_id: str) -> Optional[dict]:
     for cg in load_caregivers():
         if cg.get("caregiver_id") == caregiver_id or cg.get("id") == caregiver_id:
             return cg
+    # Synthetic doctors (demo roster) are bookable too when the flag is on.
+    if settings.USE_SYNTHETIC_CAREGIVERS:
+        from app.core.synthetic import load_synthetic_caregivers
+        for row in load_synthetic_caregivers():
+            if row.get("caregiver_id") == caregiver_id:
+                return {
+                    "caregiver_id": row.get("caregiver_id"),
+                    "id": row.get("caregiver_id"),
+                    "name": row.get("name", ""),
+                    "role": row.get("role", "doctor"),
+                    "qualification": row.get("qualification", ""),
+                    "languages": [l.strip() for l in (row.get("languages") or "").split(";") if l.strip()],
+                    "skills": [s.strip() for s in (row.get("skills") or "").split(";") if s.strip()],
+                    "base_area": row.get("base_area", ""),
+                    "base_lat": float(row.get("base_lat") or 0),
+                    "base_lng": float(row.get("base_lng") or 0),
+                    "max_radius_km": float(row.get("max_radius_km") or 15.0),
+                    "tier": row.get("tier", "base"),
+                    "rating": float(row.get("rating") or 4.0),
+                    "experience_years": int(row.get("experience_years") or 1),
+                    "free_from": row.get("free_from", "09:00"),
+                    "free_until": row.get("free_until", "18:00"),
+                    "active": True,
+                    "venue": row.get("venue", ""),
+                    "department": row.get("department", ""),
+                    "facility_name": row.get("facility_name", ""),
+                    "source": "synthetic",
+                }
     return None
 
 

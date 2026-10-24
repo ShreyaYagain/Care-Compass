@@ -50,7 +50,7 @@ from app.core.modules import (
     module_next_question,
     MODULE_MAX_QUESTIONS,
 )
-from app.core.synthetic import secondary_doctor_options
+from app.core.synthetic import secondary_doctor_options, adjust_by_doctor_availability
 from app.core.context import get_context, season_display
 from app.core.guardrails import (
     input_guard,
@@ -714,9 +714,17 @@ def run_triage_pipeline(
 
         decision = injury_decision(request.module_answers, slots, classifier_fn=_injury_classifier)
         dc, du, df = decision["care_type"], decision["urgency"], decision["red_flags"]
+
+        # Doctor availability (synthetic roster) may refine paramedic vs
+        # teleconsultation when both are viable.
+        avail_dc, avail_note = adjust_by_doctor_availability(dc, du, request.location, lang)
+        if avail_dc != dc:
+            reasons.append(f"Availability routing: {dc} -> {avail_dc}")
+            dc = avail_dc
+
         meds = request.module_answers.get("meds_used")
         meds_line = f" You used: {meds}." if meds and str(meds) != "None" else ""
-        module_reason = f"{decision['reason']}{meds_line}"
+        module_reason = f"{decision['reason']}{meds_line}{avail_note}"
 
         if dc == "emergency_112":
             guard_res = output_guard(module_reason, lang=lang, is_emergency=True, care_type="emergency_112", field_name="reasoning")
@@ -799,8 +807,9 @@ def run_triage_pipeline(
         q_text, q_options = select_follow_up_question(slots, lang, history_dicts, context)
         q_text = enforce_question_bank(q_text, lang)
 
-        # Input-noise budget: the second empty attempt adds a "pick the closest"
-        # hint so the user has a clear, safe way to proceed.
+        # Irrelevant input: the main-symptom bank question already says "no
+        # symptoms were recognised". The second empty attempt adds a
+        # "pick the closest" hint so the user has a clear way to proceed.
         if qid == "main_symptom_buttons" and count_asked_id(history_dicts, "main_symptom_buttons") >= 1:
             q_text = f"{q_text} {_pick_closest_line(lang)}"
 

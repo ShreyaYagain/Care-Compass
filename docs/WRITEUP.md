@@ -64,7 +64,17 @@ A separate `app/data/caregivers_synthetic.csv` (30 invented doctors, `source=syn
 powers a demo-only "Other ways to see a doctor" secondary list (hospital OPD, home
 consult, virtual) with `venue`, `facility_name`, and `department`. It is gated behind
 `USE_SYNTHETIC_CAREGIVERS` (default off for scoring) and never changes the official
-five care-type labels or the official caregiver matching.
+five care-type labels.
+
+When the flag is ON the synthetic fields also drive the routing and matching:
+home-consult doctors (`venue=home`) join the candidate pool for
+`paramedic_home_visit` / `home_nursing`, virtual doctors (`venue=virtual`) join
+`teleconsultation`, and hospital OPD doctors stay in the secondary list where they
+are bookable like any caregiver. Matched payloads carry `venue`, `department` and
+`facility_name`. A same-day medic home visit is only downgraded to
+teleconsultation when no home-consult doctor is free nearby while a virtual
+doctor is (availability routing); with the flag OFF the official matching and
+decision paths are byte-for-byte unchanged.
 
 ### Symptom-specific follow-up modules (closed question bank)
 A closed bank of follow-up modules (`app/data/modules.yaml`) is selected by the

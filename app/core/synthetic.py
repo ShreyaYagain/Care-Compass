@@ -102,3 +102,77 @@ def _lang_hint(language: str) -> str:
     if "hi" in language.lower() or "hinglish" in language.lower():
         return "hindi"
     return "english"
+
+
+def _window_open(free_from: str, free_until: str) -> bool:
+    from datetime import datetime, timezone, timedelta
+    ist_now = datetime.now(timezone.utc) + timedelta(hours=5, minutes=30)
+    current = ist_now.strftime("%H:%M")
+    return free_from <= current <= free_until
+
+
+def home_consult_available(location=None, language: str = "", max_km: float = 15.0) -> bool:
+    """True when at least one home-consult doctor (synthetic venue=home) is
+    free right now, within max_km of the user, and speaks the language."""
+    if not settings.USE_SYNTHETIC_CAREGIVERS:
+        return False
+    lang = _lang_hint(language)
+    for row in load_synthetic_caregivers():
+        if row.get("venue") != "home":
+            continue
+        if str(row.get("active", "True")).strip().lower() not in ("true", "1", "yes"):
+            continue
+        if not _window_open(row.get("free_from", "00:00"), row.get("free_until", "23:59")):
+            continue
+        if lang and lang not in (row.get("languages") or "").lower():
+            continue
+        if location and location.lat:
+            dist = _dist_km(location.lat, location.lng, float(row.get("base_lat") or 0), float(row.get("base_lng") or 0))
+            if dist > max_km:
+                continue
+        return True
+    return False
+
+
+def virtual_consult_available(language: str = "") -> bool:
+    """True when at least one virtual doctor (synthetic venue=virtual) is free
+    right now and speaks the language."""
+    if not settings.USE_SYNTHETIC_CAREGIVERS:
+        return False
+    lang = _lang_hint(language)
+    for row in load_synthetic_caregivers():
+        if row.get("venue") != "virtual":
+            continue
+        if not _window_open(row.get("free_from", "00:00"), row.get("free_until", "23:59")):
+            continue
+        if lang and lang not in (row.get("languages") or "").lower():
+            continue
+        return True
+    return False
+
+
+def _dist_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
+    import math
+    R = 6371.0
+    dlat = math.radians(lat2 - lat1)
+    dlng = math.radians(lng2 - lng1)
+    a = math.sin(dlat / 2) ** 2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlng / 2) ** 2
+    return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+
+def adjust_by_doctor_availability(care_type: str, urgency: str, location=None, language: str = "") -> tuple[str, str]:
+    """Uses the synthetic doctor roster to refine a borderline routing choice.
+
+    When a medic home visit was chosen but no home-consult doctor is free
+    nearby while a virtual doctor IS free, offer teleconsultation instead.
+    Never returns a new care_type; only swaps between the official two.
+    Returns (care_type, reason_note)."""
+    if not settings.USE_SYNTHETIC_CAREGIVERS:
+        return care_type, ""
+    if care_type == "paramedic_home_visit" and urgency == "same_day":
+        if not home_consult_available(location, language) and virtual_consult_available(language):
+            return "teleconsultation", (
+                " No home-visit doctor is free right now, so we recommend an immediate "
+                "video consultation; a home visit can be booked for the next available slot."
+            )
+    return care_type, ""

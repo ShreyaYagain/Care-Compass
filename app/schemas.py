@@ -120,6 +120,9 @@ class MatchedCaregiver(BaseModel):
     free_from: Optional[str] = None
     free_until: Optional[str] = None
     distance_km: Optional[float] = None
+    venue: Optional[str] = None
+    department: Optional[str] = None
+    facility_name: Optional[str] = None
 
 
 # --- /triage ---

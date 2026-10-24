@@ -267,5 +267,49 @@ class TestInjuryModule(unittest.TestCase):
         self.assertIsNotNone(resp2.care_type)
 
 
+    def test_pain8_with_cannot_bear_weight_still_paramedic(self):
+        # Even with serious findings, the calibrated classifier rarely reaches
+        # P(emergency_112) >= 0.75, so the outcome stays paramedic (sane).
+        answers = {"head_hit": "No", "pain_level": 8, "weight_bearing": "Not at all",
+                   "deformity": "Yes", "swelling": "Yes"}
+        resp = _triage("I fell down and my leg hurts", history=_card_labels(2),
+                       module_id="injury", module_answers=answers)
+        self.assertEqual(resp.care_type, "paramedic_home_visit")
+
+    def test_headache_never_emergency_nor_injury_card(self):
+        for text in ("I have a headache", "mere ko sir dard hai", "headache"):
+            resp = _triage(text)
+            self.assertNotEqual(resp.care_type, "emergency_112", text)
+            self.assertNotIn("unconsciousness", resp.red_flags, text)
+            self.assertIsNone(resp.module_card, text)
+            if resp.follow_up_question:
+                self.assertNotIn("hosh", (resp.follow_up_question or ""), text)
+
+    def test_headache_decides_teleconsultation(self):
+        resp = _triage("I have a headache")
+        self.assertEqual(resp.care_type, "teleconsultation")
+
+    def test_similar_injuries_get_injury_module_or_sane_outcome(self):
+        for text in ("shoulder pain", "neck me dard hai", "elbow pain",
+                     "back me dard hai", "wrist me dard hai"):
+            with self.subTest(text=text):
+                resp = _triage(text)
+                if resp.module_card is not None:
+                    self.assertEqual(resp.module_card["module_id"], "injury")
+                else:
+                    self.assertIn(resp.care_type, ("teleconsultation", "paramedic_home_visit"))
+                    self.assertNotEqual(resp.care_type, "emergency_112")
+
+    def test_llm_module_guard_rejects_unevidenced_module(self):
+        # The LLM may not open the injury module for a plain headache.
+        from unittest import mock
+        from app.core.modules import llm_select_module
+        fake_out = type("Out", (), {"module_id": "injury", "answered_field_ids": []})()
+        with mock.patch("app.core.llm.is_llm_available", return_value=True), \
+             mock.patch("app.core.llm.llm_json", return_value=fake_out):
+            chosen = llm_select_module("I have a headache", {"symptoms": ["headache"]})
+        self.assertIsNone(chosen)
+
+
 if __name__ == "__main__":
     unittest.main()

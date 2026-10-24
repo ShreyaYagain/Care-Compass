@@ -101,6 +101,19 @@ A post-classifier ambulatory adjustment routes routine fever/cough/cold
 presentations (no red flags, no severity, no high temperature, adult,
 non-vulnerable) to teleconsultation instead of a reflexive home visit, so
 home visits are reserved for cases that actually need a clinician in person.
+An injury sanity layer does the same for routine pain/sprain/joint
+presentations (video consult first; an X-ray needs a hospital anyway) and
+corrects misclassified home_nursing/lab routes for injuries; severe pain or
+vulnerable patients (child/senior/pregnant/chronic) keep the medic home
+visit.
+
+Emergency guardrails keep false 112s out: pain 8-10 alone never escalates
+(only serious combined findings can, and only at calibrated
+P(emergency_112) >= 0.75); a plain headache is never screened for
+consciousness and never opens the injury module (the LLM module selection is
+rejected unless the extracted symptoms actually contain the module's trigger
+symptoms); and the semantic screen only flags unconsciousness when the
+message carries a real loss-of-consciousness indicator.
 
 ### Android screens
 The Android app renders the module follow-ups one question at a time (0-10

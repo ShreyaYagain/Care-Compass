@@ -51,7 +51,8 @@ class TestSupabaseHistory(unittest.TestCase):
             location=Location(lat=28.54, lng=77.27),
             conversation_history=[],
         )
-        resp = triage_endpoint(request=req, debug=False, db=None, user="user-1")
+        import asyncio
+        resp = asyncio.run(triage_endpoint(request=req, debug=False, db=None, user="user-1"))
         self.assertIsNotNone(resp.session_id)
         session = store.get_session(resp.session_id, "user-1")
         self.assertIsNotNone(session)

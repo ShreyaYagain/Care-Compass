@@ -3,6 +3,11 @@
 Forces the SQLite fallback (no Supabase) for every test and binds the store to a
 fresh, per-test SQLite database so history/booking tests are isolated and
 deterministic.
+
+The semantic red-flag screen is neutralised by default (groq_ok, no flags) so
+tests of other layers are not hijacked by the combined failsafe question; tests
+that exercise the screen patch app.core.pipeline.screen_red_flags (or
+semantic_screen internals) themselves — the inner patch wins.
 """
 import pytest
 
@@ -27,3 +32,13 @@ def _isolated_sqlite(tmp_path):
     sess.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     sess.Base.metadata.create_all(engine)
     yield
+
+
+@pytest.fixture(autouse=True)
+def _neutral_semantic_screen():
+    from unittest.mock import patch
+    with patch(
+        "app.core.pipeline.screen_red_flags",
+        return_value={"status": "groq_ok", "flags": [], "combined": False},
+    ):
+        yield

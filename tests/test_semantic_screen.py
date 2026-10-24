@@ -9,6 +9,14 @@ from app.core.semantic_screen import flag_question_id, QUESTION_TO_FLAG, NOT_SUR
 LOC = Location(lat=28.54, lng=77.27)
 
 
+def _skip():
+    return {"status": "skip", "flags": [], "combined": False}
+
+
+def _groq_ok(flags):
+    return {"status": "groq_ok", "flags": flags, "combined": False}
+
+
 class TestSemanticScreen(unittest.TestCase):
 
     def test_flag_question_mapping_covers_all_nine(self):
@@ -25,7 +33,7 @@ class TestSemanticScreen(unittest.TestCase):
 
     @patch("app.core.pipeline.screen_red_flags")
     def test_screen_asks_confirmation_for_fresh_paraphrase(self, mock_screen):
-        mock_screen.return_value = ["chest_pain"]
+        mock_screen.return_value = _groq_ok(["chest_pain"])
         req = TriageRequest(
             user_input="my chest feels like someone is sitting on it",
             language="en", location=LOC, conversation_history=[],
@@ -37,7 +45,7 @@ class TestSemanticScreen(unittest.TestCase):
 
     @patch("app.core.pipeline.screen_red_flags")
     def test_yes_answer_escalates_to_emergency(self, mock_screen):
-        mock_screen.return_value = []
+        mock_screen.return_value = _skip()
         hist = [
             ChatMessage(role="user", text="my chest feels like someone is sitting on it"),
             ChatMessage(role="assistant", text="Is the patient experiencing acute chest pain or heavy pressure?"),
@@ -49,7 +57,7 @@ class TestSemanticScreen(unittest.TestCase):
 
     @patch("app.core.pipeline.screen_red_flags")
     def test_not_sure_escalates_for_critical_flag(self, mock_screen):
-        mock_screen.return_value = []
+        mock_screen.return_value = _skip()
         hist = [
             ChatMessage(role="user", text="she keeps opening her mouth but air is not going in"),
             ChatMessage(role="assistant", text="Is the patient experiencing any difficulty in breathing?"),
@@ -61,7 +69,7 @@ class TestSemanticScreen(unittest.TestCase):
 
     @patch("app.core.pipeline.screen_red_flags")
     def test_no_answer_does_not_escalate(self, mock_screen):
-        mock_screen.return_value = []
+        mock_screen.return_value = _skip()
         hist = [
             ChatMessage(role="user", text="my chest feels like someone is sitting on it"),
             ChatMessage(role="assistant", text="Is the patient experiencing acute chest pain or heavy pressure?"),
@@ -73,7 +81,7 @@ class TestSemanticScreen(unittest.TestCase):
     @patch("app.core.pipeline.screen_red_flags")
     def test_screen_never_lowers_a_rule_emergency(self, mock_screen):
         # Keyword rule already flags this; the screen (even empty) must not lower it.
-        mock_screen.return_value = []
+        mock_screen.return_value = _skip()
         req = TriageRequest(user_input="chest pain ho raha hai papa ko", language="hinglish",
                             location=LOC, conversation_history=[])
         resp = run_triage_pipeline(req)

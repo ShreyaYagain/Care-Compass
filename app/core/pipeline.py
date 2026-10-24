@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from typing import Any
 import yaml
@@ -23,12 +24,18 @@ from app.core.intake import (
     get_question_by_id,
     is_bank_question,
     get_asked_ids,
+    count_asked_id,
+    build_classifier_text,
+    _select_question_id,
 )
 from app.core.semantic_screen import (
     screen_red_flags,
     flag_question_id,
     QUESTION_TO_FLAG,
     NOT_SURE_AS_YES,
+    COMBINED_QUESTION_ID,
+    WHICH_ONE_QUESTION_ID,
+    map_combined_category,
 )
 from app.core.triage_model import predict_triage
 from app.core.risk_modifiers import apply_risk_modifiers
@@ -53,26 +60,55 @@ _BARE_ANSWERS = {
     "nahi pata", "pata nahi hai", "not sure about", "sure nahi",
 }
 
+_PICK_CLOSEST = {
+    "en": "Pick the closest one or say \"talk to a doctor\".",
+    "hinglish": "Sabse close option chuniye ya \"talk to a doctor\" boliye.",
+    "hi": "सबसे करीबी विकल्प चुनें या \"डॉक्टर से बात करें\" कहें।",
+}
+
+
+def _pick_closest_line(lang: str) -> str:
+    return _PICK_CLOSEST.get(lang, _PICK_CLOSEST["en"])
+
 
 def _parse_semantic_answer(history_dicts: list[dict], user_input: str):
-    """If the current message answers a semantic-screen confirmation question,
-    return (flag, 'yes'|'no'|'unsure'), else None."""
+    """If the current message answers a semantic-screen question, return one of:
+        ("flag_confirm", flag, kind)   per-flag confirmation answer
+        ("combined", kind, flag)       combined failsafe answer (kind yes/no/unsure)
+        ("which_one", flag)            which-one clarification answer
+    else None."""
     last_qid = None
     for m in reversed(history_dicts):
         if m.get("role") == "assistant":
             qid = is_bank_question(m.get("text") or m.get("content") or "")
-            if qid and qid in QUESTION_TO_FLAG:
+            if qid:
                 last_qid = qid
             break
     if not last_qid:
         return None
     ans = (user_input or "").strip().lower()
-    if ans in {"yes", "haan", "ha", "han", "y", "ji haan", "haan ji", "han ji"}:
-        return QUESTION_TO_FLAG[last_qid], "yes"
-    if ans in {"no", "nahi", "nahin", "nahim", "n", "na", "nhi"}:
-        return QUESTION_TO_FLAG[last_qid], "no"
-    if ans in {"not sure", "pata nahi", "unsure", "malum nahi", "pakka nahi", "nahi pata"}:
-        return QUESTION_TO_FLAG[last_qid], "unsure"
+    if last_qid == COMBINED_QUESTION_ID:
+        if ans in {"yes", "haan", "ha", "han", "y", "ji haan", "haan ji", "han ji"}:
+            return "combined", "yes", map_combined_category(user_input)
+        if ans in {"no", "nahi", "nahin", "nahim", "n", "na", "nhi"}:
+            return "combined", "no", None
+        if ans in {"not sure", "pata nahi", "unsure", "malum nahi", "pakka nahi", "nahi pata"}:
+            return "combined", "unsure", map_combined_category(user_input)
+        # A non-bare answer that names one of the six categories counts as Yes.
+        named = map_combined_category(user_input)
+        if named:
+            return "combined", "yes", named
+        return None
+    if last_qid == WHICH_ONE_QUESTION_ID:
+        return "which_one", map_combined_category(user_input) or "unspecified_emergency"
+    if last_qid in QUESTION_TO_FLAG:
+        flag = QUESTION_TO_FLAG[last_qid]
+        if ans in {"yes", "haan", "ha", "han", "y", "ji haan", "haan ji", "han ji"}:
+            return "flag_confirm", flag, "yes"
+        if ans in {"no", "nahi", "nahin", "nahim", "n", "na", "nhi"}:
+            return "flag_confirm", flag, "no"
+        if ans in {"not sure", "pata nahi", "unsure", "malum nahi", "pakka nahi", "nahi pata"}:
+            return "flag_confirm", flag, "unsure"
     return None
 
 
@@ -126,12 +162,18 @@ def run_triage_pipeline(
     request: TriageRequest,
     db: Session | None = None,
     debug: bool = False,
+    screen_result: dict | None = None,
+    pre_slots: dict | None = None,
 ) -> TriageResponse:
     """
     Executes the triage pipeline with full diagnostic tracing adhering to the official labels:
     CARE_TYPES = ["paramedic_home_visit", "home_nursing", "lab_test_home", "teleconsultation", "emergency_112"]
     URGENCIES = ["emergency", "same_day", "scheduled"]
     Integrates clinical safety guardrails (input sanitization, PII masking, response policy enforcement).
+
+    `screen_result` / `pre_slots` let the async wrapper (run_triage_pipeline_async)
+    inject the semantic screen and intake extraction results it computed in
+    parallel; both are recomputed here when omitted.
     """
     user_input = request.user_input
 
@@ -223,17 +265,86 @@ def run_triage_pipeline(
     if pregnancy_risk.is_pregnant and pregnancy_risk.reason:
         reasons.append(f"Pregnancy layer: {pregnancy_risk.reason}")
 
-    # 2.3 Semantic-screen confirmation answer: Yes (or Not-sure for the 7
-    # critical flags) escalates; No continues. Never lowers rule decisions.
+    # 2.3 Semantic-screen answers. Per-flag confirmation: Yes (or Not-sure for
+    # the critical flags) escalates; No continues. Combined failsafe: Yes / Not
+    # sure -> emergency_112, using the specific flag the user named, or asking
+    # ONE "which one" clarification (only when the combined question was the
+    # first question, so the flow never exceeds two questions). Never lowers
+    # rule decisions.
     semantic_answer = _parse_semantic_answer(history_dicts, user_input)
     if semantic_answer:
-        s_flag, s_kind = semantic_answer
-        if s_kind == "yes" or (s_kind == "unsure" and s_flag in NOT_SURE_AS_YES):
-            high_flags = list(set(high_flags + [s_flag]))
+        kind = semantic_answer[0]
+        if kind == "flag_confirm":
+            _, s_flag, s_kind = semantic_answer
+            if s_kind == "yes" or (s_kind == "unsure" and s_flag in NOT_SURE_AS_YES):
+                high_flags = list(set(high_flags + [s_flag]))
+                is_high_emergency = True
+                reasons.append(f"Semantic screen: user confirmed red flag {s_flag} (answer={s_kind})")
+            else:
+                reasons.append(f"Semantic screen: user cleared red flag {s_flag} (answer={s_kind})")
+        elif kind == "combined":
+            _, c_kind, c_flag = semantic_answer
+            if c_kind in ("yes", "unsure"):
+                if c_flag:
+                    high_flags = list(set(high_flags + [c_flag]))
+                    is_high_emergency = True
+                    reasons.append(f"Semantic screen: combined failsafe confirmed red flag {c_flag} (answer={c_kind})")
+                elif c_kind == "yes" and history_turns == 1:
+                    # Bare Yes with no named symptom and question budget left:
+                    # ask which one (the second allowed question).
+                    w_text, w_options = get_question_by_id(WHICH_ONE_QUESTION_ID, lang)
+                    w_text = enforce_question_bank(w_text, lang)
+                    guard_w = output_guard(w_text, lang=lang, is_emergency=False, care_type="teleconsultation", field_name="follow_up_question")
+                    if not guard_w["ok"]:
+                        output_violations.extend(guard_w["violations"])
+                        template_replaced = True
+                    w_text = guard_w["safe_text"]
+                    debug_trace = {
+                        "red_flags_high": high_flags,
+                        "red_flags_medium": medium_flags,
+                        "model_probs": None,
+                        "calibrated_probabilities": None,
+                        "urgency_after_cost_matrix": None,
+                        "urgency_after_risk_modifiers": None,
+                        "urgency_after_confidence_fallback": None,
+                        "confidence": None,
+                        "slots": {},
+                        "final_care_type": None,
+                        "final_urgency": None,
+                        "context_info": context,
+                        "screen_status": "failsafe_question",
+                        "semantic_screen": {"status": "failsafe_question", "flags": [], "combined": True, "asked": WHICH_ONE_QUESTION_ID},
+                        "guardrails": {
+                            "input_guard": input_guard_res,
+                            "output_violations": output_violations,
+                            "template_replaced": template_replaced,
+                        },
+                        "reasons": ["Combined failsafe answered Yes/Not sure; asking which symptom"],
+                    }
+                    return TriageResponse(
+                        follow_up_question=w_text,
+                        follow_up_options=w_options,
+                        care_type=None,
+                        urgency=None,
+                        red_flags=[],
+                        reasoning=None,
+                        confidence=None,
+                        matched_caregivers=[],
+                        emergency_steps=[],
+                        context_used=None,
+                        debug=debug_trace if debug else None,
+                    )
+                else:
+                    high_flags = list(set(high_flags + ["unspecified_emergency"]))
+                    is_high_emergency = True
+                    reasons.append(f"Semantic screen: combined failsafe confirmed (answer={c_kind}, symptom unnamed); escalating")
+            else:
+                reasons.append(f"Semantic screen: combined failsafe cleared (answer={c_kind})")
+        elif kind == "which_one":
+            w_flag = semantic_answer[1]
+            high_flags = list(set(high_flags + [w_flag]))
             is_high_emergency = True
-            reasons.append(f"Semantic screen: user confirmed red flag {s_flag} (answer={s_kind})")
-        else:
-            reasons.append(f"Semantic screen: user cleared red flag {s_flag} (answer={s_kind})")
+            reasons.append(f"Semantic screen: which-one answer mapped to red flag {w_flag}")
 
     # Emergency branch (Immediate 112)
     if is_high_emergency:
@@ -377,13 +488,25 @@ def run_triage_pipeline(
     # 2.4 SEMANTIC RED-FLAG SCREEN (after keyword rules, before follow-ups and
     # the classifier). Meaning-based detection; a present flag becomes ONE
     # confirmation question — the LLM never decides an emergency by itself.
+    # Skipped for bare answers and for the second follow-up answer
+    # (history_turns >= MAX_FOLLOWUPS), and never runs when the rules already
+    # decided emergency_112 (the emergency branch above returns earlier).
+    screen_status = "skip"
     semantic_flags: list[str] = []
-    if user_input.strip().lower() not in _BARE_ANSWERS:
+    combined_needed = False
+    if user_input.strip().lower() not in _BARE_ANSWERS and history_turns < settings.MAX_FOLLOWUPS:
         try:
-            semantic_flags = screen_red_flags(user_input, lang)
+            if screen_result is None:
+                screen_result = screen_red_flags(user_input, lang)
         except Exception as e:
             logger.warning(f"Semantic red-flag screen failed: {e}")
-            semantic_flags = []
+            screen_result = {"status": "skip", "flags": [], "combined": False}
+    else:
+        screen_result = {"status": "skip", "flags": [], "combined": False}
+    screen_status = screen_result.get("status", "skip")
+    semantic_flags = list(screen_result.get("flags") or [])
+    combined_needed = bool(screen_result.get("combined"))
+
     if semantic_flags:
         asked_ids = get_asked_ids(history_dicts)
         for s_flag in semantic_flags:
@@ -410,7 +533,8 @@ def run_triage_pipeline(
                     "final_care_type": None,
                     "final_urgency": None,
                     "context_info": context,
-                    "semantic_screen": {"flags": semantic_flags, "asked": qid},
+                    "screen_status": screen_status,
+                    "semantic_screen": {"status": screen_status, "flags": semantic_flags, "combined": False, "asked": qid},
                     "guardrails": {
                         "input_guard": input_guard_res,
                         "output_violations": output_violations,
@@ -450,8 +574,81 @@ def run_triage_pipeline(
                         logger.warning(f"Failed to write audit log: {e}")
                 return resp
 
+    # 2.4b Combined failsafe question: Groq down + local fallback empty + the
+    # keyword rules found NO red flag + the message contains a symptom. Ask
+    # ONE combined screening question from the closed bank — unless a red-flag
+    # screening question was already answered this session. Never a silent
+    # decision.
+    if combined_needed:
+        red_flag_screen_ids = set(QUESTION_TO_FLAG.keys()) | {COMBINED_QUESTION_ID}
+        asked_ids = get_asked_ids(history_dicts)
+        if not medium_flags and not any(qid in red_flag_screen_ids for qid in asked_ids):
+            q_text, q_options = get_question_by_id(COMBINED_QUESTION_ID, lang)
+            q_text = enforce_question_bank(q_text, lang)
+            guard_q = output_guard(q_text, lang=lang, is_emergency=False, care_type="teleconsultation", field_name="follow_up_question")
+            if not guard_q["ok"]:
+                output_violations.extend(guard_q["violations"])
+                template_replaced = True
+            q_text = guard_q["safe_text"]
+
+            debug_trace = {
+                "red_flags_high": high_flags,
+                "red_flags_medium": medium_flags,
+                "model_probs": None,
+                "calibrated_probabilities": None,
+                "urgency_after_cost_matrix": None,
+                "urgency_after_risk_modifiers": None,
+                "urgency_after_confidence_fallback": None,
+                "confidence": None,
+                "slots": {},
+                "final_care_type": None,
+                "final_urgency": None,
+                "context_info": context,
+                "screen_status": "failsafe_question",
+                "semantic_screen": {"status": "failsafe_question", "flags": [], "combined": True, "asked": COMBINED_QUESTION_ID},
+                "guardrails": {
+                    "input_guard": input_guard_res,
+                    "output_violations": output_violations,
+                    "template_replaced": template_replaced,
+                },
+                "reasons": ["Semantic screen unavailable (Groq down after retry, local fallback empty); asking combined failsafe question"],
+            }
+            resp = TriageResponse(
+                follow_up_question=q_text,
+                follow_up_options=q_options,
+                care_type=None,
+                urgency=None,
+                red_flags=[],
+                reasoning=None,
+                confidence=None,
+                matched_caregivers=[],
+                emergency_steps=[],
+                context_used=None,
+                debug=debug_trace if debug else None,
+            )
+            if db:
+                try:
+                    log = AuditLog(
+                        user_input=user_input,
+                        language=lang,
+                        red_flags=[],
+                        probabilities=None,
+                        care_type=None,
+                        urgency=None,
+                        confidence=None,
+                        reasoning=None,
+                        debug_trace=debug_trace,
+                    )
+                    db.add(log)
+                    db.commit()
+                except Exception as e:
+                    logger.warning(f"Failed to write audit log: {e}")
+            return resp
+        else:
+            reasons.append("Semantic screen failsafe skipped: red-flag screening already asked/answered this session")
+
     # 3. Intake slot extraction (on sanitized text)
-    slots = extract_slots(norm_text, history_dicts)
+    slots = pre_slots if pre_slots is not None else extract_slots(norm_text, history_dicts)
     if medium_flags:
         slots["medium_red_flags"] = medium_flags
 
@@ -464,8 +661,14 @@ def run_triage_pipeline(
 
     # 4. Check if follow-up question is needed
     if needs_more_info(slots, history_turns, history_dicts):
+        qid = _select_question_id(slots, history_dicts, context)
         q_text, q_options = select_follow_up_question(slots, lang, history_dicts, context)
         q_text = enforce_question_bank(q_text, lang)
+
+        # Input-noise budget: the second empty attempt adds a "pick the closest"
+        # hint so the user has a clear, safe way to proceed.
+        if qid == "main_symptom_buttons" and count_asked_id(history_dicts, "main_symptom_buttons") >= 1:
+            q_text = f"{q_text} {_pick_closest_line(lang)}"
 
         # Output guard on follow up question and options
         guard_q = output_guard(q_text, lang=lang, is_emergency=False, care_type="teleconsultation", field_name="follow_up_question")
@@ -507,6 +710,7 @@ def run_triage_pipeline(
             "final_care_type": None,
             "final_urgency": None,
             "context_info": context,
+            "screen_status": screen_status,
             "guardrails": {
                 "input_guard": input_guard_res,
                 "output_violations": output_violations,
@@ -528,16 +732,10 @@ def run_triage_pipeline(
             debug=debug_trace if debug else None,
         )
 
-    # Reconstruct substantive user text for ML classification if current text is a bare reply
-    bare_replies = {"no", "nahi", "nahin", "na", "yes", "haan", "ha", "not sure", "pata nahi", "unsure"}
-    substantive_tokens = [
-        (m.get("text") or "").strip()
-        for m in history_dicts
-        if m.get("role") == "user" and (m.get("text") or "").strip().lower() not in bare_replies
-    ]
-    if norm_text.strip().lower() not in bare_replies and norm_text.strip():
-        substantive_tokens.append(norm_text.strip())
-    patient_text = " ".join(substantive_tokens) if substantive_tokens else norm_text
+    # Classifier input is a cleaned string built from canonical symptom names and
+    # validated slots — never the raw text — so random noise tokens cannot shift
+    # the prediction. The raw text is preserved only in the audit log.
+    patient_text = build_classifier_text(slots)
 
     # 5. Triage model prediction (predicts care_type; urgency derived from CARE_TO_URGENCY)
     pred_res = predict_triage(slots, patient_text)
@@ -578,7 +776,9 @@ def run_triage_pipeline(
             care_type = "teleconsultation"
             urgency_after_confidence_fallback = "same_day"
             unclear_fallback = True
+            confidence = 0.30
             reasons.append(f"Stage 7: Max follow-ups reached ({history_turns} turns); condition unclear. Defaulted to teleconsultation as safest first step.")
+            reasons.append("not enough information")
     elif (
         urgency_after_risk_modifiers != "emergency"
         and care_type != "emergency_112"
@@ -616,6 +816,7 @@ def run_triage_pipeline(
                 "final_care_type": None,
                 "final_urgency": None,
                 "context_info": context,
+                "screen_status": screen_status,
                 "guardrails": {
                     "input_guard": input_guard_res,
                     "output_violations": output_violations,
@@ -851,6 +1052,8 @@ def run_triage_pipeline(
         "final_care_type": final_care_type,
         "final_urgency": final_urgency,
         "context_info": context,
+        "screen_status": screen_status,
+        "semantic_screen": {"status": screen_status, "flags": semantic_flags, "combined": combined_needed},
         "guardrails": {
             "input_guard": input_guard_res,
             "output_violations": output_violations,
@@ -890,4 +1093,70 @@ def run_triage_pipeline(
         emergency_steps=emergency_steps,
         context_used=context_used,
         debug=debug_trace if debug else None,
+    )
+
+
+def _screen_skip_precheck(request: TriageRequest) -> bool:
+    """Mirrors the pipeline's own screen-skip conditions (bare answers,
+    second follow-up answer, rules already emergency). Cheap & deterministic;
+    used by the async wrapper to decide whether to parallelize."""
+    user_input = (request.user_input or "").strip()
+    if user_input.lower() in _BARE_ANSWERS:
+        return True
+    history_dicts = [{"role": m.role, "text": m.text or m.content or ""} for m in request.conversation_history]
+    if count_assistant_turns(history_dicts) >= settings.MAX_FOLLOWUPS:
+        return True
+    try:
+        _, _, _, is_high = check_red_flags(user_input, detect_and_normalise(user_input)[1], return_medium=True)
+        return bool(is_high)
+    except Exception:
+        return False
+
+
+async def run_triage_pipeline_async(
+    request: TriageRequest,
+    db: Session | None = None,
+    debug: bool = False,
+) -> TriageResponse:
+    """Async /triage entry point. Runs the semantic screen and the intake
+    extraction IN PARALLEL (asyncio.gather) to keep p95 latency under the
+    budget; the screen runs on the fast model with its own 2.5 s timeout.
+    Ineligible requests (emergencies, bare answers, second follow-up answers)
+    take the synchronous path, where the screen is skipped anyway."""
+    if _screen_skip_precheck(request):
+        return run_triage_pipeline(request, db=db, debug=debug)
+
+    user_input = (request.user_input or "").strip()
+    input_guard_res = input_guard(user_input)
+    cleaned_input = input_guard_res["cleaned_text"]
+    try:
+        _, norm_text, detected_lang = detect_and_normalise(cleaned_input)
+    except Exception:
+        return run_triage_pipeline(request, db=db, debug=debug)
+    lang = request.language if request.language != "auto" else detected_lang
+
+    history_dicts = [{"role": m.role, "text": m.text or m.content or ""} for m in request.conversation_history]
+
+    loop = asyncio.get_running_loop()
+
+    def _screen() -> dict:
+        try:
+            return screen_red_flags(user_input, lang)
+        except Exception:
+            return {"status": "skip", "flags": [], "combined": False}
+
+    def _extract() -> dict | None:
+        try:
+            return extract_slots(norm_text, history_dicts)
+        except Exception:
+            return None
+
+    screen_result, pre_slots = await asyncio.gather(
+        loop.run_in_executor(None, _screen),
+        loop.run_in_executor(None, _extract),
+    )
+    return run_triage_pipeline(
+        request, db=db, debug=debug,
+        screen_result=screen_result,
+        pre_slots=pre_slots,
     )

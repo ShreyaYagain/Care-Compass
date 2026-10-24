@@ -154,6 +154,30 @@ question_bank:
       - { en: "No", hi: "नहीं", hinglish: "No" }
       - { en: "Not sure", hi: "पक्का नहीं", hinglish: "Not sure" }
 
+  - id: combined_red_flag_screen
+    slot: any_red_flag
+    purpose: red_flag_screen
+    text_en: "Is there trouble breathing, chest pain, heavy bleeding, fits, fainting, or can't wake up?"
+    text_hi: "क्या सांस लेने में दिक्कत, सीने में दर्द, ज़्यादा खून बहना, दौरे, बेहोशी, या जगाने पर न उठना जैसा कुछ हो रहा है?"
+    text_hinglish: "Kya saans lene mein dikkat, seene mein dard, zyada khoon behna, daure, behoshi, ya jagaane par na uthna jaisa kuch ho raha hai?"
+    options:
+      - { en: "Yes", hi: "हाँ", hinglish: "Yes" }
+      - { en: "No", hi: "नहीं", hinglish: "No" }
+      - { en: "Not sure", hi: "पक्का नहीं", hinglish: "Not sure" }
+
+  - id: which_red_flag_symptom
+    slot: any_red_flag
+    purpose: red_flag_screen
+    text_en: "Which one is happening right now?"
+    text_hi: "अभी इनमें से क्या हो रहा है?"
+    text_hinglish: "Abhi inme se kya ho raha hai?"
+    options:
+      - { en: "Trouble breathing", hi: "सांस लेने में दिक्कत", hinglish: "Saans lene mein dikkat" }
+      - { en: "Chest pain or pressure", hi: "सीने में दर्द या दबाव", hinglish: "Seene mein dard ya dabav" }
+      - { en: "Heavy bleeding", hi: "ज़्यादा खून बहना", hinglish: "Zyada khoon behna" }
+      - { en: "Fits or shaking", hi: "दौरे या झटके", hinglish: "Daure ya jhatke" }
+      - { en: "Fainted or can't wake up", hi: "बेहोशी या न उठना", hinglish: "Behoshi ya na uthna" }
+
 # --- Symptom synonym list (used by the rule-based intake extractor) ---
 # This is the single canonical symptom lexicon: the extractor and the
 # explanation builder may only ever emit names from this list.

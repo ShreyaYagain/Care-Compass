@@ -12,6 +12,7 @@ except ImportError:
 from app.config import settings
 from app.schemas import HealthResponse
 from app.core.llm import is_llm_available
+from app.core.semantic_screen import get_screen_status
 from app.db.supabase_client import active_store
 
 router = APIRouter(tags=["Health"])
@@ -24,4 +25,5 @@ def get_health():
         model_version=settings.MODEL_VERSION,
         llm_available=is_llm_available(),
         store=active_store(),
+        screen_status=get_screen_status(),
     )

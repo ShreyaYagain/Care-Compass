@@ -307,3 +307,4 @@ class HealthResponse(BaseModel):
     model_version: str = "1.0.0"
     llm_available: bool = False
     store: str = "sqlite"
+    screen_status: Optional[str] = None

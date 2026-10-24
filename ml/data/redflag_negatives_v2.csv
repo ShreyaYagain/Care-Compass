@@ -1,0 +1,61 @@
+id,category,user_input,expected
+1,past_event,my dad had chest pain last year but he is completely fine now,non_emergency
+2,past_event,I had a heart attack two years ago and fully recovered since,non_emergency
+3,past_event,bachpan mein ek baar daura pada tha ab kabhi nahi hota,non_emergency
+4,past_event,she fainted once last month and doctors said it was just dehydration,non_emergency
+5,past_event,last year mere haath se khoon beh gaya tha accident mein ab thik hai,non_emergency
+6,past_event,mujhe 3 mahine pehle stroke hua tha ab physiotherapy chal rahi hai,non_emergency
+7,past_event,he had fits as a child but nothing since then,non_emergency
+8,past_event,pehle saans ki dikkat hoti thi ab bilkul sahi hai,non_emergency
+9,past_event,that breathing trouble was six months ago and never came back,non_emergency
+10,past_event,chest mein dard last year hua tha checkup normal aaya tha,non_emergency
+11,past_event,the seizure happened when he was small and doctors cleared him,non_emergency
+12,past_event,my bleeding problem was resolved after the surgery last year,non_emergency
+13,resolved_now,fever is gone now I am fine,non_emergency
+14,resolved_now,bukhar utar gaya hai ab thik hai,non_emergency
+15,resolved_now,saans ki dikkat thi par ab bilkul theek hai,non_emergency
+16,resolved_now,khansi aur bukhar khatam ho gaye hain,non_emergency
+17,resolved_now,the bleeding stopped two hours ago,non_emergency
+18,resolved_now,chakkar aate the subah ko ab nahi aate,non_emergency
+19,resolved_now,the pain is gone after taking the medicine,non_emergency
+20,resolved_now,pet ka dard theek ho gaya hai,non_emergency
+21,resolved_now,my chest discomfort went away with an antacid,non_emergency
+22,resolved_now,dizziness resolved since yesterday evening,non_emergency
+23,resolved_now,the fever subsided completely this morning,non_emergency
+24,resolved_now,woh daura ek baar aaya tha ab bilkul normal hai,non_emergency
+25,other_persons_news,padosi ko kal chest pain hua tha,non_emergency
+26,other_persons_news,my neighbour's son had a fit yesterday,non_emergency
+27,other_persons_news,meri friend behosh ho gayi thi uske ghar pe,non_emergency
+28,other_persons_news,a man fainted in the market today I just walked by,non_emergency
+29,other_persons_news,my colleague's father is in the ICU,non_emergency
+30,other_persons_news,TV pe dekha ek aurat ka khoon beh raha tha accident mein,non_emergency
+31,other_persons_news,my neighbour was bleeding heavily last night,non_emergency
+32,other_persons_news,friend ka beta behosh ho gaya tha school mein,non_emergency
+33,other_persons_news,mere gali mein ek budhe aadmi ko daura pada,non_emergency
+34,other_persons_news,the news said a man had a seizure in a bus,non_emergency
+35,mild_symptom,halka sa sir dard hai,non_emergency
+36,mild_symptom,thoda bukhar hai 99.2,non_emergency
+37,mild_symptom,halki si khansi subah se hai,non_emergency
+38,mild_symptom,thoda chakkar sa lag raha hai bas,non_emergency
+39,mild_symptom,mild body ache after the gym,non_emergency
+40,mild_symptom,halki jalan si ho rahi hai khane ke baad,non_emergency
+41,mild_symptom,chhoti si chot lagi hai ungli mein,non_emergency
+42,mild_symptom,mild cramps during periods,non_emergency
+43,mild_symptom,thodi si khaansi ke liye dawa chahiye,non_emergency
+44,mild_symptom,halka bukhar aur thodi kamzori hai,non_emergency
+45,medicine_query,crocin ki dose kya hai adults ke liye,non_emergency
+46,medicine_query,is azithromycin 500 safe during pregnancy,non_emergency
+47,medicine_query,paracetamol 650 kitni baar le sakte hain,non_emergency
+48,medicine_query,BP ki dawa kab leni chahiye subah ya raat,non_emergency
+49,medicine_query,cough syrup ke side effects kya hain,non_emergency
+50,medicine_query,insulin kaise store karna chahiye,non_emergency
+51,medicine_query,dolo ka price kya hai,non_emergency
+52,medicine_query,can I take antacid and BP medicine together,non_emergency
+53,chronic_stable,my BP is under control with medicine,non_emergency
+54,chronic_stable,diabetes ki report normal aayi hai,non_emergency
+55,chronic_stable,routine checkup ke liye doctor dikhana hai,non_emergency
+56,chronic_stable,my asthma is well controlled with the inhaler,non_emergency
+57,chronic_stable,sugar 110 hai fasting normal hai na,non_emergency
+58,chronic_stable,yearly full body checkup karwana hai,non_emergency
+59,chronic_stable,heart patient hoon regular medicine leta hoon aaj bas prescription renew karni hai,non_emergency
+60,chronic_stable,mild BP ki dawa khatam ho gayi refill chahiye,non_emergency

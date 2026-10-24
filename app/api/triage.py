@@ -6,7 +6,6 @@ from sqlalchemy.orm import Session
 
 from app.schemas import TriageRequest, TriageResponse
 from app.db.session import get_db
-from app.core.pipeline import run_triage_pipeline
 from app.core.auth import get_current_user_optional
 from app.db import store
 
@@ -82,13 +81,16 @@ def _log_history(request: TriageRequest, resp: TriageResponse, user_id: str) -> 
 
 
 @router.post("/triage", response_model=TriageResponse)
-def triage_endpoint(
+async def triage_endpoint(
     request: TriageRequest,
     debug: bool = False,
     db: Session = Depends(get_db),
     user: Optional[str] = Depends(get_current_user_optional),
 ):
-    resp = run_triage_pipeline(request, db=db, debug=debug)
+    # Async path runs the semantic screen and intake extraction in parallel
+    # (asyncio.gather) to keep p95 latency under budget.
+    from app.core.pipeline import run_triage_pipeline_async
+    resp = await run_triage_pipeline_async(request, db=db, debug=debug)
 
     user_id = user if isinstance(user, str) else None
     if user_id:

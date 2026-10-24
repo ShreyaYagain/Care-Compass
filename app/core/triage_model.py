@@ -210,7 +210,11 @@ def predict_triage(slots: dict, text: str) -> tuple[str, str, dict, float, list[
         except Exception:
             care_pred = None
 
-    if not care_pred or (rb_conf >= 0.85 and confidence < 0.60):
+    # The rule layer is authoritative for any confident match: it routes on
+    # canonical symptoms/slots, so random noise in the (cleaned) classifier text
+    # can never shift the decision. The ML model only refines inputs the rules
+    # do not confidently recognise.
+    if not care_pred or rb_conf >= 0.85:
         care_pred = rb_care
         confidence = rb_conf
         care_probs = rb_probs

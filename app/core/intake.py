@@ -16,6 +16,11 @@ class GroqSlotExtraction(BaseModel):
     who_for: Optional[str] = None
     age_group: Optional[str] = None
     duration: Optional[str] = None
+    duration_evidence: Optional[str] = None
+    fever_temp: Optional[float] = None
+    fever_temp_unit: Optional[str] = None
+    fever_temp_evidence: Optional[str] = None
+    age_evidence: Optional[str] = None
     red_flag_candidates: list[str] = Field(default_factory=list)
     language: Optional[str] = "en"
     confidence: float = 0.8
@@ -101,11 +106,205 @@ def default_slots() -> dict:
         "consciousness": "alert",
         "bleeding": None,
         "fever_temp": None,
+        "fever_temp_unit": None,
         "pregnancy": False,
         "chronic_conditions": [],
         "unfamiliar_care_type_mapped": None,
         "unfamiliar_reason": None,
     }
+
+
+# ---------------------------------------------------------------------------
+# Number / duration / temperature / age parsing (input-noise rules)
+#
+# A bare number is never a duration, temperature or age. A number only counts
+# when it is directly attached to the right unit or marker, and age vs duration
+# are kept apart ("2 saal se dard" = duration, "70 saal ke papa" = age).
+# ---------------------------------------------------------------------------
+
+_DEV_DIGITS = str.maketrans("०१२३४५६७८९", "0123456789")
+
+_HINDI_NUM_WORDS = {
+    "ek": 1, "do": 2, "teen": 3, "tina": 3, "chaar": 4, "char": 4,
+    "paanch": 5, "panch": 5, "chhe": 6, "che": 6, "chhah": 6,
+    "saat": 7, "sath": 7, "aath": 8, "ath": 8, "nau": 9, "das": 10,
+}
+_EN_NUM_WORDS = {
+    "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
+    "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10,
+}
+
+_DURATION_UNITS = {
+    "day": ["din", "dina", "dino", "day", "days"],
+    "week": ["hafta", "hafte", "week", "weeks", "saptah", "saaptah"],
+    "hour": ["ghanta", "ghante", "ghanton", "hour", "hours", "hr", "hrs"],
+    "month": ["mahina", "mahine", "mahino", "month", "months"],
+    "year": ["saal", "sal", "sala", "varsh", "varash", "year", "years"],
+    "night": ["raat", "raaton", "night", "nights"],
+}
+
+_YEAR_UNITS = ("saal", "sal", "sala", "varsh", "varash", "year", "years")
+_FEVER_WORDS = ("fever", "bukhar", "bukhaar", "bukhara", "taap", "temperature", "jwar", "jvara")
+
+
+def _normalise_num(text: str) -> str:
+    return normalise_text(text or "").translate(_DEV_DIGITS)
+
+
+def _duration_label(days: int, unit_kind: str) -> str:
+    if unit_kind == "hour":
+        return "today"
+    if unit_kind in ("week", "month", "year"):
+        return ">5 days"
+    # day / night
+    if days == 1:
+        return "1 day"
+    if days == 2:
+        return "2 days"
+    if days == 3:
+        return "3 days"
+    if days == 4:
+        return "4 days"
+    if days >= 5:
+        return ">5 days"
+    return "today"
+
+
+def parse_duration(text: str) -> Optional[str]:
+    """Returns a canonical duration label only when a number/number-word is
+    attached to a time unit. Bare numbers never produce a duration."""
+    norm = _normalise_num(text)
+    if not norm:
+        return None
+
+    if re.search(r"\bkal raat se\b", norm) or re.search(r"\bkal raat\b", norm):
+        return "1 day"
+    if re.search(r"\bkal se\b", norm):
+        return "1 day"
+    if re.search(r"\baaj se\b|\bsubah se\b|\btoday\b|\bsince morning\b|\bmorning se\b", norm):
+        return "today"
+
+    numword = "|".join(list(_HINDI_NUM_WORDS) + list(_EN_NUM_WORDS))
+    for unit_kind, words in _DURATION_UNITS.items():
+        unit_alt = "|".join(re.escape(w) for w in sorted(words, key=len, reverse=True))
+        for pat in (rf"\b(\d{{1,3}})\s*({unit_alt})\b", rf"\b({numword})\s+({unit_alt})\b"):
+            m = re.search(pat, norm)
+            if not m:
+                continue
+            raw_num = m.group(1)
+            if unit_kind == "year":
+                after = norm[m.end():]
+                if not re.match(r"^\s*(?:se|since|for)\b", after):
+                    continue
+            if raw_num.isdigit():
+                n = int(raw_num)
+            else:
+                n = _HINDI_NUM_WORDS.get(raw_num, _EN_NUM_WORDS.get(raw_num))
+                if n is None:
+                    continue
+            return _duration_label(n, unit_kind)
+    return None
+
+
+def parse_temperature(text: str) -> Optional[tuple[float, str]]:
+    """Temperature only when a number in 95-108 (F) or 35-42 (C) sits next to a
+    fever word or a degree marker. Returns (value, "F"|"C") or None."""
+    norm = _normalise_num(text)
+    if not norm:
+        return None
+    tokens = norm.split()
+    fever = set(_FEVER_WORDS)
+
+    for i, tok in enumerate(tokens):
+        m = re.fullmatch(r"(\d{2,3}(?:\.\d+)?)", tok)
+        if not m:
+            continue
+        val = float(m.group(1))
+        prev = tokens[i - 1] if i > 0 else ""
+        nxt = tokens[i + 1] if i + 1 < len(tokens) else ""
+        if nxt in ("f", "fahrenheit") or prev in ("f", "fahrenheit"):
+            if 95 <= val <= 108:
+                return (val, "F")
+        if nxt in ("c", "celsius") or prev in ("c", "celsius"):
+            if 35 <= val <= 42:
+                return (val, "C")
+
+    for i, tok in enumerate(tokens):
+        if tok not in fever:
+            continue
+        for j in (i - 1, i + 1):
+            if 0 <= j < len(tokens):
+                m = re.fullmatch(r"(\d{2,3}(?:\.\d+)?)", tokens[j])
+                if m:
+                    val = float(m.group(1))
+                    if 95 <= val <= 108:
+                        return (val, "F")
+                    if 35 <= val <= 42:
+                        return (val, "C")
+    return None
+
+
+def parse_age(text: str) -> Optional[int]:
+    """Age from "age 70", "70 saal ke papa", "70 years old", "umar 38".
+    Returns None for durations ("2 saal se dard") and bare numbers."""
+    norm = _normalise_num(text)
+    if not norm:
+        return None
+
+    m = re.search(r"\b(?:age|aged|umar|umra)\s*(?:is\s+|of\s+)?(\d{1,3})\b", norm)
+    if m:
+        return int(m.group(1))
+
+    m = re.search(
+        r"\b(\d{1,3})\s*(?:" + "|".join(_YEAR_UNITS) + r")\s*(?:old|ka|ke|ki|kii|hain)\b",
+        norm,
+    )
+    if m:
+        return int(m.group(1))
+
+    m = re.search(r"\b(\d{1,3})\s*(?:" + "|".join(_YEAR_UNITS) + r")\b", norm)
+    if m:
+        after = norm[m.end():]
+        if not re.match(r"^\s*(?:se|since|for)\b", after):
+            return int(m.group(1))
+    return None
+
+
+def build_classifier_text(slots: dict) -> str:
+    """Cleaned classifier input: canonical symptom names + validated slots only.
+    Raw user text (with noise tokens) is never fed to the classifier."""
+    parts: list[str] = []
+    for s in slots.get("symptoms", []) or []:
+        parts.append(str(s).replace("_", " "))
+    service = slots.get("service_requested")
+    if service and service != "none":
+        parts.append(str(service).replace("_", " "))
+    if slots.get("duration"):
+        parts.append(f"duration {slots['duration']}")
+    if slots.get("severity"):
+        parts.append(str(slots["severity"]))
+    if slots.get("age_group"):
+        parts.append(str(slots["age_group"]))
+    relation = slots.get("patient_relation")
+    if relation and relation != "self":
+        parts.append(str(relation))
+    if slots.get("breathing_difficulty"):
+        parts.append("breathing difficulty")
+    if slots.get("chest_pain"):
+        parts.append("chest pain")
+    if slots.get("fever_temp") is not None:
+        parts.append(f"temperature {slots['fever_temp']}{slots.get('fever_temp_unit') or ''}")
+    return " ".join(parts)
+
+
+def _evidence_in_text(evidence: Optional[str], text: str) -> bool:
+    """True when `evidence` is a real (normalised) substring of `text`."""
+    if not evidence or not evidence.strip():
+        return False
+    ev_norm = normalise_text(evidence)
+    if not ev_norm:
+        return False
+    return ev_norm in normalise_text(text) or evidence.strip() in text
 
 
 # ---------------------------------------------------------------------------
@@ -219,6 +418,22 @@ def get_asked_ids(history: list[dict] | None) -> list[str]:
                     asked.append(bid)
                 break
     return asked
+
+
+def count_asked_id(history: list[dict] | None, qid: str) -> int:
+    """Counts how many times `qid` has been asked in history (for the input-noise
+    symptom-question budget, which allows the clue buttons up to twice)."""
+    kws = _BANK_ID_KEYWORDS.get(qid, [])
+    count = 0
+    for msg in history or []:
+        if msg.get("role") != "assistant":
+            continue
+        t = (msg.get("text") or msg.get("content") or "").lower()
+        if is_bank_question(t) == qid:
+            count += 1
+        elif kws and any(k in t for k in kws):
+            count += 1
+    return count
 
 
 def enforce_question_bank(q_text: str, lang: str = "en", default_id: str = "main_symptom_buttons") -> str:
@@ -366,7 +581,7 @@ def rule_based_extract(text: str, history: list[dict] = None) -> dict:
                 break
 
     # Additional symptoms & complaints
-    if any(re.search(rf"\b{re.escape(w)}\b", norm) for w in ["sir dard", "sar dard", "headache", "migraine"]):
+    if any(re.search(rf"\b{re.escape(w)}\b", norm) for w in ["sir dard", "sar dard", "headache", "migraine", "head hurts", "head pain", "head ache", "sir me dard", "sar me dard", "sir mein dard", "sar mein dard"]):
         if "headache" not in detected_symptoms:
             detected_symptoms.append("headache")
 
@@ -447,17 +662,13 @@ def rule_based_extract(text: str, history: list[dict] = None) -> dict:
     if any(re.search(rf"\b{w}\b", norm) for w in ["pregnant", "pregnancy", "garbh", "garbhvati", "garbhavati", "garbhavastha"]):
         slots["pregnancy"] = True
 
-    # Duration
-    if any(p in norm for p in ["teen din", "3 din", "3 days", "three days"]):
-        slots["duration"] = "3 days"
-    elif any(p in norm for p in ["do din", "2 din", "2 days", "two days"]):
-        slots["duration"] = "2 days"
-    elif any(p in norm for p in ["ek din", "1 din", "1 day", "one day", "kal se", "kal raat se"]):
-        slots["duration"] = "1 day"
-    elif any(p in norm for p in ["aaj se", "today", "subah se"]):
-        slots["duration"] = "today"
-    elif any(p in norm for p in ["hafta", "week", "5 din", "5 days", ">5"]):
-        slots["duration"] = ">5 days"
+    # Duration (number/number-word attached to a time unit only; bare numbers
+    # never create a duration) and temperature (95-108 F / 35-42 C only).
+    slots["duration"] = parse_duration(combined_text)
+    temp = parse_temperature(combined_text)
+    if temp:
+        slots["fever_temp"] = temp[0]
+        slots["fever_temp_unit"] = temp[1]
 
     # Chronic conditions
     conditions = []
@@ -475,14 +686,11 @@ def rule_based_extract(text: str, history: list[dict] = None) -> dict:
     elif slots["patient_relation"] in ["grandmother", "grandfather", "senior", "dada", "dadi"]:
         slots["age_group"] = "senior"
 
-    # Check for explicit age mentions e.g. age 70, "38 saal", "umra 38 sal" (ITRANS)
-    age_match = re.search(
-        r"\b(?:age|umar|umra|saal|sal|varsh|varash)\s*(\d{1,3})\b"
-        r"|\b(\d{1,3})\s*(?:saal|sal|varsh|varash|years?)\b",
-        norm,
-    )
-    if age_match:
-        age_num = int(age_match.group(1) or age_match.group(2))
+    # Check for explicit age mentions e.g. "age 70", "70 saal ke papa",
+    # "38 saal", "umra 38" (ITRANS). Age vs duration is kept apart: "2 saal se
+    # dard" is a duration, never an age.
+    age_num = parse_age(combined_text)
+    if age_num is not None:
         if age_num < 5:
             slots["age_group"] = "child"
         elif age_num >= 65:
@@ -557,9 +765,19 @@ def extract_slots(text: str, history: list[dict] = None) -> dict:
             if groq_result.who_for and rule_slots["patient_relation"] == "self":
                 rule_slots["patient_relation"] = groq_result.who_for.lower()
             if groq_result.age_group and not rule_slots.get("age_group"):
-                rule_slots["age_group"] = groq_result.age_group.lower()
+                # Age is accepted only with a re-validated evidence quote.
+                if _evidence_in_text(groq_result.age_evidence, text) and parse_age(groq_result.age_evidence) is not None:
+                    rule_slots["age_group"] = groq_result.age_group.lower()
             if groq_result.duration and not rule_slots.get("duration"):
-                rule_slots["duration"] = groq_result.duration
+                # Duration must come with an evidence quote that is a substring
+                # of the message and re-parses with the same regex; else drop.
+                if _evidence_in_text(groq_result.duration_evidence, text) and parse_duration(groq_result.duration_evidence) is not None:
+                    rule_slots["duration"] = groq_result.duration
+            if groq_result.fever_temp is not None and rule_slots.get("fever_temp") is None:
+                if _evidence_in_text(groq_result.fever_temp_evidence, text) and parse_temperature(groq_result.fever_temp_evidence) is not None:
+                    rule_slots["fever_temp"] = groq_result.fever_temp
+                    unit = (groq_result.fever_temp_unit or "").strip().upper()
+                    rule_slots["fever_temp_unit"] = unit[:1] if unit[:1] in ("F", "C") else "F"
             if groq_result.unfamiliar_care_type_mapped:
                 rule_slots["unfamiliar_care_type_mapped"] = groq_result.unfamiliar_care_type_mapped
                 rule_slots["unfamiliar_reason"] = groq_result.unfamiliar_reason
@@ -615,9 +833,10 @@ def _select_question_id(slots: dict, history: list[dict] | None, context: dict |
     if slots.get("pregnancy"):
         return None
 
-    # (a) No health information at all -> symptom clue buttons, at most once.
+    # (a) No health information at all -> symptom clue buttons, at most twice
+    # (input-noise budget: two empty attempts, then a low-confidence decision).
     if not has_health_info:
-        return "main_symptom_buttons" if "main_symptom_buttons" not in asked else None
+        return "main_symptom_buttons" if count_asked_id(history, "main_symptom_buttons") < 2 else None
 
     # (b) Sufficiency: symptom + context => decide without asking.
     has_context = bool(

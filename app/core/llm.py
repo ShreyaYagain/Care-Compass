@@ -8,21 +8,26 @@ logger = logging.getLogger(__name__)
 
 T = TypeVar("T", bound=BaseModel)
 
-_GROQ_CLIENT = None
+_GROQ_CLIENTS: dict[float, Any] = {}
 
 
-def get_groq_client():
-    global _GROQ_CLIENT
-    if _GROQ_CLIENT is None:
+def get_groq_client(timeout: float | None = None):
+    """Returns a cached Groq client. `timeout` (seconds) creates/returns a
+    dedicated client, so the screen can run on its own 2.5 s budget while the
+    rest of the app keeps the default LLM_TIMEOUT_S."""
+    timeout = timeout or settings.LLM_TIMEOUT_S
+    client = _GROQ_CLIENTS.get(timeout)
+    if client is None:
         api_key = settings.GROQ_API_KEY.strip() if settings.GROQ_API_KEY else ""
         if api_key:
             try:
                 from groq import Groq
-                _GROQ_CLIENT = Groq(api_key=api_key, timeout=settings.LLM_TIMEOUT_S)
+                client = Groq(api_key=api_key, timeout=timeout)
             except Exception as e:
                 logger.warning(f"Could not initialize Groq client: {e}")
-                _GROQ_CLIENT = None
-    return _GROQ_CLIENT
+                client = None
+        _GROQ_CLIENTS[timeout] = client
+    return client
 
 
 def is_groq_available() -> bool:
@@ -74,18 +79,20 @@ def groq_json(
     user: str,
     schema: Type[T] | None = None,
     model: str | None = None,
+    timeout: float | None = None,
+    retries: int = 1,
 ) -> T | dict | None:
     """
-    Forces JSON output from Groq LLM, validates with Pydantic schema, retries once on error.
+    Forces JSON output from Groq LLM, validates with Pydantic schema.
+    `retries` = extra attempts after the first one (default 1).
     Fallback chain: Groq -> Gemini (if key exists) -> None (rule/regex layer takes over).
     Never crashes.
     """
-    client = get_groq_client()
+    client = get_groq_client(timeout=timeout)
     model_to_use = model or settings.GROQ_MODEL
 
     if client:
-        # Try Groq with 1 retry
-        for attempt in range(2):
+        for attempt in range(retries + 1):
             try:
                 messages = []
                 if system:
@@ -113,7 +120,7 @@ def groq_json(
                     model_to_use = "openai/gpt-oss-120b"
                     continue
                 logger.warning(f"Groq LLM call attempt {attempt + 1} failed: {e}")
-                if attempt == 1:
+                if attempt >= retries:
                     break
 
     # Fallback to Gemini if configured

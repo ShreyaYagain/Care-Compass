@@ -57,7 +57,8 @@ def rules_only(text: str) -> bool:
 
 
 def semantic_only(text: str) -> bool:
-    return len(screen_red_flags(text)) > 0
+    res = screen_red_flags(text)
+    return bool(res.get("flags")) or bool(res.get("combined"))
 
 
 def pipeline_outcome(rules_em: bool, screen_flags: list[str]) -> str:
@@ -107,16 +108,20 @@ def main():
             screen_flags_by_text[t] = screen_red_flags(t)
             time.sleep(0.5)
 
-    pos_sem = ["confirmation" if screen_flags_by_text[r["user_input"]] else "missed" for r in pos]
-    neg_sem = ["confirmation" if screen_flags_by_text[r["user_input"]] else "ok" for r in neg]
+    pos_sem = ["confirmation" if (screen_flags_by_text[r["user_input"]].get("flags") or screen_flags_by_text[r["user_input"]].get("combined")) else "missed" for r in pos]
+    neg_sem = ["confirmation" if (screen_flags_by_text[r["user_input"]].get("flags") or screen_flags_by_text[r["user_input"]].get("combined")) else "ok" for r in neg]
     report_mode("SEMANTIC SCREEN ONLY (confirm-or-skip)", pos_sem, neg_sem)
 
-    pos_full = [pipeline_outcome(rules_only(r["user_input"]), screen_flags_by_text[r["user_input"]]) for r in pos]
-    neg_full = [pipeline_outcome(rules_only(r["user_input"]), screen_flags_by_text[r["user_input"]]) for r in neg]
+    def _screen_signal(t: str) -> list[str]:
+        res = screen_flags_by_text.get(t, {})
+        return list(res.get("flags") or []) + (["combined"] if res.get("combined") else [])
+
+    pos_full = [pipeline_outcome(rules_only(r["user_input"]), _screen_signal(r["user_input"])) for r in pos]
+    neg_full = [pipeline_outcome(rules_only(r["user_input"]), _screen_signal(r["user_input"])) for r in neg]
     report_mode("FULL PIPELINE (rules + semantic + classifier)", pos_full, neg_full)
 
-    missed = [(r["user_input"], screen_flags_by_text[r["user_input"]]) for r in pos
-              if pipeline_outcome(rules_only(r["user_input"]), screen_flags_by_text[r["user_input"]]) == "missed"]
+    missed = [(r["user_input"], _screen_signal(r["user_input"])) for r in pos
+              if pipeline_outcome(rules_only(r["user_input"]), _screen_signal(r["user_input"])) == "missed"]
     print(f"\nFull-pipeline missed positives ({len(missed)}):")
     for text, flags in missed:
         print(f"  - {text!r} (screen flags={flags})")

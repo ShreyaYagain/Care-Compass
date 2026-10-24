@@ -6,7 +6,7 @@ decision. Head-hit + drowsy escalates to emergency_112.
 """
 import unittest
 
-from app.schemas import TriageRequest, Location
+from app.schemas import TriageRequest, Location, ChatMessage
 from app.core.pipeline import run_triage_pipeline
 from app.core.modules import (
     render_module_card,
@@ -151,16 +151,118 @@ class TestInjuryModule(unittest.TestCase):
         self.assertEqual(d_none["urgency"], d_painkiller["urgency"])
         self.assertEqual(d_none["care_type"], d_spray["care_type"])
 
+    def test_bleeding_bone_visible_emergency(self):
+        d = injury_decision({"deformity": "Yes"}, {"bleeding": True})
+        self.assertEqual(d["care_type"], "emergency_112")
+        self.assertIn("severe_bleeding", d["red_flags"])
+
+    def test_fall_type_deferred_not_in_main_card(self):
+        card = render_module_card("injury", "en", {}, "")
+        ids = {f["id"] for f in card["fields"]}
+        self.assertNotIn("fall_type", ids)
+        self.assertIn("pain_level", ids)
+
+    def test_fall_type_deferred_card(self):
+        card = render_module_card("injury", "en", {}, "", deferred=True)
+        self.assertIsNotNone(card)
+        ids = {f["id"] for f in card["fields"]}
+        self.assertEqual(ids, {"fall_type"})
+        opts = card["fields"][0]["options"]
+        self.assertEqual(opts, ["Ground level", "From height", "Road accident"])
+
+    def test_undecided_asks_fall_type(self):
+        d = injury_decision(
+            {"pain_level": 5, "swelling": "No", "weight_bearing": "With pain",
+             "deformity": "No", "neuro_vascular": "No", "head_hit": "No"}, {})
+        self.assertTrue(d.get("ask_fall_type"))
+        self.assertIsNone(d["care_type"])
+
+    def test_fall_from_height_paramedic(self):
+        d = injury_decision(
+            {"pain_level": 5, "fall_type": "From height", "swelling": "No",
+             "weight_bearing": "With pain", "deformity": "No",
+             "neuro_vascular": "No", "head_hit": "No"}, {})
+        self.assertEqual(d["care_type"], "paramedic_home_visit")
+        self.assertEqual(d["urgency"], "same_day")
+
+    def test_fall_ground_level_teleconsultation(self):
+        d = injury_decision(
+            {"pain_level": 5, "fall_type": "Ground level", "swelling": "No",
+             "weight_bearing": "With pain", "deformity": "No",
+             "neuro_vascular": "No", "head_hit": "No"}, {})
+        self.assertEqual(d["care_type"], "teleconsultation")
+
     def test_pipeline_module_answers_decision(self):
-        # Collect the card, then answer it -> a decision with caregivers.
+        # Moderate pain + swelling -> paramedic home visit (rule 4), with
+        # caregivers attached and no further question.
         resp = _triage("I fell down and my leg hurts")
         self.assertIsNotNone(resp.module_card)
-        answers = {"pain_level": 8, "deformity": "Yes", "weight_bearing": "Not at all",
+        answers = {"pain_level": 6, "deformity": "No", "weight_bearing": "With pain",
                    "swelling": "Yes", "neuro_vascular": "No", "head_hit": "No", "meds_used": "None"}
         resp2 = _triage("I fell down and my leg hurts", module_id="injury", module_answers=answers)
         self.assertEqual(resp2.care_type, "paramedic_home_visit")
         self.assertEqual(resp2.urgency, "same_day")
         self.assertIsNone(resp2.follow_up_question)
+
+    def test_pipeline_pain8_deformity_classifier_gate(self):
+        # Pain 8-10 with deformity / no weight bearing: the calibrated
+        # classifier P(emergency_112) >= 0.50 escalates to emergency_112.
+        answers = {"pain_level": 8, "deformity": "Yes", "weight_bearing": "Not at all",
+                   "swelling": "Yes", "neuro_vascular": "No", "head_hit": "No", "meds_used": "None"}
+        resp = _triage("I fell down and my leg hurts", module_id="injury", module_answers=answers)
+        self.assertEqual(resp.care_type, "emergency_112")
+        self.assertEqual(resp.urgency, "emergency")
+
+    def test_pipeline_undecided_asks_fall_type_card(self):
+        # Borderline case: one targeted second card (fall type) is returned.
+        answers = {"pain_level": 5, "deformity": "No", "weight_bearing": "With pain",
+                   "swelling": "No", "neuro_vascular": "No", "head_hit": "No", "meds_used": "None"}
+        resp = _triage("I fell down and my leg hurts", module_id="injury", module_answers=answers)
+        self.assertIsNotNone(resp.module_card)
+        self.assertIsNone(resp.care_type)
+        ids = {f["id"] for f in resp.module_card["fields"]}
+        self.assertEqual(ids, {"fall_type"})
+
+    def test_pipeline_fall_type_from_height_paramedic(self):
+        answers = {"pain_level": 5, "deformity": "No", "weight_bearing": "With pain",
+                   "swelling": "No", "neuro_vascular": "No", "head_hit": "No",
+                   "meds_used": "None", "fall_type": "From height"}
+        resp = _triage("I fell down and my leg hurts", module_id="injury", module_answers=answers)
+        self.assertEqual(resp.care_type, "paramedic_home_visit")
+        self.assertEqual(resp.urgency, "same_day")
+
+    def test_pipeline_fall_type_ground_teleconsultation(self):
+        answers = {"pain_level": 5, "deformity": "No", "weight_bearing": "With pain",
+                   "swelling": "No", "neuro_vascular": "No", "head_hit": "No",
+                   "meds_used": "None", "fall_type": "Ground level"}
+        resp = _triage("I fell down and my leg hurts", module_id="injury", module_answers=answers)
+        self.assertEqual(resp.care_type, "teleconsultation")
+
+    def test_pipeline_fall_type_cap_two_turns(self):
+        # With two assistant turns already on record, no third card is asked:
+        # the pipeline decides directly (teleconsultation, safest first step).
+        history = [
+            ChatMessage(role="assistant", text="Chot / girna"),
+            ChatMessage(role="assistant", text="Aap kaise gire?"),
+        ]
+        answers = {"pain_level": 5, "deformity": "No", "weight_bearing": "With pain",
+                   "swelling": "No", "neuro_vascular": "No", "head_hit": "No", "meds_used": "None"}
+        resp = _triage("I fell down and my leg hurts", history=history,
+                       module_id="injury", module_answers=answers)
+        self.assertIsNone(resp.module_card)
+        self.assertIsNotNone(resp.care_type)
+        self.assertEqual(resp.care_type, "teleconsultation")
+
+    def test_pipeline_meds_never_changes_decision(self):
+        # Same input, different field 7 -> identical care_type.
+        base = {"pain_level": 6, "deformity": "No", "weight_bearing": "With pain",
+                "swelling": "Yes", "neuro_vascular": "No", "head_hit": "No"}
+        types = set()
+        for meds in ("None", "Spray or balm", "Painkiller", "Other"):
+            answers = dict(base, meds_used=meds)
+            resp = _triage("I fell down and my leg hurts", module_id="injury", module_answers=answers)
+            types.add((resp.care_type, resp.urgency))
+        self.assertEqual(len(types), 1)
 
     def test_pipeline_head_hit_emergency(self):
         answers = {"pain_level": 5, "head_hit": "Yes"}

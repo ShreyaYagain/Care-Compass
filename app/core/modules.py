@@ -123,11 +123,14 @@ def render_module_card(
     slots: dict,
     text: str = "",
     answered: list[str] | None = None,
+    deferred: bool = False,
 ) -> Optional[dict]:
     """Builds the card definition: only the still-unanswered fields, localised.
 
-    Returns None when the module id is unknown or every field is already
-    answered (then the caller decides directly).
+    When `deferred=True` only the module's deferred fields (e.g. the single
+    targeted "how did you fall" question) are rendered, for the one extra
+    follow-up card allowed after the main card. Returns None when the module id
+    is unknown or every requested field is already answered.
     """
     modules = (load_modules().get("modules") or {})
     m = modules.get(module_id)
@@ -141,6 +144,9 @@ def render_module_card(
     fields_out = []
     for field in m.get("fields", []) or []:
         fid = field.get("id")
+        is_deferred = bool(field.get("deferred", False))
+        if is_deferred != deferred:
+            continue
         already = _is_filled(slots, field, answered_set) or _answer_evidence_in_text(field, norm)
         if already:
             continue
@@ -176,21 +182,37 @@ def render_module_card(
 # Injury / fall deterministic decision rules
 # ---------------------------------------------------------------------------
 
-_WEIGHT_NOT_AT_ALL = {"Not at all", "Bilkul nahi"}
+_WEIGHT_NOT_AT_ALL = {"Not at all", "Bilkul nahi", "बिल्कुल नहीं"}
+_FALL_HIGH = {"From height", "Road accident", "ऊँचाई से", "सड़क दुर्घटना"}
+_YES = {"Yes", "हाँ", "Haan", "haan"}
 
 
-def injury_decision(answers: dict, slots: dict) -> dict:
+def _yes(v) -> bool:
+    return str(v or "") in _YES
+
+
+def injury_decision(answers: dict, slots: dict, classifier_fn=None) -> dict:
     """Deterministic decision for the injury module. Never diagnoses.
 
-    Returns {"care_type", "urgency", "red_flags", "reason"}.
+    `classifier_fn(answers, slots)` optionally returns a
+    (care_type, urgency, probs, confidence) tuple; its calibrated
+    P(emergency_112) is the ONLY thing that may escalate a high-risk limb
+    injury from paramedic_home_visit to emergency_112 (per policy:
+    P >= 0.50). Field 7 (meds_used) is never part of the decision.
+
+    Returns {"care_type", "urgency", "red_flags", "reason"} or, when the
+    case is still undecided and the fall type could change the route,
+    {"ask_fall_type": True, ...} (the caller may then ask the one allowed
+    targeted "how did you fall" question).
     """
     pain = _as_int(answers.get("pain_level"))
-    swelling = answers.get("swelling") == "Yes"
-    weight = answers.get("weight_bearing", "")
-    deformity = answers.get("deformity") == "Yes"
-    neuro = answers.get("neuro_vascular") == "Yes"
-    head_hit = answers.get("head_hit") == "Yes"
-    fall_type = answers.get("fall_type", "")
+    swelling = _yes(answers.get("swelling"))
+    weight = str(answers.get("weight_bearing", "") or "")
+    deformity = _yes(answers.get("deformity"))
+    neuro = _yes(answers.get("neuro_vascular"))
+    head_hit = _yes(answers.get("head_hit"))
+    fall_type = str(answers.get("fall_type", "") or "")
+    bleeding = slots.get("bleeding") is True or _yes(answers.get("bleeding"))
 
     is_elderly = (
         slots.get("age_group") == "senior"
@@ -198,6 +220,17 @@ def injury_decision(answers: dict, slots: dict) -> dict:
     )
 
     hospital_line = ("If it worsens, go to hospital or call 112. This could need an X-ray; a doctor should check it.")
+    summary = f"Pain {pain}/10" if pain >= 0 else ""
+    if swelling:
+        summary += ", swelling"
+    if weight in _WEIGHT_NOT_AT_ALL:
+        summary += ", cannot bear weight"
+    if weight == "With pain":
+        summary += ", weight bearing with pain"
+    if neuro:
+        summary += ", numb/cold limb"
+    if fall_type:
+        summary += f", fall: {fall_type}"
 
     # 1. Head hit + drowsy/faint -> unconsciousness -> emergency_112
     if head_hit:
@@ -208,26 +241,55 @@ def injury_decision(answers: dict, slots: dict) -> dict:
             "reason": "Head injury after a fall can be serious; emergency services (112) are recommended immediately.",
         }
 
-    # 2. High-risk limb injury -> paramedic_home_visit (same_day) + hospital line
+    # 2. Heavy bleeding / bone visible with bleeding -> severe_bleeding -> emergency_112
+    if bleeding:
+        return {
+            "care_type": "emergency_112",
+            "urgency": "emergency",
+            "red_flags": ["severe_bleeding"],
+            "reason": "Heavy bleeding after an injury needs immediate emergency care; call 112 now.",
+        }
+
+    fall_high = fall_type in _FALL_HIGH
+
+    # 3. High-risk limb injury: from height / road accident, numbness/cold/pale
+    # limb, pain 8-10 with deformity or no weight bearing, or deformity / no
+    # weight bearing at any pain >= 4 -> paramedic_home_visit (same_day), with
+    # emergency_112 ONLY when the calibrated classifier says P(emergency_112)
+    # >= 0.50 or a red flag is present.
     high_risk_limb = (
-        (pain >= 8 and (deformity or weight in _WEIGHT_NOT_AT_ALL))
+        fall_high
         or neuro
-        or fall_type in ("From height", "Road accident")
+        or (pain >= 8 and (deformity or weight in _WEIGHT_NOT_AT_ALL))
+        or (pain >= 4 and (deformity or weight in _WEIGHT_NOT_AT_ALL))
     )
     if high_risk_limb:
+        if classifier_fn is not None:
+            try:
+                out = classifier_fn(answers, slots)
+                if out and len(out) >= 3:
+                    probs = out[2] or {}
+                    p_emerg = float(probs.get("emergency_112", 0.0) or 0.0)
+                    if p_emerg >= 0.50:
+                        return {
+                            "care_type": "emergency_112",
+                            "urgency": "emergency",
+                            "red_flags": [],
+                            "reason": (
+                                f"{summary} and the triage model flags high risk, so emergency "
+                                f"services (112) are recommended. {hospital_line}"
+                            ),
+                        }
+            except Exception:
+                pass
         return {
             "care_type": "paramedic_home_visit",
             "urgency": "same_day",
             "red_flags": [],
-            "reason": (
-                f"Pain {pain}/10" + (", swelling" if swelling else "") +
-                (", cannot bear weight" if weight in _WEIGHT_NOT_AT_ALL else "") +
-                (", numbness/cold limb" if neuro else "") +
-                f", so a medic home visit is recommended. {hospital_line}"
-            ),
+            "reason": f"{summary}, so a medic home visit is recommended. {hospital_line}",
         }
 
-    # 3. Elderly hip/thigh after fall -> same_day minimum
+    # 4. Elderly hip/thigh after fall -> same_day minimum
     if is_elderly and pain >= 4:
         return {
             "care_type": "paramedic_home_visit",
@@ -236,21 +298,28 @@ def injury_decision(answers: dict, slots: dict) -> dict:
             "reason": f"Elderly patient with hip/thigh pain after a fall: a same-day medic home visit is recommended. {hospital_line}",
         }
 
-    # 4. Moderate pain + swelling, some weight bearing -> paramedic or teleconsultation
+    # 5. Moderate pain + swelling, some weight bearing -> paramedic home visit
     if 4 <= pain <= 7 and swelling:
         return {
             "care_type": "paramedic_home_visit",
             "urgency": "same_day",
             "red_flags": [],
-            "reason": f"Pain {pain}/10 with swelling and some weight bearing, so a medic home visit is recommended; this could need an X-ray. {hospital_line}",
+            "reason": f"{summary} and some weight bearing, so a medic home visit is recommended; this could need an X-ray. {hospital_line}",
         }
 
-    # 5. Mild pain, no swelling, normal movement -> teleconsultation
+    # 6. Still undecided and the fall type could change the route (ground level
+    # -> teleconsultation, from height / road accident -> medic home visit):
+    # allow ONE targeted "how did you fall" question.
+    if not fall_type and pain >= 4:
+        return {"ask_fall_type": True, "care_type": None, "urgency": None, "red_flags": [], "reason": ""}
+
+    # 7. Mild pain, no swelling, normal movement -> teleconsultation
+    reason = f"{summary}; normal movement, so a virtual doctor consultation is recommended to check whether an X-ray is needed."
     return {
         "care_type": "teleconsultation",
         "urgency": "same_day",
         "red_flags": [],
-        "reason": f"Pain {pain}/10 with normal movement, so a virtual doctor consultation is recommended to check whether an X-ray is needed.",
+        "reason": reason,
     }
 
 
@@ -265,7 +334,7 @@ def merge_answers_into_slots(slots: dict, answers: dict) -> None:
     """Merges module answers into the intake slots for non-injury modules."""
     if not answers:
         return
-    if "pain_level" in answers and "severity" not in slots:
+    if "pain_level" in answers and not slots.get("severity"):
         try:
             p = int(answers["pain_level"])
             slots["severity"] = "severe" if p >= 7 else ("moderate" if p >= 4 else "mild")

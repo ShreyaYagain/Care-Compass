@@ -87,6 +87,18 @@ modules:
           - {en: "Painkiller", hi: "दर्द की दवा", hinglish: "Painkiller"}
           - {en: "Other", hi: "अन्य", hinglish: "Other"}
         evidence: []
+      - id: fall_type
+        type: choice
+        slot: fall_type
+        deferred: true
+        question_en: "How did you fall?"
+        question_hi: "आप कैसे गिरे?"
+        question_hinglish: "Aap kaise gire?"
+        options:
+          - {en: "Ground level", hi: "ज़मीन से", hinglish: "Ground level"}
+          - {en: "From height", hi: "ऊँचाई से", hinglish: "From height"}
+          - {en: "Road accident", hi: "सड़क दुर्घटना", hinglish: "Road accident"}
+        evidence: []
 
   fever:
     label_en: "Fever"

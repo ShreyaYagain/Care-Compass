@@ -46,7 +46,7 @@ from app.core.modules import (
     llm_select_module,
     render_module_card,
     injury_decision,
-    summarize_answers,
+    merge_answers_into_slots,
 )
 from app.core.synthetic import secondary_doctor_options
 from app.core.context import get_context, season_display
@@ -164,6 +164,14 @@ def _context_summary_line(context: dict, lang: str) -> str:
     base = f"Right now: {facts_str}" if facts else "Local weather is unavailable"
     extra = f", {season} season, {t_str}" if (season or t_str) else ""
     return f"{base}{extra}."
+
+
+def _injury_classifier(answers: dict, slots: dict):
+    """Classifier view of an injury case for the calibrated P(emergency_112)
+    gate: module answers folded into slots -> canonical classifier text."""
+    merged = dict(slots)
+    merge_answers_into_slots(merged, answers)
+    return predict_triage(merged, build_classifier_text(merged))
 
 
 def run_triage_pipeline(
@@ -582,7 +590,7 @@ def run_triage_pipeline(
                         logger.warning(f"Failed to write audit log: {e}")
                 return resp
 
-    # 2.4b Combined failsafe question: Gemini down + local fallback empty + the
+    # 2.4b Combined failsafe question: LLM down + local fallback empty + the
     # keyword rules found NO red flag + the message contains a symptom. Ask
     # ONE combined screening question from the closed bank — unless a red-flag
     # screening question was already answered this session. Never a silent
@@ -619,7 +627,7 @@ def run_triage_pipeline(
                     "output_violations": output_violations,
                     "template_replaced": template_replaced,
                 },
-                "reasons": ["Semantic screen unavailable (Gemini down after retry, local fallback empty); asking combined failsafe question"],
+                "reasons": ["Semantic screen unavailable (LLM down after retry, local fallback empty); asking combined failsafe question"],
             }
             resp = TriageResponse(
                 follow_up_question=q_text,
@@ -671,10 +679,34 @@ def run_triage_pipeline(
     module_id = request.module_id or llm_select_module(norm_text, slots)
 
     if module_id and request.module_answers is not None and module_id == "injury":
-        decision = injury_decision(request.module_answers, slots)
+        decision = injury_decision(request.module_answers, slots, classifier_fn=_injury_classifier)
+
+        # One targeted question at most ("how did you fall"), only when still
+        # undecided, within the absolute 2-turn cap.
+        if decision.get("ask_fall_type"):
+            if history_turns < settings.MAX_FOLLOWUPS:
+                fall_card = render_module_card(module_id, lang, slots, norm_text, deferred=True)
+                if fall_card:
+                    guard_q = output_guard(fall_card["label"], lang=lang, is_emergency=False, care_type="teleconsultation", field_name="follow_up_question")
+                    return TriageResponse(
+                        follow_up_question=guard_q["safe_text"], follow_up_options=[],
+                        care_type=None, urgency=None, red_flags=[], reasoning=None,
+                        matched_caregivers=[], emergency_steps=[], context_used=None,
+                        module_card=fall_card,
+                        debug={"module_id": module_id, "module_answers": request.module_answers} if debug else None,
+                    )
+            # Turn budget spent: decide directly with the safest first step.
+            decision = {
+                "care_type": "teleconsultation",
+                "urgency": "same_day",
+                "red_flags": [],
+                "reason": "We could not be sure about the fall, so a virtual doctor consultation is the safest first step to check whether an X-ray is needed.",
+            }
+
         dc, du, df = decision["care_type"], decision["urgency"], decision["red_flags"]
-        module_summary = summarize_answers(request.module_answers)
-        module_reason = f"{module_summary}. {decision['reason']}"
+        meds = request.module_answers.get("meds_used")
+        meds_line = f" You used: {meds}." if meds and str(meds) != "None" else ""
+        module_reason = f"{decision['reason']}{meds_line}"
 
         if dc == "emergency_112":
             guard_res = output_guard(module_reason, lang=lang, is_emergency=True, care_type="emergency_112", field_name="reasoning")

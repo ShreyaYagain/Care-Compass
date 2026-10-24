@@ -65,3 +65,32 @@ powers a demo-only "Other ways to see a doctor" secondary list (hospital OPD, ho
 consult, virtual) with `venue`, `facility_name`, and `department`. It is gated behind
 `USE_SYNTHETIC_CAREGIVERS` (default off for scoring) and never changes the official
 five care-type labels or the official caregiver matching.
+
+### Symptom-specific follow-up modules (closed question bank)
+A closed bank of follow-up modules (`app/data/modules.yaml`) is selected by the
+extracted symptom — injury/fall, fever, abdominal pain, cough/breathing. Each
+module is ONE card (buttons/slider, localised en/hi/hinglish) that counts as a
+single turn; fields already stated in the message are prefilled and hidden, and
+the LLM may only pick the module id and the still-unanswered fields — it never
+writes free-form questions. The injury module decides deterministically
+(head hit -> `emergency_112`; heavy bleeding -> `severe_bleeding` ->
+`emergency_112`; fall from height / road accident / pain 8-10 with deformity or
+no weight bearing / numb-cold limb -> `paramedic_home_visit` (same_day), with
+`emergency_112` only when the calibrated classifier P(emergency_112) >= 0.50;
+elderly hip/thigh -> same_day minimum; pain 4-7 with swelling -> medic home
+visit; mild -> teleconsultation). It never diagnoses ("this could need an
+X-ray; a doctor should check it") and the answers are quoted in the
+explanation. One targeted "how did you fall" question is allowed at most, only
+when still undecided, within the absolute 2-turn cap. Field 7 (meds used) is
+informational only: shown on the booking summary, never part of the decision,
+and no medicine or dose is ever suggested.
+
+### Android screens
+The Android app renders the module card (0-10 slider with mild/moderate/severe
+bands, answer chips, optional meds chips marked "Doctor info only"), the
+targeted fall question as a second card, the doctor summary on the booking
+confirmation screen, and the demo "Other ways to see a doctor" list after the
+triage result. Screenshots: `docs/android_module_card.png`,
+`docs/android_module_card_meds.png`, `docs/android_fall_card.png`,
+`docs/android_result_screen.png`, `docs/android_secondary_doctors.png`,
+`docs/android_booking_summary.png`.

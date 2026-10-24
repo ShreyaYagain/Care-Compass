@@ -126,8 +126,14 @@ def build_reasoning(
     if duration:
         dur_label = {
             "en": f" for {duration}",
-            "hinglish": f" {duration} se",
-            "hi": f" {duration} से",
+            "hinglish": {
+                "today": " aaj se", "1 day": " ek din se", "2 days": " do din se",
+                "3 days": " teen din se", ">5 days": " 5 din se zyada",
+            }.get(str(duration), f" {duration} se"),
+            "hi": {
+                "today": " आज से", "1 day": " एक दिन से", "2 days": " दो दिन से",
+                "3 days": " तीन दिन से", ">5 days": " पाँच दिन से अधिक",
+            }.get(str(duration), f" {duration} से"),
         }[lang]
         mention = f"{mention}{dur_label}"
 

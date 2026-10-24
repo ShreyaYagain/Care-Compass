@@ -28,6 +28,16 @@ def parse_client_time(client_time_str: str | None) -> datetime:
     return datetime.now(kolkata_tz)
 
 
+def season_display(season: str) -> str:
+    """Human-readable season name (no underscores)."""
+    return {
+        "winter": "Winter",
+        "summer": "Summer",
+        "monsoon": "Monsoon",
+        "post_monsoon": "Post-monsoon",
+    }.get(season, str(season).replace("_", " ").capitalize())
+
+
 def get_north_india_season(dt: datetime) -> str:
     """
     Determines season for North India from month & day:
@@ -184,7 +194,7 @@ def get_context(
     context["tags"] = sorted(list(set(tags)))
 
     # Human-readable summary
-    summary_parts = [season.capitalize()]
+    summary_parts = [season_display(season)]
     if context["temperature_c"] is not None:
         summary_parts.append(f"{round(context['temperature_c'])}°C")
     if "hot_humid" in tags:

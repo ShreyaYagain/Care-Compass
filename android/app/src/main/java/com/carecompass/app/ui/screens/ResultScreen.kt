@@ -132,7 +132,7 @@ fun ResultScreen(
 
         if (caregivers.isEmpty()) {
             Text(
-                text = "Finding available caregivers nearby...",
+                text = "No caregivers available right now. Try a teleconsult.",
                 fontSize = 16.sp,
                 color = Color.Gray,
                 modifier = Modifier.padding(vertical = 16.dp)

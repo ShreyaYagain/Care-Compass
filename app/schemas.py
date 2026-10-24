@@ -134,6 +134,7 @@ class TriageResponse(BaseModel):
     confidence: Optional[float] = None
     matched_caregivers: list[MatchedCaregiver] = []
     emergency_steps: list[str] = []
+    debug: Optional[dict[str, Any]] = None
 
 
 # --- /match ---

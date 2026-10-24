@@ -38,24 +38,76 @@ def default_slots() -> dict:
 def rule_based_extract(text: str, history: list[dict] = None) -> dict:
     """
     Deterministic rule/regex slot extraction fallback.
+    Accurately handles multi-turn conversation and follow-up answers (Yes/No/Not sure).
     """
     _load_symptoms_config()
     slots = default_slots()
 
-    # Combine current text with conversation history
-    full_conversation = text
+    # Identify previous assistant questions and corresponding user answers
+    bare_answers = {
+        "no", "nahi", "nahin", "na", "nope", "n",
+        "yes", "haan", "ha", "yup", "y", "ji haan",
+        "not sure", "pata nahi", "unsure", "malum nahi", "samajh nahi"
+    }
+
+    if history:
+        for i, msg in enumerate(history):
+            if msg.get("role") == "assistant":
+                q_text = (msg.get("text") or msg.get("content") or "").lower()
+                # Find subsequent user answer
+                ans_text = ""
+                for j in range(i + 1, len(history)):
+                    if history[j].get("role") == "user":
+                        ans_text = (history[j].get("text") or history[j].get("content") or "").lower()
+                        break
+                if not ans_text:
+                    ans_text = text.lower()
+
+                ans_norm = normalise_text(ans_text)
+                is_neg = any(w in ans_norm.split() for w in ["no", "nahi", "nahin", "na"]) or "dikkat nahi" in ans_norm or "dard nahi" in ans_norm
+                is_pos = (any(w in ans_norm.split() for w in ["yes", "haan", "ha", "ji haan"]) or "dikkat hai" in ans_norm or "dard hai" in ans_norm) and not is_neg
+                is_unsure = any(w in ans_norm for w in ["not sure", "pata nahi", "malum nahi", "unsure"])
+
+                # Breathing follow-up
+                if any(w in q_text for w in ["saans", "breathing", "breath"]):
+                    if is_pos:
+                        slots["breathing_difficulty"] = True
+                    elif is_neg:
+                        slots["breathing_difficulty"] = False
+                    elif is_unsure:
+                        slots["breathing_difficulty"] = None
+
+                # Chest pain follow-up
+                if any(w in q_text for w in ["chest", "seene"]):
+                    if is_pos:
+                        slots["chest_pain"] = True
+                    elif is_neg:
+                        slots["chest_pain"] = False
+                    elif is_unsure:
+                        slots["chest_pain"] = None
+
+    # Collect substantive user utterances (ignoring bare follow-up replies like "No")
+    user_texts = []
     if history:
         for msg in history:
-            full_conversation += " " + (msg.get("text") or "")
+            if msg.get("role") == "user":
+                t = (msg.get("text") or msg.get("content") or "").strip()
+                if normalise_text(t) not in bare_answers and len(t) > 0:
+                    user_texts.append(t)
 
-    norm = normalise_text(full_conversation)
+    norm_curr = normalise_text(text).strip()
+    if norm_curr not in bare_answers and len(norm_curr) > 0:
+        user_texts.append(text)
+
+    combined_text = " ".join(user_texts)
+    norm = normalise_text(combined_text)
 
     # 1. Relation detection
     relations = {
         "papa": "father", "pitaji": "father", "father": "father",
         "mummy": "mother", "mataji": "mother", "maa": "mother", "mother": "mother",
         "dadi": "grandmother", "nani": "grandmother", "dada": "grandfather",
-        "bachha": "child", "beta": "child", "beti": "child", "baby": "child",
+        "bachha": "child", "bachhe": "child", "beta": "child", "beti": "child", "baby": "child", "child": "child",
         "patni": "wife", "wife": "wife", "pati": "husband", "husband": "husband"
     }
     for word, rel in relations.items():
@@ -63,16 +115,16 @@ def rule_based_extract(text: str, history: list[dict] = None) -> dict:
             slots["patient_relation"] = rel
             break
 
-    # 2. Symptom discovery
+    # 2. Symptom discovery from user messages
     symptoms_list = _SYMPTOMS_CONFIG.get("symptoms_list", {})
     detected_symptoms = []
     for sym_name, sym_info in symptoms_list.items():
         syns = sym_info.get("synonyms", [])
         for syn in syns:
             syn_norm = normalise_text(syn)
-            if syn_norm in norm:
-                # Check negation
-                if is_phrase_negated(syn, full_conversation):
+            if re.search(rf"\b{re.escape(syn_norm)}\b", norm):
+                # Check negation in combined user utterances
+                if is_phrase_negated(syn, combined_text):
                     if sym_name == "breathlessness":
                         slots["breathing_difficulty"] = False
                     elif sym_name == "chest_pain":
@@ -86,34 +138,55 @@ def rule_based_extract(text: str, history: list[dict] = None) -> dict:
                         slots["chest_pain"] = True
                 break
 
+    # Additional common symptom keywords with word boundary matching
+    if any(re.search(rf"\b{re.escape(w)}\b", norm) for w in ["sir dard", "sar dard", "headache", "migraine"]):
+        if "headache" not in detected_symptoms:
+            detected_symptoms.append("headache")
+
+    if any(re.search(rf"\b{re.escape(w)}\b", norm) for w in ["pet dard", "pet me dard", "pet mein dard", "stomach pain", "stomach ache", "abdominal pain", "abdomen pain", "pet kharab"]):
+        if "stomach_pain" not in detected_symptoms:
+            detected_symptoms.append("stomach_pain")
+
     slots["symptoms"] = detected_symptoms
 
     # 3. Direct checks for breathing & chest pain if not explicitly set
     if slots["breathing_difficulty"] is None:
-        if any(w in norm for w in ["breathing", "saans", "sans"]):
-            if is_phrase_negated("saans", full_conversation) or is_phrase_negated("breathing", full_conversation):
+        if any(re.search(rf"\b{w}\b", norm) for w in ["breathing", "saans", "sans"]):
+            if is_phrase_negated("saans", combined_text) or is_phrase_negated("breathing", combined_text):
                 slots["breathing_difficulty"] = False
             elif any(w in norm for w in ["dikkat", "takleef", "difficulty", "shortness"]):
                 slots["breathing_difficulty"] = True
 
     if slots["chest_pain"] is None:
-        if any(w in norm for w in ["chest pain", "seene me dard"]):
-            if is_phrase_negated("chest pain", full_conversation) or is_phrase_negated("seene me dard", full_conversation):
+        if any(w in norm for w in ["chest pain", "seene me dard", "seene mein dard"]):
+            if is_phrase_negated("chest pain", combined_text) or is_phrase_negated("seene", combined_text):
                 slots["chest_pain"] = False
             else:
                 slots["chest_pain"] = True
 
-    # 4. Duration
-    if any(p in norm for p in ["do din", "2 din", "2 days", "two days"]):
+    # 4. Severity detection
+    if any(re.search(rf"\b{w}\b", norm) for w in ["halka", "mild", "thoda", "kam"]):
+        slots["severity"] = "mild"
+    elif any(re.search(rf"\b{w}\b", norm) for w in ["acute", "tez", "severe", "bahut zyada", "unbearable"]):
+        slots["severity"] = "severe"
+
+    # Pregnancy detection
+    if any(re.search(rf"\b{w}\b", norm) for w in ["pregnant", "pregnancy", "garbh", "garbhvati"]):
+        slots["pregnancy"] = True
+
+    # 5. Duration
+    if any(p in norm for p in ["teen din", "3 din", "3 days", "three days"]):
+        slots["duration"] = "3 days"
+    elif any(p in norm for p in ["do din", "2 din", "2 days", "two days"]):
         slots["duration"] = "2 days"
     elif any(p in norm for p in ["ek din", "1 din", "1 day", "one day", "kal se"]):
         slots["duration"] = "1 day"
     elif any(p in norm for p in ["aaj se", "today", "subah se"]):
         slots["duration"] = "today"
-    elif any(p in norm for p in ["hafta", "week", "5 din", "5 days"]):
+    elif any(p in norm for p in ["hafta", "week", "5 din", "5 days", ">5"]):
         slots["duration"] = ">5 days"
 
-    # 5. Chronic conditions
+    # 6. Chronic conditions
     conditions = []
     if "diabetes" in norm or "sugar" in norm:
         conditions.append("diabetes")
@@ -123,7 +196,7 @@ def rule_based_extract(text: str, history: list[dict] = None) -> dict:
         conditions.append("asthma")
     slots["chronic_conditions"] = conditions
 
-    # 6. Age group
+    # 7. Age group
     if slots["patient_relation"] in ["child", "baby"]:
         slots["age_group"] = "child"
     elif slots["patient_relation"] in ["grandmother", "grandfather"]:
@@ -167,28 +240,30 @@ def needs_more_info(slots: dict, history_turns: int) -> bool:
     """
     Check if we need to ask follow-up questions.
     Max 4 turns. Prefer 2.
-    Ask if safety-critical slots are unknown when related symptoms (fever, cough, chest, weakness) exist.
+    Rule G: Empty or very short input (< 2 meaningful words, or empty, or no symptoms) -> ask to describe the problem.
     """
     if history_turns >= settings.MAX_FOLLOWUPS:
         return False
 
     symptoms = slots.get("symptoms", [])
 
-    # If nothing has been extracted at all, we definitely need more info
-    if not symptoms and not slots.get("duration"):
+    # Rule G: If no symptoms extracted or vague/empty input, ask for main symptom
+    if not symptoms:
         return True
 
-    # If patient has respiratory or chest symptoms but breathing_difficulty is not known
-    if any(s in symptoms for s in ["fever", "cough", "breathlessness"]) and slots.get("breathing_difficulty") is None:
-        if history_turns < 2:
-            return True
+    # If single isolated symptom without duration and without patient relation / severity
+    # on the first turn, ask clarifying question (e.g. "fever" alone, or "papa ko bukhar hai" without duration)
+    if (
+        history_turns == 0
+        and len(symptoms) == 1
+        and not slots.get("duration")
+        and not slots.get("severity")
+        and slots.get("breathing_difficulty") is None
+    ):
+        return True
 
-    # If patient has chest discomfort or pain, but chest_pain clarity is not known
+    # If chest pain specifically mentioned but clarity is unknown
     if "chest_pain" in symptoms and slots.get("chest_pain") is None:
-        return True
-
-    # If patient is elderly or child with fever and duration is unknown
-    if "fever" in symptoms and slots.get("duration") is None and history_turns == 0:
         return True
 
     return False
@@ -197,24 +272,32 @@ def needs_more_info(slots: dict, history_turns: int) -> bool:
 def select_follow_up_question(slots: dict, lang: str = "en") -> tuple[str, list[str]]:
     """
     Select follow-up question based on safety priority from symptoms.yaml.
+    Rule G: Empty/vague input returns "What is the problem? Please tell us the main symptom."
     """
     _load_symptoms_config()
     slots_config = _SYMPTOMS_CONFIG.get("slots", {})
 
-    target_lang = "hinglish" if lang in ["hinglish", "hi"] else "en"
-    if lang == "hi":
-        target_lang = "hi"
+    target_lang = "hi" if lang == "hi" else ("hinglish" if lang == "hinglish" else "en")
+    symptoms = slots.get("symptoms", [])
 
-    # Prioritize unanswered safety-critical slots
-    # 1. Breathing difficulty
-    if slots.get("breathing_difficulty") is None and any(s in slots.get("symptoms", []) for s in ["cough", "fever", "breathlessness"]):
+    # Rule G: Empty or no symptoms
+    if not symptoms:
+        if lang == "hi":
+            return "क्या परेशानी है? कृपया हमें मुख्य लक्षण बताएं।", ["बुखार", "खांसी", "सिर दर्द", "पेट दर्द", "अन्य"]
+        elif lang == "hinglish":
+            return "Kya pareshani hai? Kripya mukhya lakshan batayein.", ["Fever", "Cough", "Headache", "Stomach pain", "Other"]
+        else:
+            return "What is the problem? Please tell us the main symptom.", ["Fever", "Cough", "Headache", "Stomach pain", "Other"]
+
+    # 1. Breathing difficulty if respiratory symptoms present
+    if slots.get("breathing_difficulty") is None and any(s in symptoms for s in ["cough", "fever", "breathlessness"]):
         cfg = slots_config.get("breathing_difficulty", {})
         q = cfg.get("question", {}).get(target_lang, cfg.get("question", {}).get("en", "Is there any difficulty in breathing?"))
         opts = cfg.get("options", ["Yes", "No", "Not sure"])
         return q, opts
 
-    # 2. Chest pain
-    if slots.get("chest_pain") is None:
+    # 2. Chest pain ONLY if chest_pain was mentioned
+    if "chest_pain" in symptoms and slots.get("chest_pain") is None:
         cfg = slots_config.get("chest_pain", {})
         q = cfg.get("question", {}).get(target_lang, cfg.get("question", {}).get("en", "Is the patient experiencing any chest pain?"))
         opts = cfg.get("options", ["Yes", "No", "Not sure"])

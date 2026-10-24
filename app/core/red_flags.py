@@ -94,11 +94,13 @@ def check_red_flags(
 
         if found:
             if severity == "high":
-                high_flags.append(flag_id)
+                if flag_id in settings.RED_FLAGS and flag_id not in high_flags:
+                    high_flags.append(flag_id)
                 has_high_severity = True
                 highest_severity = "high"
             else:
-                medium_flags.append(flag_id)
+                if flag_id not in medium_flags:
+                    medium_flags.append(flag_id)
                 if highest_severity != "high":
                     highest_severity = "medium"
 

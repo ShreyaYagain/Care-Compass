@@ -4,17 +4,13 @@ from app.schemas import PatientProfile
 
 def bump_urgency(current_urgency: str, levels: int = 1) -> str:
     """
-    Safely raise urgency by N levels (routine -> same_day -> immediate).
-    Never lowers urgency.
+    Safely raise urgency by at most 1 level.
+    Rule E: total bump from all modifiers is at most +1 level, and only up to same_day.
+    They can reach immediate only together with a high-severity red flag (rule A.1).
     """
-    order = settings.URGENCIES  # ["routine", "same_day", "immediate"]
-    try:
-        idx = order.index(current_urgency)
-    except ValueError:
-        idx = 0
-
-    new_idx = min(len(order) - 1, idx + levels)
-    return order[new_idx]
+    if current_urgency == "routine":
+        return "same_day"
+    return current_urgency
 
 
 def apply_risk_modifiers(
@@ -24,52 +20,55 @@ def apply_risk_modifiers(
     care_type: str,
 ) -> tuple[str, str, list[str]]:
     """
-    Applies clinical risk modifiers. Only escalates urgency.
-    Returns: (modified_urgency, modified_care_type, applied_modifiers)
+    Applies clinical risk modifiers.
+    Rule E: Total bump is at most +1 level, capped at same_day.
+    Never produces immediate or emergency_referral.
     """
     applied = []
     final_urgency = urgency
     final_care_type = care_type
 
     symptoms = slots.get("symptoms", [])
+    triggered = False
 
     if not patient:
         # Check if age group was extracted in slots
         age_group = slots.get("age_group")
         if age_group == "senior" and ("fever" in symptoms or slots.get("breathing_difficulty")):
-            final_urgency = bump_urgency(final_urgency, 1)
+            triggered = True
             applied.append("elderly_vulnerable_symptoms")
-        return final_urgency, final_care_type, applied
+    else:
+        # 1. Age < 1 year or > 75 with fever or respiratory symptoms
+        age = patient.age
+        if age is not None:
+            if (age < 1 or age > 75) and ("fever" in symptoms or slots.get("breathing_difficulty")):
+                triggered = True
+                applied.append(f"age_{age}_with_symptoms")
 
-    # 1. Age < 1 year or > 75 with fever or respiratory symptoms
-    age = patient.age
-    if age is not None:
-        if (age < 1 or age > 75) and ("fever" in symptoms or slots.get("breathing_difficulty")):
-            final_urgency = bump_urgency(final_urgency, 1)
-            applied.append(f"age_{age}_with_symptoms")
+        # 2. Chronic conditions with fever / breathing
+        chronic = [c.lower() for c in (patient.conditions or slots.get("chronic_conditions", []))]
+        high_risk_conditions = {"diabetes", "heart disease", "copd", "kidney disease", "hypertension"}
+        has_high_risk = any(cond in chronic for cond in high_risk_conditions)
 
-    # 2. Pregnancy with bleeding or severe pain -> immediate emergency
-    if patient.pregnant:
-        if slots.get("bleeding") or "bleeding" in symptoms or "pain" in symptoms:
-            final_urgency = "immediate"
-            final_care_type = "emergency_referral"
-            applied.append("pregnancy_acute_risk")
-
-    # 3. Chronic conditions (diabetes, heart disease, copd, kidney) with fever / breathing
-    chronic = [c.lower() for c in (patient.conditions or slots.get("chronic_conditions", []))]
-    high_risk_conditions = {"diabetes", "heart disease", "copd", "kidney disease", "hypertension"}
-    has_high_risk = any(cond in chronic for cond in high_risk_conditions)
-
-    if has_high_risk and ("fever" in symptoms or slots.get("breathing_difficulty")):
-        if final_urgency == "routine":
-            final_urgency = bump_urgency(final_urgency, 1)
+        if has_high_risk and ("fever" in symptoms or slots.get("breathing_difficulty")):
+            triggered = True
             applied.append("chronic_condition_with_acute_symptoms")
 
-    # 4. Symptoms > 5 days -> at least same_day
+        # 3. Pregnancy with acute severe pain or bleeding
+        if patient.pregnant or slots.get("pregnancy"):
+            if slots.get("bleeding") or "severe" in str(slots.get("severity")) or "acute" in str(slots.get("severity")):
+                final_urgency = "immediate"
+                final_care_type = "emergency_referral"
+                applied.append("pregnancy_acute_risk")
+
+    # 3. Symptoms > 5 days -> at least same_day
     duration = slots.get("duration", "")
-    if duration and (">5" in str(duration) or "5" in str(duration) or "week" in str(duration)):
-        if final_urgency == "routine":
-            final_urgency = "same_day"
-            applied.append("prolonged_symptom_duration")
+    if duration and (">5" in str(duration) or "week" in str(duration)):
+        triggered = True
+        applied.append("prolonged_symptom_duration")
+
+    # Rule E: At most +1 bump, and only up to same_day
+    if triggered and final_urgency == "routine":
+        final_urgency = "same_day"
 
     return final_urgency, final_care_type, applied

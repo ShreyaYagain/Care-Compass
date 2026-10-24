@@ -8,5 +8,5 @@ router = APIRouter(tags=["Triage"])
 
 
 @router.post("/triage", response_model=TriageResponse)
-def triage_endpoint(request: TriageRequest, db: Session = Depends(get_db)):
-    return run_triage_pipeline(request, db=db)
+def triage_endpoint(request: TriageRequest, debug: bool = False, db: Session = Depends(get_db)):
+    return run_triage_pipeline(request, db=db, debug=debug)

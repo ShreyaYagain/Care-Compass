@@ -1,0 +1,87 @@
+id,user_input,norm_input,language,care_type,urgency,red_flags,follow_up_question,source
+S0002,"Mild acidity and gas since morning, want to consult a doctor",mild acidity and gas since morning want to consult a doctor,English,teleconsultation,same_day,,,official_sanocare
+S0004,accident ke baad bleeding ruk nahi rahi,accident ke baad bleeding ruk nahi rahi,Hinglish,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0010,doctor ne injection likha hai koi ghar aa sakta hai,doctor ne injection likha hai koi ghar aa sakta hai,Hinglish,home_nursing,same_day,,,official_sanocare
+S0013,doctor ne injection likha hai koi ghar aa sakta hai,doctor ne injection likha hai koi ghar aa sakta hai,Hinglish,home_nursing,same_day,,,official_sanocare
+S0015,accident ke baad bleeding ruk nahi rahi,accident ke baad bleeding ruk nahi rahi,Hinglish,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0017,Want a CBC and thyroid test with home sample collection,want a cbc and thyroid test with home sample collection,English,lab_test_home,scheduled,,,official_sanocare
+S0027,Want to talk to a doctor about my reports,want to talk to a doctor about my reports,English,teleconsultation,same_day,,,official_sanocare
+S0028,doctor ne injection likha hai koi ghar aa sakta hai,doctor ne injection likha hai koi ghar aa sakta hai,Hinglish,home_nursing,same_day,,,official_sanocare
+S0034,Want to talk to a doctor about my reports,want to talk to a doctor about my reports,English,teleconsultation,same_day,,,official_sanocare
+S0039,ghar pe IM injection lagwana hai,ghar pe im injection lagwana hai,Hinglish,home_nursing,same_day,,,official_sanocare
+S0046,doctor ne injection likha hai koi ghar aa sakta hai,doctor ne injection likha hai koi ghar aa sakta hai,Hinglish,home_nursing,same_day,,,official_sanocare
+S0047,accident ke baad bleeding ruk nahi rahi,accident ke baad bleeding ruk nahi rahi,Hinglish,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0049,Want to talk to a doctor about my reports,want to talk to a doctor about my reports,English,teleconsultation,same_day,,,official_sanocare
+S0051,Want to talk to a doctor about my reports,want to talk to a doctor about my reports,English,teleconsultation,same_day,,,official_sanocare
+S0054,"Mild acidity and gas since morning, want to consult a doctor",mild acidity and gas since morning want to consult a doctor,English,teleconsultation,same_day,,,official_sanocare
+S0060,पत्नी की पट्टी बदलवानी है घर पर,ptni ki ptti bdlvani hai ghr pr,Hindi,home_nursing,same_day,,,official_sanocare
+S0062,Want to talk to a doctor about my reports,want to talk to a doctor about my reports,English,teleconsultation,same_day,,,official_sanocare
+S0064,डॉक्टर चाहिए,d ktr chahie,Hindi,follow_up,,,"Happy to help. Could you tell me the main symptom or service you need (home visit, nursing, lab test, or teleconsult)?",official_sanocare
+S0067,Want to talk to a doctor about my reports,want to talk to a doctor about my reports,English,teleconsultation,same_day,,,official_sanocare
+S0069,Need someone to check BP and sugar at home for my mother,need someone to check hypertension and diabetes at home for my mother,English,paramedic_home_visit,same_day,,,official_sanocare
+S0070,ghar pe IM injection lagwana hai,ghar pe im injection lagwana hai,Hinglish,home_nursing,same_day,,,official_sanocare
+S0074,ghar pe IM injection lagwana hai,ghar pe im injection lagwana hai,Hinglish,home_nursing,same_day,,,official_sanocare
+S0078,"Mild acidity and gas since morning, want to consult a doctor",mild acidity and gas since morning want to consult a doctor,English,teleconsultation,same_day,,,official_sanocare
+S0085,accident ke baad bleeding ruk nahi rahi,accident ke baad bleeding ruk nahi rahi,Hinglish,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0087,"Mild acidity and gas since morning, want to consult a doctor",mild acidity and gas since morning want to consult a doctor,English,teleconsultation,same_day,,,official_sanocare
+S0089,माँ का बीपी और शुगर घर पर चेक करवाना है,ma ka bipi aur shugr ghr pr chek krvana hai,Hindi,paramedic_home_visit,same_day,,,official_sanocare
+S0091,accident ke baad bleeding ruk nahi rahi,accident ke baad bleeding ruk nahi rahi,Hinglish,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0096,Want to talk to a doctor about my reports,want to talk to a doctor about my reports,English,teleconsultation,same_day,,,official_sanocare
+S0099,माँ का बीपी और शुगर घर पर चेक करवाना है,ma ka bipi aur shugr ghr pr chek krvana hai,Hindi,paramedic_home_visit,same_day,,,official_sanocare
+S0104,पत्नी की पट्टी बदलवानी है घर पर,ptni ki ptti bdlvani hai ghr pr,Hindi,home_nursing,same_day,,,official_sanocare
+S0117,पापा को दो दिन से बुखार और खांसी है,papa ko do din se fever aur cough hai,Hindi,paramedic_home_visit,same_day,,,official_sanocare
+S0120,accident ke baad bleeding ruk nahi rahi,accident ke baad bleeding ruk nahi rahi,Hinglish,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0124,dadi ko bedsore dressing chahiye,dadi ko bedsore dressing chahiye,Hinglish,home_nursing,same_day,,,official_sanocare
+S0135,Want to talk to a doctor about my reports,want to talk to a doctor about my reports,English,teleconsultation,same_day,,,official_sanocare
+S0136,ऑपरेशन के बाद घर पर ड्रेसिंग करवानी है,ऑpreshn ke bad ghr pr dresing krvani hai,Hindi,home_nursing,same_day,,,official_sanocare
+S0140,ghar pe IM injection lagwana hai,ghar pe im injection lagwana hai,Hinglish,home_nursing,same_day,,,official_sanocare
+S0141,accident ke baad bleeding ruk nahi rahi,accident ke baad bleeding ruk nahi rahi,Hinglish,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0143,माँ का बीपी और शुगर घर पर चेक करवाना है,ma ka bipi aur shugr ghr pr chek krvana hai,Hindi,paramedic_home_visit,same_day,,,official_sanocare
+S0147,Need someone to check BP and sugar at home for my mother,need someone to check hypertension and diabetes at home for my mother,English,paramedic_home_visit,same_day,,,official_sanocare
+S0151,डॉक्टर चाहिए,d ktr chahie,Hindi,follow_up,,,"Namaste! I'm here to help. Who is this for, and what's the concern — fever, a nursing need, a lab test, or a doctor consult?",official_sanocare
+S0154,ऑपरेशन के बाद घर पर ड्रेसिंग करवानी है,ऑpreshn ke bad ghr pr dresing krvani hai,Hindi,home_nursing,same_day,,,official_sanocare
+S0155,Want a CBC and thyroid test with home sample collection,want a cbc and thyroid test with home sample collection,English,lab_test_home,scheduled,,,official_sanocare
+S0158,माँ का बीपी और शुगर घर पर चेक करवाना है,ma ka bipi aur shugr ghr pr chek krvana hai,Hindi,paramedic_home_visit,same_day,,,official_sanocare
+S0161,"Mild acidity and gas since morning, want to consult a doctor",mild acidity and gas since morning want to consult a doctor,English,teleconsultation,same_day,,,official_sanocare
+S0162,पापा को दो दिन से बुखार और खांसी है,papa ko do din se fever aur cough hai,Hindi,paramedic_home_visit,same_day,,,official_sanocare
+S0170,dadi ko bedsore dressing chahiye,dadi ko bedsore dressing chahiye,Hinglish,home_nursing,same_day,,,official_sanocare
+S0174,ऑपरेशन के बाद घर पर ड्रेसिंग करवानी है,ऑpreshn ke bad ghr pr dresing krvani hai,Hindi,home_nursing,same_day,,,official_sanocare
+S0194,doctor ne injection likha hai koi ghar aa sakta hai,doctor ne injection likha hai koi ghar aa sakta hai,Hinglish,home_nursing,same_day,,,official_sanocare
+S0199,ghar pe IM injection lagwana hai,ghar pe im injection lagwana hai,Hinglish,home_nursing,same_day,,,official_sanocare
+S0200,dadi ko bedsore dressing chahiye,dadi ko bedsore dressing chahiye,Hinglish,home_nursing,same_day,,,official_sanocare
+S0201,accident ke baad bleeding ruk nahi rahi,accident ke baad bleeding ruk nahi rahi,Hinglish,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0203,Need someone to check BP and sugar at home for my mother,need someone to check hypertension and diabetes at home for my mother,English,paramedic_home_visit,same_day,,,official_sanocare
+S0212,accident ke baad bleeding ruk nahi rahi,accident ke baad bleeding ruk nahi rahi,Hinglish,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0218,ghar pe IM injection lagwana hai,ghar pe im injection lagwana hai,Hinglish,home_nursing,same_day,,,official_sanocare
+S0220,ghar pe IM injection lagwana hai,ghar pe im injection lagwana hai,Hinglish,home_nursing,same_day,,,official_sanocare
+S0227,dadi ko bedsore dressing chahiye,dadi ko bedsore dressing chahiye,Hinglish,home_nursing,same_day,,,official_sanocare
+S0228,Want a CBC and thyroid test with home sample collection,want a cbc and thyroid test with home sample collection,English,lab_test_home,scheduled,,,official_sanocare
+S0230,पत्नी की पट्टी बदलवानी है घर पर,ptni ki ptti bdlvani hai ghr pr,Hindi,home_nursing,same_day,,,official_sanocare
+S0237,ghar pe IM injection lagwana hai,ghar pe im injection lagwana hai,Hinglish,home_nursing,same_day,,,official_sanocare
+S0238,Want a CBC and thyroid test with home sample collection,want a cbc and thyroid test with home sample collection,English,lab_test_home,scheduled,,,official_sanocare
+S0243,accident ke baad bleeding ruk nahi rahi,accident ke baad bleeding ruk nahi rahi,Hinglish,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0250,पापा को दो दिन से बुखार और खांसी है,papa ko do din se fever aur cough hai,Hindi,paramedic_home_visit,same_day,,,official_sanocare
+S0253,accident ke baad bleeding ruk nahi rahi,accident ke baad bleeding ruk nahi rahi,Hinglish,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0254,accident ke baad bleeding ruk nahi rahi,accident ke baad bleeding ruk nahi rahi,Hinglish,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0256,पापा को दो दिन से बुखार और खांसी है,papa ko do din se fever aur cough hai,Hindi,paramedic_home_visit,same_day,,,official_sanocare
+S0257,डॉक्टर चाहिए,d ktr chahie,Hindi,follow_up,,,"Namaste! I'm here to help. Who is this for, and what's the concern — fever, a nursing need, a lab test, or a doctor consult?",official_sanocare
+S0259,Need someone to check BP and sugar at home for my mother,need someone to check hypertension and diabetes at home for my mother,English,paramedic_home_visit,same_day,,,official_sanocare
+S0261,"Mild acidity and gas since morning, want to consult a doctor",mild acidity and gas since morning want to consult a doctor,English,teleconsultation,same_day,,,official_sanocare
+S0264,Need someone to check BP and sugar at home for my mother,need someone to check hypertension and diabetes at home for my mother,English,paramedic_home_visit,same_day,,,official_sanocare
+S0266,पत्नी की पट्टी बदलवानी है घर पर,ptni ki ptti bdlvani hai ghr pr,Hindi,home_nursing,same_day,,,official_sanocare
+S0273,पत्नी की पट्टी बदलवानी है घर पर,ptni ki ptti bdlvani hai ghr pr,Hindi,home_nursing,same_day,,,official_sanocare
+S0278,accident ke baad bleeding ruk nahi rahi,accident ke baad bleeding ruk nahi rahi,Hinglish,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0279,"Mild acidity and gas since morning, want to consult a doctor",mild acidity and gas since morning want to consult a doctor,English,teleconsultation,same_day,,,official_sanocare
+S0285,"Mild acidity and gas since morning, want to consult a doctor",mild acidity and gas since morning want to consult a doctor,English,teleconsultation,same_day,,,official_sanocare
+S0286,Want a CBC and thyroid test with home sample collection,want a cbc and thyroid test with home sample collection,English,lab_test_home,scheduled,,,official_sanocare
+S0295,dadi ko bedsore dressing chahiye,dadi ko bedsore dressing chahiye,Hinglish,home_nursing,same_day,,,official_sanocare
+S0297,पापा को दो दिन से बुखार और खांसी है,papa ko do din se fever aur cough hai,Hindi,paramedic_home_visit,same_day,,,official_sanocare
+S0300,Want to talk to a doctor about my reports,want to talk to a doctor about my reports,English,teleconsultation,same_day,,,official_sanocare
+S0302,पत्नी की पट्टी बदलवानी है घर पर,ptni ki ptti bdlvani hai ghr pr,Hindi,home_nursing,same_day,,,official_sanocare
+S0311,ghar pe IM injection lagwana hai,ghar pe im injection lagwana hai,Hinglish,home_nursing,same_day,,,official_sanocare
+S0312,doctor ne injection likha hai koi ghar aa sakta hai,doctor ne injection likha hai koi ghar aa sakta hai,Hinglish,home_nursing,same_day,,,official_sanocare
+S0316,ghar pe IM injection lagwana hai,ghar pe im injection lagwana hai,Hinglish,home_nursing,same_day,,,official_sanocare
+S0328,डॉक्टर चाहिए,d ktr chahie,Hindi,follow_up,,,"Namaste! I'm here to help. Who is this for, and what's the concern — fever, a nursing need, a lab test, or a doctor consult?",official_sanocare
+S0332,"Mild acidity and gas since morning, want to consult a doctor",mild acidity and gas since morning want to consult a doctor,English,teleconsultation,same_day,,,official_sanocare
+S0333,ऑपरेशन के बाद घर पर ड्रेसिंग करवानी है,ऑpreshn ke bad ghr pr dresing krvani hai,Hindi,home_nursing,same_day,,,official_sanocare
+S0339,ऑपरेशन के बाद घर पर ड्रेसिंग करवानी है,ऑpreshn ke bad ghr pr dresing krvani hai,Hindi,home_nursing,same_day,,,official_sanocare

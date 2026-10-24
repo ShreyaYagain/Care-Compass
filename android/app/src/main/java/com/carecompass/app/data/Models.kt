@@ -9,7 +9,8 @@ data class Location(
 
 data class ChatMessage(
     @SerializedName("role") val role: String,
-    @SerializedName("text") val text: String
+    @SerializedName("content") val content: String? = null,
+    @SerializedName("text") val text: String? = null
 )
 
 data class PatientProfile(
@@ -49,6 +50,7 @@ data class TriageResponse(
     @SerializedName("reasoning") val reasoning: String? = null,
     @SerializedName("confidence") val confidence: Double? = null,
     @SerializedName("matched_caregivers") val matchedCaregivers: List<MatchedCaregiver> = emptyList(),
+    @SerializedName("emergency_steps") val emergencySteps: List<String> = emptyList(),
     @SerializedName("emergency") val emergency: EmergencyInfo? = null
 )
 

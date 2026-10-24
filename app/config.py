@@ -12,7 +12,7 @@ try:
 
     class Settings(BaseSettings):
         APP_NAME: str = "CareCompass"
-        MODEL_VERSION: str = "1.0.0"
+        MODEL_VERSION: str = "2.0.0"
         DEBUG: bool = False
         HOST: str = "0.0.0.0"
         PORT: int = 8000
@@ -23,69 +23,45 @@ try:
         GEMINI_MODEL: str = "gemini-1.5-flash"
         LLM_TIMEOUT_SECONDS: float = 3.0
 
-        # Label sets
+        # Official Label sets (single source of truth)
         CARE_TYPES: list[str] = [
             "paramedic_home_visit",
-            "nurse_home_visit",
-            "gp_teleconsult",
-            "specialist",
-            "emergency_referral",
+            "home_nursing",
+            "lab_test_home",
+            "teleconsultation",
+            "emergency_112",
         ]
 
         URGENCIES: list[str] = [
-            "routine",
+            "emergency",
             "same_day",
-            "immediate",
+            "scheduled",
         ]
 
-        SPECIALTIES: list[str] = [
-            "cardiology",
-            "pulmonology",
-            "paediatrics",
-            "gynaecology",
-            "orthopaedics",
-            "general_medicine",
-            "dermatology",
-            "neurology",
-            "psychiatry",
+        RED_FLAGS: list[str] = [
+            "chest_pain",
+            "breathlessness",
+            "unconsciousness",
+            "severe_bleeding",
+            "stroke_symptoms",
+            "seizure",
+            "high_fever_infant",
+            "suicidal_ideation",
+            "severe_dehydration",
         ]
+
+        CARE_TO_URGENCY: dict[str, str] = {
+            "emergency_112": "emergency",
+            "home_nursing": "same_day",
+            "paramedic_home_visit": "same_day",
+            "teleconsultation": "same_day",
+            "lab_test_home": "scheduled",
+        }
 
         # Safety & Triage Tunables
         CONF_THRESHOLD: float = 0.55
         MAX_FOLLOWUPS: int = 4
         MAX_KM: float = 35.0
-
-        # Asymmetric urgency cost matrix
-        URGENCY_COST_MATRIX: dict[str, dict[str, float]] = {
-            "routine": {"routine": 0.0, "same_day": 1.0, "immediate": 2.0},
-            "same_day": {"routine": 4.0, "same_day": 0.0, "immediate": 1.0},
-            "immediate": {"routine": 10.0, "same_day": 3.0, "immediate": 0.0},
-        }
-
-        # Matching weights
-        MATCHING_WEIGHTS: dict[str, dict[str, float]] = {
-            "routine": {
-                "skill": 0.30,
-                "distance": 0.15,
-                "availability": 0.15,
-                "language": 0.25,
-                "rating": 0.15,
-            },
-            "same_day": {
-                "skill": 0.30,
-                "distance": 0.25,
-                "availability": 0.25,
-                "language": 0.10,
-                "rating": 0.10,
-            },
-            "immediate": {
-                "availability": 0.40,
-                "distance": 0.35,
-                "skill": 0.25,
-                "language": 0.00,
-                "rating": 0.00,
-            },
-        }
 
         EMERGENCY_NUMBERS: list[str] = ["112", "102"]
         MENTAL_HEALTH_HELPLINE: str = "14416 (Tele-MANAS)"
@@ -93,6 +69,8 @@ try:
         RED_FLAGS_FILE: Path = DATA_DIR / "red_flags.yaml"
         SYMPTOMS_FILE: Path = DATA_DIR / "symptoms.yaml"
         HINGLISH_NORM_FILE: Path = DATA_DIR / "hinglish_norm.json"
+        OFFICIAL_DATA_DIR: Path = ML_DIR / "data" / "official"
+        CAREGIVERS_CSV_FILE: Path = OFFICIAL_DATA_DIR / "caregivers.csv"
         CAREGIVERS_FILE: Path = DATA_DIR / "caregivers.json"
         EMERGENCY_STEPS_FILE: Path = DATA_DIR / "emergency_steps.yaml"
         ARTIFACTS_DIR: Path = ARTIFACTS_DIR
@@ -106,7 +84,7 @@ try:
 except ImportError:
     class Settings:
         APP_NAME: str = "CareCompass"
-        MODEL_VERSION: str = "1.0.0"
+        MODEL_VERSION: str = "2.0.0"
         DEBUG: bool = False
         HOST: str = "0.0.0.0"
         PORT: int = 8000
@@ -118,63 +96,41 @@ except ImportError:
 
         CARE_TYPES: list[str] = [
             "paramedic_home_visit",
-            "nurse_home_visit",
-            "gp_teleconsult",
-            "specialist",
-            "emergency_referral",
+            "home_nursing",
+            "lab_test_home",
+            "teleconsultation",
+            "emergency_112",
         ]
 
         URGENCIES: list[str] = [
-            "routine",
+            "emergency",
             "same_day",
-            "immediate",
+            "scheduled",
         ]
 
-        SPECIALTIES: list[str] = [
-            "cardiology",
-            "pulmonology",
-            "paediatrics",
-            "gynaecology",
-            "orthopaedics",
-            "general_medicine",
-            "dermatology",
-            "neurology",
-            "psychiatry",
+        RED_FLAGS: list[str] = [
+            "chest_pain",
+            "breathlessness",
+            "unconsciousness",
+            "severe_bleeding",
+            "stroke_symptoms",
+            "seizure",
+            "high_fever_infant",
+            "suicidal_ideation",
+            "severe_dehydration",
         ]
+
+        CARE_TO_URGENCY: dict[str, str] = {
+            "emergency_112": "emergency",
+            "home_nursing": "same_day",
+            "paramedic_home_visit": "same_day",
+            "teleconsultation": "same_day",
+            "lab_test_home": "scheduled",
+        }
 
         CONF_THRESHOLD: float = 0.55
         MAX_FOLLOWUPS: int = 4
         MAX_KM: float = 35.0
-
-        URGENCY_COST_MATRIX: dict[str, dict[str, float]] = {
-            "routine": {"routine": 0.0, "same_day": 1.0, "immediate": 2.0},
-            "same_day": {"routine": 4.0, "same_day": 0.0, "immediate": 1.0},
-            "immediate": {"routine": 10.0, "same_day": 3.0, "immediate": 0.0},
-        }
-
-        MATCHING_WEIGHTS: dict[str, dict[str, float]] = {
-            "routine": {
-                "skill": 0.30,
-                "distance": 0.15,
-                "availability": 0.15,
-                "language": 0.25,
-                "rating": 0.15,
-            },
-            "same_day": {
-                "skill": 0.30,
-                "distance": 0.25,
-                "availability": 0.25,
-                "language": 0.10,
-                "rating": 0.10,
-            },
-            "immediate": {
-                "availability": 0.40,
-                "distance": 0.35,
-                "skill": 0.25,
-                "language": 0.00,
-                "rating": 0.00,
-            },
-        }
 
         EMERGENCY_NUMBERS: list[str] = ["112", "102"]
         MENTAL_HEALTH_HELPLINE: str = "14416 (Tele-MANAS)"
@@ -182,6 +138,8 @@ except ImportError:
         RED_FLAGS_FILE: Path = DATA_DIR / "red_flags.yaml"
         SYMPTOMS_FILE: Path = DATA_DIR / "symptoms.yaml"
         HINGLISH_NORM_FILE: Path = DATA_DIR / "hinglish_norm.json"
+        OFFICIAL_DATA_DIR: Path = ML_DIR / "data" / "official"
+        CAREGIVERS_CSV_FILE: Path = OFFICIAL_DATA_DIR / "caregivers.csv"
         CAREGIVERS_FILE: Path = DATA_DIR / "caregivers.json"
         EMERGENCY_STEPS_FILE: Path = DATA_DIR / "emergency_steps.yaml"
         ARTIFACTS_DIR: Path = ARTIFACTS_DIR

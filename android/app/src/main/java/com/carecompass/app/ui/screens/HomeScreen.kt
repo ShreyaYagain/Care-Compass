@@ -1,185 +1,371 @@
 package com.carecompass.app.ui.screens
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Send
-import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import com.carecompass.app.R
 import com.carecompass.app.ui.components.BigButton
 import com.carecompass.app.ui.components.LanguageToggle
 import com.carecompass.app.ui.components.MicButton
 import com.carecompass.app.ui.theme.EmergencyRed
 import com.carecompass.app.ui.theme.PrimaryBlue
+import com.carecompass.app.util.MicState
+import com.carecompass.app.util.SpeechHelper
+import com.carecompass.app.viewmodel.TriageUiState
 import com.carecompass.app.viewmodel.TriageViewModel
+
+private data class SymptomOption(
+    val id: String,
+    val icon: ImageVector,
+    val canonicalKeyword: String,
+    val labelEnRes: Int,
+    val labelHiRes: Int,
+    val labelHinglishRes: Int
+)
+
+private val SYMPTOM_OPTIONS = listOf(
+    SymptomOption("fever", Icons.Default.Whatshot, "fever", R.string.symptom_fever_en, R.string.symptom_fever_hi, R.string.symptom_fever_hinglish),
+    SymptomOption("cough", Icons.Default.Air, "cough", R.string.symptom_cough_en, R.string.symptom_cough_hi, R.string.symptom_cough_hinglish),
+    SymptomOption("pain", Icons.Default.Healing, "body pain", R.string.symptom_pain_en, R.string.symptom_pain_hi, R.string.symptom_pain_hinglish),
+    SymptomOption("injury", Icons.Default.MedicalServices, "injury wound", R.string.symptom_injury_en, R.string.symptom_injury_hi, R.string.symptom_injury_hinglish),
+    SymptomOption("breathing", Icons.Default.Air, "difficulty in breathing", R.string.symptom_breathing_en, R.string.symptom_breathing_hi, R.string.symptom_breathing_hinglish),
+    SymptomOption("stomach", Icons.Default.Restaurant, "stomach pain and vomiting", R.string.symptom_stomach_en, R.string.symptom_stomach_hi, R.string.symptom_stomach_hinglish),
+    SymptomOption("headache", Icons.Default.Psychology, "headache", R.string.symptom_headache_en, R.string.symptom_headache_hi, R.string.symptom_headache_hinglish),
+    SymptomOption("other", Icons.Default.MoreHoriz, "general discomfort", R.string.symptom_other_en, R.string.symptom_other_hi, R.string.symptom_other_hinglish)
+)
 
 @Composable
 fun HomeScreen(
     viewModel: TriageViewModel,
-    uiState: com.carecompass.app.viewmodel.TriageUiState,
+    uiState: TriageUiState,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     var inputText by remember { mutableStateOf("") }
+    var micState by remember { mutableStateOf(MicState.IDLE) }
+    var userMessage by remember { mutableStateOf<String?>(null) }
+    val selectedSymptoms = remember { mutableStateListOf<String>() }
+
+    // SpeechRecognizer Helper
+    val speechHelper = remember {
+        SpeechHelper(
+            context = context,
+            onStateChanged = { state -> micState = state },
+            onPartialResult = { partial ->
+                // Show partial results live in the text box
+                inputText = partial
+            },
+            onFinalResult = { finalResult ->
+                inputText = finalResult
+                // Put text in box, then call /triage (BUG 1 fixed: non-empty only)
+                if (finalResult.isNotBlank()) {
+                    viewModel.submitUserInput(finalResult)
+                }
+            },
+            onError = { errMsg ->
+                userMessage = errMsg
+            }
+        )
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            speechHelper.destroy()
+        }
+    }
+
+    // Runtime Permission for Microphone
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            userMessage = null
+            speechHelper.startListening(uiState.selectedLanguage)
+        } else {
+            userMessage = "Please allow the microphone, or type your symptoms"
+            micState = MicState.IDLE
+        }
+    }
+
+    fun handleMicTap() {
+        if (micState == MicState.LISTENING) {
+            speechHelper.stopListening()
+            return
+        }
+
+        userMessage = null
+        val permissionCheck = ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO)
+        if (permissionCheck == PackageManager.PERMISSION_GRANTED) {
+            speechHelper.startListening(uiState.selectedLanguage)
+        } else {
+            permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+        }
+    }
 
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(Color(0xFFF8F9FA))
-            .padding(20.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.SpaceBetween
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Top section: Language & Emergency Bar
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "CareCompass",
-                    fontSize = 26.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = PrimaryBlue
-                )
-                LanguageToggle(
-                    selectedLanguage = uiState.selectedLanguage,
-                    onLanguageSelected = { viewModel.setLanguage(it) }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Dedicated Red Emergency Call Button (Dials 112)
-            Button(
-                onClick = {
-                    val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:112"))
-                    context.startActivity(intent)
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = EmergencyRed)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Warning,
-                    contentDescription = "Emergency",
-                    tint = Color.White
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Emergency: Call 112",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
-            }
-        }
-
-        // Center section: Mic Button & Large Action Text
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(vertical = 24.dp)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "What is the problem?",
+                text = "CareCompass",
                 fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Tap the mic and speak in Hindi, English, or Hinglish",
-                fontSize = 17.sp,
-                color = Color(0xFF616161),
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(28.dp))
-
-            MicButton(
-                onClick = {
-                    // Demo utterance if device STT is triggered or mock
-                    viewModel.submitUserInput("Papa ko do din se bukhar hai aur khansi bhi")
-                }
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "Tap & Speak",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold,
+                fontWeight = FontWeight.ExtraBold,
                 color = PrimaryBlue
             )
+            LanguageToggle(
+                selectedLanguage = uiState.selectedLanguage,
+                onLanguageSelected = { viewModel.setLanguage(it) }
+            )
         }
 
-        // Bottom section: Typing Input Fallback
-        Column(modifier = Modifier.fillMaxWidth()) {
-            if (uiState.isLoading) {
-                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = PrimaryBlue)
-                }
-                Spacer(modifier = Modifier.height(12.dp))
-            }
+        Spacer(modifier = Modifier.height(14.dp))
 
-            if (uiState.errorMessage != null) {
-                Text(
-                    text = uiState.errorMessage,
-                    color = EmergencyRed,
-                    fontSize = 15.sp,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-            }
+        // Dedicated Red Emergency Call Button (Dials 112, min 56dp)
+        Button(
+            onClick = {
+                val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:112"))
+                context.startActivity(intent)
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = EmergencyRed)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Warning,
+                contentDescription = "Emergency",
+                tint = Color.White
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Emergency: Call 112",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+        }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                OutlinedTextField(
-                    value = inputText,
-                    onValueChange = { inputText = it },
-                    placeholder = { Text("Or type symptoms here...", fontSize = 16.sp) },
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = PrimaryBlue,
-                        unfocusedBorderColor = Color(0xFFBDBDBD)
-                    ),
-                    maxLines = 3
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                IconButton(
-                    onClick = {
-                        if (inputText.isNotBlank()) {
-                            viewModel.submitUserInput(inputText.trim())
-                            inputText = ""
-                        }
-                    },
-                    modifier = Modifier
-                        .size(54.dp)
-                        .background(PrimaryBlue, RoundedCornerShape(12.dp))
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Center Heading
+        Text(
+            text = "What is the problem?",
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF212121),
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        // FEATURE 2: 2-column Symptom Grid (min 72dp per button, multi-select)
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            for (i in SYMPTOM_OPTIONS.indices step 2) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Send,
-                        contentDescription = "Send",
-                        tint = Color.White
-                    )
+                    for (j in 0..1) {
+                        if (i + j < SYMPTOM_OPTIONS.size) {
+                            val symptom = SYMPTOM_OPTIONS[i + j]
+                            val isSelected = selectedSymptoms.contains(symptom.id)
+
+                            val label = when (uiState.selectedLanguage) {
+                                "hi" -> stringResource(symptom.labelHiRes)
+                                "hinglish" -> stringResource(symptom.labelHinglishRes)
+                                else -> stringResource(symptom.labelEnRes)
+                            }
+
+                            Card(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .heightIn(min = 72.dp)
+                                    .clickable {
+                                        if (isSelected) {
+                                            selectedSymptoms.remove(symptom.id)
+                                        } else {
+                                            selectedSymptoms.add(symptom.id)
+                                        }
+                                    },
+                                shape = RoundedCornerShape(12.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = if (isSelected) PrimaryBlue else Color.White
+                                ),
+                                border = BorderStroke(
+                                    width = if (isSelected) 2.dp else 1.dp,
+                                    color = if (isSelected) PrimaryBlue else Color(0xFFD1D5DB)
+                                ),
+                                elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 4.dp else 1.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(horizontal = 10.dp, vertical = 12.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Start
+                                ) {
+                                    Icon(
+                                        imageVector = symptom.icon,
+                                        contentDescription = label,
+                                        tint = if (isSelected) Color.White else PrimaryBlue,
+                                        modifier = Modifier.size(28.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = label,
+                                        fontSize = 18.sp,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                        color = if (isSelected) Color.White else Color(0xFF1F2937),
+                                        lineHeight = 22.sp
+                                    )
+                                }
+                            }
+                        } else {
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
+                    }
                 }
             }
         }
+
+        // Multi-select "Continue" button appears when at least one is selected
+        if (selectedSymptoms.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(14.dp))
+            BigButton(
+                text = "Continue with Selected Symptoms",
+                onClick = {
+                    val canonicalList = SYMPTOM_OPTIONS
+                        .filter { selectedSymptoms.contains(it.id) }
+                        .map { it.canonicalKeyword }
+                    val query = canonicalList.joinToString(", ")
+                    if (query.isNotBlank()) {
+                        inputText = query
+                        viewModel.submitUserInput(query)
+                    }
+                },
+                containerColor = Color(0xFF2E7D32) // Positive green for continue
+            )
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Mic Section with pulsing animation and real SpeechRecognizer
+        MicButton(
+            state = micState,
+            onClick = { handleMicTap() }
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Friendly error or permission message banner
+        if (userMessage != null) {
+            Surface(
+                color = Color(0xFFFFF3E0),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 10.dp)
+            ) {
+                Text(
+                    text = userMessage!!,
+                    color = Color(0xFFE65100),
+                    fontSize = 18.sp,
+                    modifier = Modifier.padding(12.dp),
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+
+        if (uiState.isLoading) {
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = PrimaryBlue)
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+        }
+
+        // Bottom: Text input box with send button (min height 56dp)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            OutlinedTextField(
+                value = inputText,
+                onValueChange = { inputText = it },
+                placeholder = { Text("Or type symptoms here...", fontSize = 18.sp) },
+                modifier = Modifier
+                    .weight(1f)
+                    .heightIn(min = 56.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = PrimaryBlue,
+                    unfocusedBorderColor = Color(0xFFBDBDBD)
+                ),
+                maxLines = 3
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            IconButton(
+                onClick = {
+                    val trimmed = inputText.trim()
+                    if (trimmed.isNotBlank()) {
+                        viewModel.submitUserInput(trimmed)
+                        inputText = ""
+                    }
+                },
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(PrimaryBlue)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Send,
+                    contentDescription = "Send",
+                    tint = Color.White
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }

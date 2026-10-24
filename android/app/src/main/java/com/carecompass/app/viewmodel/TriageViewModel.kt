@@ -25,6 +25,7 @@ data class TriageUiState(
     val currentOptions: List<String> = emptyList(),
     val latestResponse: TriageResponse? = null,
     val emergencyInfo: EmergencyInfo? = null,
+    val emergencySteps: List<String> = emptyList(),
     val bookingResponse: BookingResponse? = null,
     val errorMessage: String? = null,
     val destination: ScreenDestination = ScreenDestination.Home
@@ -42,10 +43,14 @@ class TriageViewModel(
     }
 
     fun submitUserInput(text: String) {
-        if (text.isBlank()) return
+        val trimmed = text.trim()
+        // BUG 1 fix: Never call /triage with an empty user_input
+        if (trimmed.isBlank()) {
+            return
+        }
 
         val state = _uiState.value
-        val updatedHistory = state.conversationHistory + ChatMessage(role = "user", text = text)
+        val updatedHistory = state.conversationHistory + ChatMessage(role = "user", text = trimmed, content = trimmed)
 
         _uiState.value = state.copy(
             isLoading = true,
@@ -55,7 +60,7 @@ class TriageViewModel(
 
         viewModelScope.launch {
             val req = TriageRequest(
-                userInput = text,
+                userInput = trimmed,
                 language = state.selectedLanguage,
                 location = Location(lat = 28.54, lng = 77.27), // Hardcoded Delhi location
                 conversationHistory = updatedHistory
@@ -78,18 +83,27 @@ class TriageViewModel(
     private fun handleTriageResponse(response: TriageResponse) {
         val currentHistory = _uiState.value.conversationHistory.toMutableList()
 
-        if (response.emergency != null) {
+        val isEmergency = response.redFlags.isNotEmpty() ||
+                response.careType == "emergency_referral"
+
+        if (isEmergency) {
+            val steps = if (response.emergencySteps.isNotEmpty()) {
+                response.emergencySteps
+            } else {
+                response.emergency?.steps ?: emptyList()
+            }
             _uiState.value = _uiState.value.copy(
                 isLoading = false,
                 latestResponse = response,
                 emergencyInfo = response.emergency,
+                emergencySteps = steps,
                 destination = ScreenDestination.Emergency
             )
             return
         }
 
         if (!response.followUpQuestion.isNullOrBlank()) {
-            currentHistory.add(ChatMessage(role = "assistant", text = response.followUpQuestion))
+            currentHistory.add(ChatMessage(role = "assistant", text = response.followUpQuestion, content = response.followUpQuestion))
             _uiState.value = _uiState.value.copy(
                 isLoading = false,
                 conversationHistory = currentHistory,

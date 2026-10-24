@@ -32,12 +32,18 @@ fun EmergencyScreen(
     val context = LocalContext.current
     val emergency = uiState.emergencyInfo
     val callNumber = emergency?.callNumbers?.firstOrNull() ?: "112"
-    val steps = emergency?.steps ?: listOf(
-        "Call 112 (National Emergency) immediately.",
-        "Keep the patient sitting upright and calm.",
-        "Do not offer food, water, or unprescribed medicines.",
-        "Unlock the door for the medical response team."
-    )
+    val steps = if (uiState.emergencySteps.isNotEmpty()) {
+        uiState.emergencySteps
+    } else if (emergency?.steps != null && emergency.steps.isNotEmpty()) {
+        emergency.steps
+    } else {
+        listOf(
+            "Call 112 (National Emergency) immediately.",
+            "Keep the patient sitting upright and calm.",
+            "Do not offer food, water, or unprescribed medicines.",
+            "Unlock the door for the medical response team."
+        )
+    }
 
     Column(
         modifier = modifier
@@ -79,7 +85,7 @@ fun EmergencyScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Huge Call 112 button
+        // Huge Call 112 button (min 56dp height)
         Button(
             onClick = {
                 val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$callNumber"))
@@ -131,15 +137,15 @@ fun EmergencyScreen(
                     ) {
                         Text(
                             text = "${idx + 1}. ",
-                            fontSize = 16.sp,
+                            fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
                         )
                         Text(
                             text = step,
-                            fontSize = 16.sp,
+                            fontSize = 18.sp,
                             color = Color.White,
-                            lineHeight = 22.sp
+                            lineHeight = 24.sp
                         )
                     }
                 }
@@ -148,11 +154,15 @@ fun EmergencyScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        TextButton(onClick = onReset) {
+        TextButton(
+            onClick = onReset,
+            modifier = Modifier.heightIn(min = 56.dp)
+        ) {
             Text(
                 text = "Back to Home",
-                fontSize = 16.sp,
-                color = Color.White.copy(alpha = 0.8f)
+                fontSize = 18.sp,
+                color = Color.White.copy(alpha = 0.85f),
+                fontWeight = FontWeight.SemiBold
             )
         }
     }

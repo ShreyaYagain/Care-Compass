@@ -1,22 +1,32 @@
 package com.carecompass.app.ui.screens
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import com.carecompass.app.ui.components.BigButton
 import com.carecompass.app.ui.components.MicButton
 import com.carecompass.app.ui.theme.PrimaryBlue
+import com.carecompass.app.util.MicState
+import com.carecompass.app.util.SpeechHelper
 import com.carecompass.app.viewmodel.TriageUiState
 import com.carecompass.app.viewmodel.TriageViewModel
 
@@ -26,6 +36,7 @@ fun ChatScreen(
     uiState: TriageUiState,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     val question = uiState.currentQuestion ?: "Is there any difficulty in breathing?"
     val options = if (uiState.currentOptions.isNotEmpty()) {
         uiState.currentOptions
@@ -33,16 +44,72 @@ fun ChatScreen(
         listOf("Yes", "No", "Not sure")
     }
 
+    var inputText by remember { mutableStateOf("") }
+    var micState by remember { mutableStateOf(MicState.IDLE) }
+    var userMessage by remember { mutableStateOf<String?>(null) }
+
+    // SpeechRecognizer Helper for follow-up answering
+    val speechHelper = remember {
+        SpeechHelper(
+            context = context,
+            onStateChanged = { state -> micState = state },
+            onPartialResult = { partial ->
+                inputText = partial
+            },
+            onFinalResult = { finalResult ->
+                inputText = finalResult
+                if (finalResult.isNotBlank()) {
+                    viewModel.submitUserInput(finalResult)
+                }
+            },
+            onError = { errMsg ->
+                userMessage = errMsg
+            }
+        )
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            speechHelper.destroy()
+        }
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            userMessage = null
+            speechHelper.startListening(uiState.selectedLanguage)
+        } else {
+            userMessage = "Please allow the microphone, or type your response"
+            micState = MicState.IDLE
+        }
+    }
+
+    fun handleMicTap() {
+        if (micState == MicState.LISTENING) {
+            speechHelper.stopListening()
+            return
+        }
+        userMessage = null
+        val permissionCheck = ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO)
+        if (permissionCheck == PackageManager.PERMISSION_GRANTED) {
+            speechHelper.startListening(uiState.selectedLanguage)
+        } else {
+            permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+        }
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(Color(0xFFF8F9FA))
-            .padding(20.dp)
+            .padding(18.dp)
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween
     ) {
-        // Question header card
+        // Question Header Card
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
@@ -51,8 +118,8 @@ fun ChatScreen(
         ) {
             Column(modifier = Modifier.padding(20.dp)) {
                 Text(
-                    text = "Doctor / Assistant Question",
-                    fontSize = 15.sp,
+                    text = "Follow-up Question",
+                    fontSize = 18.sp,
                     color = PrimaryBlue,
                     fontWeight = FontWeight.Bold
                 )
@@ -67,48 +134,101 @@ fun ChatScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
-        // Options: Big touch-friendly buttons
+        // Options: neutral colors (NOT red), high-contrast white text, min 56dp
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             options.forEach { opt ->
+                val (btnColor, textColor) = when (opt.trim().lowercase()) {
+                    "yes", "haan" -> Pair(PrimaryBlue, Color.White) // Neutral primary blue, NOT red
+                    "no", "nahi" -> Pair(Color(0xFF37474F), Color.White) // Deep blue-grey
+                    else -> Pair(Color(0xFF546E7A), Color.White) // Medium slate
+                }
+
                 BigButton(
                     text = opt,
                     onClick = {
                         viewModel.submitUserInput(opt)
                     },
-                    containerColor = when (opt.lowercase()) {
-                        "yes", "haan" -> Color(0xFFD32F2F)
-                        "no", "nahi" -> PrimaryBlue
-                        else -> Color(0xFF5C6BC0)
-                    }
+                    containerColor = btnColor,
+                    contentColor = textColor
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(28.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
-        // Mic available
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            MicButton(
-                onClick = {
-                    viewModel.submitUserInput("Nahi, saans me koi dikkat nahi hai")
-                }
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Or tap mic to reply",
-                fontSize = 16.sp,
-                color = Color(0xFF757575)
-            )
+        // Mic available for voice reply
+        MicButton(
+            state = micState,
+            onClick = { handleMicTap() }
+        )
+
+        if (userMessage != null) {
+            Spacer(modifier = Modifier.height(10.dp))
+            Surface(
+                color = Color(0xFFFFF3E0),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = userMessage!!,
+                    color = Color(0xFFE65100),
+                    fontSize = 18.sp,
+                    modifier = Modifier.padding(10.dp)
+                )
+            }
         }
 
         if (uiState.isLoading) {
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(14.dp))
             CircularProgressIndicator(color = PrimaryBlue)
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Fallback text input (min 56dp)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            OutlinedTextField(
+                value = inputText,
+                onValueChange = { inputText = it },
+                placeholder = { Text("Or type answer...", fontSize = 18.sp) },
+                modifier = Modifier
+                    .weight(1f)
+                    .heightIn(min = 56.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = PrimaryBlue,
+                    unfocusedBorderColor = Color(0xFFBDBDBD)
+                ),
+                maxLines = 2
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            IconButton(
+                onClick = {
+                    val trimmed = inputText.trim()
+                    if (trimmed.isNotBlank()) {
+                        viewModel.submitUserInput(trimmed)
+                        inputText = ""
+                    }
+                },
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(PrimaryBlue)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Send,
+                    contentDescription = "Send",
+                    tint = Color.White
+                )
+            }
         }
     }
 }

@@ -3,4 +3,42 @@
     <string name="tap_and_speak">Tap and speak</string>
     <string name="describe_symptoms">Describe symptoms or tap mic</string>
     <string name="emergency_call">Emergency: Call 112</string>
+
+    <!-- Permissions and Voice -->
+    <string name="mic_permission_denied">Please allow the microphone, or type your symptoms</string>
+    <string name="listening">Listening…</string>
+    <string name="processing_voice">Processing voice…</string>
+    <string name="tap_to_speak">Tap &amp; Speak</string>
+
+    <!-- Symptom Labels English -->
+    <string name="symptom_fever_en">Fever</string>
+    <string name="symptom_cough_en">Cough</string>
+    <string name="symptom_pain_en">Body Pain</string>
+    <string name="symptom_injury_en">Injury / Wound</string>
+    <string name="symptom_breathing_en">Breathing Trouble</string>
+    <string name="symptom_stomach_en">Stomach / Vomiting</string>
+    <string name="symptom_headache_en">Headache</string>
+    <string name="symptom_other_en">Other Issue</string>
+
+    <!-- Symptom Labels Hindi -->
+    <string name="symptom_fever_hi">बुखार</string>
+    <string name="symptom_cough_hi">खांसी</string>
+    <string name="symptom_pain_hi">बदन दर्द</string>
+    <string name="symptom_injury_hi">चोट / घाव</string>
+    <string name="symptom_breathing_hi">सांस में तकलीफ</string>
+    <string name="symptom_stomach_hi">पेट दर्द / उल्टी</string>
+    <string name="symptom_headache_hi">सिरदर्द</string>
+    <string name="symptom_other_hi">अन्य समस्या</string>
+
+    <!-- Symptom Labels Hinglish -->
+    <string name="symptom_fever_hinglish">Bukhar</string>
+    <string name="symptom_cough_hinglish">Khansi</string>
+    <string name="symptom_pain_hinglish">Dard / Pain</string>
+    <string name="symptom_injury_hinglish">Chot / Wound</string>
+    <string name="symptom_breathing_hinglish">Saans ki dikkat</string>
+    <string name="symptom_stomach_hinglish">Pet dard / Ulti</string>
+    <string name="symptom_headache_hinglish">Sir dard</string>
+    <string name="symptom_other_hinglish">Kuch aur</string>
+
+    <string name="btn_continue">Continue</string>
 </resources>

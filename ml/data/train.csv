@@ -1,31 +1,326 @@
-id,user_input,language,age,sex,conditions,care_type,urgency,red_flags,source
-VIG_001,papa ko do din se bukhar hai aur khansi bhi,hinglish,68,male,diabetes,paramedic_home_visit,same_day,,handwritten_gold
-VIG_002,dadi ko subah se tez bukhar hai aur badan dard kar raha hai,hinglish,75,female,hypertension,paramedic_home_visit,same_day,,synthetic
-VIG_003,Father has had high fever and shivering since yesterday,en,62,male,,paramedic_home_visit,same_day,,synthetic
-VIG_004,पिताजी को दो दिन से तेज बुखार और कमजोरी है,hi,65,male,diabetes,paramedic_home_visit,same_day,,synthetic
-VIG_005,"Mummy ko 3 din se bukhar hai, khansi hai par saans lene me koi dikkat nahi hai",hinglish,58,female,,paramedic_home_visit,same_day,,handwritten_gold
-VIG_006,Elderly mother needs blood pressure and vitals check at home due to extreme fatigue,en,74,female,hypertension,paramedic_home_visit,same_day,,synthetic
-VIG_007,bachhe ko 2 din se bukhar aur ulti ho rahi hai,hinglish,6,male,,paramedic_home_visit,same_day,,synthetic
-VIG_008,Grandmother needs surgical wound dressing changed at home,en,78,female,diabetes,nurse_home_visit,same_day,,synthetic
-VIG_009,Papa ke pair me zakham hai jisme patti aur dressing karwani hai,hinglish,70,male,diabetes,nurse_home_visit,same_day,,handwritten_gold
-VIG_010,दादी के टांके कटवाने हैं और इंजेक्शन लगवाना है,hi,80,female,,nurse_home_visit,routine,,synthetic
-VIG_011,Need home nurse for urinary catheter flush and IV injection,en,82,male,prostate,nurse_home_visit,same_day,,synthetic
-VIG_012,Bedridden patient needs bed sore dressing and insulin administration,en,85,female,diabetes,nurse_home_visit,routine,,synthetic
-VIG_013,"Mild sore throat and runny nose since morning, need general advice",en,28,female,,gp_teleconsult,routine,,synthetic
-VIG_014,halka gala kharab hai aur thodi thakan lag rahi hai subah se,hinglish,32,male,,gp_teleconsult,routine,,handwritten_gold
-VIG_015,पेट में हल्की गैस और अपच की शिकायत है,hi,40,male,,gp_teleconsult,routine,,synthetic
-VIG_016,Doctor consultation for routine seasonal cold and prescription refill,en,45,female,,gp_teleconsult,routine,,synthetic
-VIG_017,thoda sirdard hai subah se koi gharelu upay ya consultation chahiye,hinglish,25,female,,gp_teleconsult,routine,,synthetic
-VIG_018,"Skin rash on both arms with itching for 2 weeks, getting worse",en,35,female,,specialist,routine,,synthetic
-VIG_019,Ghutno me purana dard hai chalne me dikkat hoti hai doctor ko dikhana hai,hinglish,63,female,arthritis,specialist,routine,,handwritten_gold
-VIG_020,"महीनों से सिरदर्द और माइग्रेन की पुरानी समस्या है, न्यूरोलॉजिस्ट से मिलना है",hi,38,male,migraine,specialist,routine,,synthetic
-VIG_021,"Chronic lower back ache for 2 months, need orthopaedic opinion",en,50,male,,specialist,routine,,synthetic
-VIG_022,Severe crushing chest pain radiating to left arm with cold sweat,en,55,male,hypertension,emergency_referral,immediate,chest_pain,handwritten_gold
-VIG_023,Papa ko seene me tez dard hai aur paseena aa raha hai saans nahi le pa rahe,hinglish,60,male,diabetes,emergency_referral,immediate,chest_pain;severe_breathlessness,handwritten_gold
-VIG_024,मरीज अचानक बेहोश होकर गिर पड़ा और कोई जवाब नहीं दे रहा है,hi,50,male,,emergency_referral,immediate,unconsciousness,synthetic
-VIG_025,Face drooping on right side and suddenly unable to speak or move right arm,en,72,female,hypertension,emergency_referral,immediate,stroke_signs,synthetic
-VIG_026,Khoon ki ulti ho rahi hai aur behoshi jaisi halat hai,hinglish,45,male,,emergency_referral,immediate,vomiting_blood,handwritten_gold
-VIG_027,Pregnant woman in 8th month with heavy vaginal bleeding and severe pain,en,27,female,pregnant,emergency_referral,immediate,pregnancy_emergency,synthetic
-VIG_028,Bachhe ne galti se floor cleaner ya poison pi liya hai,hinglish,4,male,,emergency_referral,immediate,poisoning_overdose,handwritten_gold
-VIG_029,"Heavy bleeding from leg wound after bike accident, not stopping with pressure",en,24,male,,emergency_referral,immediate,uncontrolled_bleeding,synthetic
-VIG_030,Patient is having continuous epileptic seizures and shaking violently,en,19,male,epilepsy,emergency_referral,immediate,seizure,synthetic
+id,user_input,norm_input,language,care_type,urgency,red_flags,follow_up_question,source
+S0001,"Doctor prescribed an injection, can someone come home",doctor prescribed an injection can someone come home,English,home_nursing,same_day,,,official_sanocare
+S0003,Grandmother has a bedsore that needs dressing,grandmother has a bedsore that needs dressing,English,home_nursing,same_day,,,official_sanocare
+S0005,Grandmother has a bedsore that needs dressing,grandmother has a bedsore that needs dressing,English,home_nursing,same_day,,,official_sanocare
+S0006,"सुबह से एसिडिटी है, डॉक्टर से सलाह चाहिए",subh se esiditi hai d ktr se slah chahie,Hindi,teleconsultation,same_day,,,official_sanocare
+S0007,Insulin injection help needed for elderly father,insulin injection help needed for elderly father,English,home_nursing,same_day,,,official_sanocare
+S0008,wo achanak gir gaye response nahi de rahe,wo achanak gir gaye response nahi de rahe,Hinglish,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0009,घर पर इंजेक्शन लगवाना है,ghr pr injekshn lgvana hai,Hindi,home_nursing,same_day,,,official_sanocare
+S0011,mummy ka bp sugar ghar pe check karwana hai,mummy ka hypertension diabetes ghar pe check karwana hai,Hinglish,paramedic_home_visit,same_day,,,official_sanocare
+S0012,"Book a full body checkup, home collection",book a full body checkup home collection,English,lab_test_home,scheduled,,,official_sanocare
+S0014,I want to book something for my mother,i want to book something for my mother,English,follow_up,,,"Happy to help. Could you tell me the main symptom or service you need (home visit, nursing, lab test, or teleconsult)?",official_sanocare
+S0016,पापा को तेज सीने में दर्द है और सांस नहीं आ रही,papa ko tej sine men drd hai aur sans nhin aa rhi,Hindi,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0018,मदद चाहिए,mdd chahie,Hindi,follow_up,,,"Namaste! I'm here to help. Who is this for, and what's the concern — fever, a nursing need, a lab test, or a doctor consult?",official_sanocare
+S0019,माँ के लिए कुछ बुक करना है,ma ke lie kuchh buk krna hai,Hindi,follow_up,,,"Happy to help. Could you tell me the main symptom or service you need (home visit, nursing, lab test, or teleconsult)?",official_sanocare
+S0020,Need wound dressing at home after surgery,need wound dressing at home after surgery,English,home_nursing,same_day,,,official_sanocare
+S0021,cbc aur thyroid test ghar se sample lekar,cbc aur thyroid test ghar se sample lekar,Hinglish,lab_test_home,scheduled,,,official_sanocare
+S0022,papa ko insulin injection chahiye ghar pe,papa ko insulin injection chahiye ghar pe,Hinglish,home_nursing,same_day,,,official_sanocare
+S0023,"subah se acidity gas hai, doctor se consult karna hai",subah se acidity gas hai doctor se consult karna hai,Hinglish,teleconsultation,same_day,,,official_sanocare
+S0024,doctor chahiye,doctor chahiye,Hinglish,follow_up,,,"Happy to help. Could you tell me the main symptom or service you need (home visit, nursing, lab test, or teleconsult)?",official_sanocare
+S0025,My father has had fever and cough for 2 days,my father has had fever and cough for 2 days,English,paramedic_home_visit,same_day,,,official_sanocare
+S0026,My father has had fever and cough for 2 days,my father has had fever and cough for 2 days,English,paramedic_home_visit,same_day,,,official_sanocare
+S0029,कल सुबह शुगर टेस्ट घर पर,kl subh shugr test ghr pr,Hindi,lab_test_home,scheduled,,,official_sanocare
+S0030,पापा को इंसुलिन लगवाना है,papa ko insulin lgvana hai,Hindi,home_nursing,same_day,,,official_sanocare
+S0031,Insulin injection help needed for elderly father,insulin injection help needed for elderly father,English,home_nursing,same_day,,,official_sanocare
+S0032,Heavy bleeding that won't stop after an accident,heavy bleeding that won t stop after an accident,English,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0033,Insulin injection help needed for elderly father,insulin injection help needed for elderly father,English,home_nursing,same_day,,,official_sanocare
+S0035,फुल बॉडी चेकअप घर से सैंपल,phul b di chekap ghr se sainpl,Hindi,lab_test_home,scheduled,,,official_sanocare
+S0036,Insulin injection help needed for elderly father,insulin injection help needed for elderly father,English,home_nursing,same_day,,,official_sanocare
+S0037,घर पर इंजेक्शन लगवाना है,ghr pr injekshn lgvana hai,Hindi,home_nursing,same_day,,,official_sanocare
+S0038,दादी को घाव की ड्रेसिंग चाहिए,dadi ko ghav ki dresing chahie,Hindi,home_nursing,same_day,,,official_sanocare
+S0040,Need blood sugar test at home tomorrow morning,need blood diabetes test at home tomorrow morning,English,lab_test_home,scheduled,,,official_sanocare
+S0041,कल सुबह शुगर टेस्ट घर पर,kl subh shugr test ghr pr,Hindi,lab_test_home,scheduled,,,official_sanocare
+S0042,"Grandfather is weak and not eating, want a home check-up",grandfather is weak and not eating want a home check up,English,paramedic_home_visit,same_day,,,official_sanocare
+S0043,kal subah sugar test ghar pe,kal subah diabetes test ghar pe,Hinglish,lab_test_home,scheduled,,,official_sanocare
+S0044,help chahiye,help chahiye,Hinglish,follow_up,,,"Namaste! I'm here to help. Who is this for, and what's the concern — fever, a nursing need, a lab test, or a doctor consult?",official_sanocare
+S0045,I need help,i need help,English,follow_up,,,"Happy to help. Could you tell me the main symptom or service you need (home visit, nursing, lab test, or teleconsult)?",official_sanocare
+S0048,operation ke baad ghar pe dressing karani hai,operation ke baad ghar pe dressing karani hai,Hinglish,home_nursing,same_day,,,official_sanocare
+S0050,Need a second opinion on my child's prescription,need a second opinion on my child s prescription,English,teleconsultation,same_day,,,official_sanocare
+S0052,cbc aur thyroid test ghar se sample lekar,cbc aur thyroid test ghar se sample lekar,Hinglish,lab_test_home,scheduled,,,official_sanocare
+S0053,reports ke baare me doctor se baat karni hai,reports ke baare me doctor se baat karni hai,Hinglish,teleconsultation,same_day,,,official_sanocare
+S0055,Need a second opinion on my child's prescription,need a second opinion on my child s prescription,English,teleconsultation,same_day,,,official_sanocare
+S0056,papa ko do din se bukhar hai aur khansi bhi,papa ko do din se fever hai aur cough bhi,Hinglish,paramedic_home_visit,same_day,,,official_sanocare
+S0057,I want to book something for my mother,i want to book something for my mother,English,follow_up,,,"Happy to help. Could you tell me the main symptom or service you need (home visit, nursing, lab test, or teleconsult)?",official_sanocare
+S0058,operation ke baad ghar pe dressing karani hai,operation ke baad ghar pe dressing karani hai,Hinglish,home_nursing,same_day,,,official_sanocare
+S0059,"Hi, is anyone there?",hi is anyone there,English,follow_up,,,"Happy to help. Could you tell me the main symptom or service you need (home visit, nursing, lab test, or teleconsult)?",official_sanocare
+S0061,फुल बॉडी चेकअप घर से सैंपल,phul b di chekap ghr se sainpl,Hindi,lab_test_home,scheduled,,,official_sanocare
+S0063,Need an IM injection given at home,need an im injection given at home,English,home_nursing,same_day,,,official_sanocare
+S0065,पापा को तेज सीने में दर्द है और सांस नहीं आ रही,papa ko tej sine men drd hai aur sans nhin aa rhi,Hindi,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0066,Need blood sugar test at home tomorrow morning,need blood diabetes test at home tomorrow morning,English,lab_test_home,scheduled,,,official_sanocare
+S0068,बच्चे की दवा पर सेकंड ओपिनियन चाहिए,bchche ki dva pr seknd opiniyn chahie,Hindi,teleconsultation,same_day,,,official_sanocare
+S0071,"Doctor prescribed an injection, can someone come home",doctor prescribed an injection can someone come home,English,home_nursing,same_day,,,official_sanocare
+S0072,wife ki post-op dressing change karwani hai,wife ki post op dressing change karwani hai,Hinglish,home_nursing,same_day,,,official_sanocare
+S0073,kal subah sugar test ghar pe,kal subah diabetes test ghar pe,Hinglish,lab_test_home,scheduled,,,official_sanocare
+S0075,papa ko severe chest pain hai saans nahi aa rahi,papa ko severe chest pain hai saans nahi aa rahi,Hinglish,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0076,I need help,i need help,English,follow_up,,,"Happy to help. Could you tell me the main symptom or service you need (home visit, nursing, lab test, or teleconsult)?",official_sanocare
+S0077,Need wound dressing at home after surgery,need wound dressing at home after surgery,English,home_nursing,same_day,,,official_sanocare
+S0079,Need blood sugar test at home tomorrow morning,need blood diabetes test at home tomorrow morning,English,lab_test_home,scheduled,,,official_sanocare
+S0080,Need an IM injection given at home,need an im injection given at home,English,home_nursing,same_day,,,official_sanocare
+S0081,Need blood sugar test at home tomorrow morning,need blood diabetes test at home tomorrow morning,English,lab_test_home,scheduled,,,official_sanocare
+S0082,I need help,i need help,English,follow_up,,,"Namaste! I'm here to help. Who is this for, and what's the concern — fever, a nursing need, a lab test, or a doctor consult?",official_sanocare
+S0083,Need blood sugar test at home tomorrow morning,need blood diabetes test at home tomorrow morning,English,lab_test_home,scheduled,,,official_sanocare
+S0084,Doctor chahiye,doctor chahiye,English,follow_up,,,"Happy to help. Could you tell me the main symptom or service you need (home visit, nursing, lab test, or teleconsult)?",official_sanocare
+S0086,bacche ki medicine pe second opinion chahiye,bacche ki medicine pe second opinion chahiye,Hinglish,teleconsultation,same_day,,,official_sanocare
+S0088,My father is having severe chest pain and can't breathe,my father is having severe chest pain and can t breathe,English,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0090,He suddenly collapsed and is not responding,he suddenly collapsed and is not responding,English,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0092,वो अचानक गिर गए और जवाब नहीं दे रहे,vo achank gir ge aur jvab nhin de rhe,Hindi,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0093,"Hi, is anyone there?",hi is anyone there,English,follow_up,,,"Happy to help. Could you tell me the main symptom or service you need (home visit, nursing, lab test, or teleconsult)?",official_sanocare
+S0094,पापा को तेज सीने में दर्द है और सांस नहीं आ रही,papa ko tej sine men drd hai aur sans nhin aa rhi,Hindi,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0095,Need a second opinion on my child's prescription,need a second opinion on my child s prescription,English,teleconsultation,same_day,,,official_sanocare
+S0097,papa ko do din se bukhar hai aur khansi bhi,papa ko do din se fever hai aur cough bhi,Hinglish,paramedic_home_visit,same_day,,,official_sanocare
+S0098,सीबीसी और थायराइड टेस्ट घर से सैंपल लेकर,sibisi aur thayraid test ghr se sainpl lekr,Hindi,lab_test_home,scheduled,,,official_sanocare
+S0100,घर पर इंजेक्शन लगवाना है,ghr pr injekshn lgvana hai,Hindi,home_nursing,same_day,,,official_sanocare
+S0101,बच्चे की दवा पर सेकंड ओपिनियन चाहिए,bchche ki dva pr seknd opiniyn chahie,Hindi,teleconsultation,same_day,,,official_sanocare
+S0102,mummy ka bp sugar ghar pe check karwana hai,mummy ka hypertension diabetes ghar pe check karwana hai,Hinglish,paramedic_home_visit,same_day,,,official_sanocare
+S0103,My father has had fever and cough for 2 days,my father has had fever and cough for 2 days,English,paramedic_home_visit,same_day,,,official_sanocare
+S0105,"डॉक्टर ने इंजेक्शन लिखा है, घर कोई आ सकता है",d ktr ne injekshn likha hai ghr koee aa skta hai,Hindi,home_nursing,same_day,,,official_sanocare
+S0106,वो अचानक गिर गए और जवाब नहीं दे रहे,vo achank gir ge aur jvab nhin de rhe,Hindi,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0107,help chahiye,help chahiye,Hinglish,follow_up,,,"Namaste! I'm here to help. Who is this for, and what's the concern — fever, a nursing need, a lab test, or a doctor consult?",official_sanocare
+S0108,Need an IM injection given at home,need an im injection given at home,English,home_nursing,same_day,,,official_sanocare
+S0109,kal subah sugar test ghar pe,kal subah diabetes test ghar pe,Hinglish,lab_test_home,scheduled,,,official_sanocare
+S0110,mummy ka bp sugar ghar pe check karwana hai,mummy ka hypertension diabetes ghar pe check karwana hai,Hinglish,paramedic_home_visit,same_day,,,official_sanocare
+S0111,वो अचानक गिर गए और जवाब नहीं दे रहे,vo achank gir ge aur jvab nhin de rhe,Hindi,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0112,घर पर इंजेक्शन लगवाना है,ghr pr injekshn lgvana hai,Hindi,home_nursing,same_day,,,official_sanocare
+S0113,"डॉक्टर ने इंजेक्शन लिखा है, घर कोई आ सकता है",d ktr ne injekshn likha hai ghr koee aa skta hai,Hindi,home_nursing,same_day,,,official_sanocare
+S0114,bacche ki medicine pe second opinion chahiye,bacche ki medicine pe second opinion chahiye,Hinglish,teleconsultation,same_day,,,official_sanocare
+S0115,"सुबह से एसिडिटी है, डॉक्टर से सलाह चाहिए",subh se esiditi hai d ktr se slah chahie,Hindi,teleconsultation,same_day,,,official_sanocare
+S0116,"Book a full body checkup, home collection",book a full body checkup home collection,English,lab_test_home,scheduled,,,official_sanocare
+S0118,वो अचानक गिर गए और जवाब नहीं दे रहे,vo achank gir ge aur jvab nhin de rhe,Hindi,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0119,घर पर इंजेक्शन लगवाना है,ghr pr injekshn lgvana hai,Hindi,home_nursing,same_day,,,official_sanocare
+S0121,फुल बॉडी चेकअप घर से सैंपल,phul b di chekap ghr se sainpl,Hindi,lab_test_home,scheduled,,,official_sanocare
+S0122,Post-operative dressing change required for my wife,post operative dressing change required for my wife,English,home_nursing,same_day,,,official_sanocare
+S0123,kal subah sugar test ghar pe,kal subah diabetes test ghar pe,Hinglish,lab_test_home,scheduled,,,official_sanocare
+S0125,मदद चाहिए,mdd chahie,Hindi,follow_up,,,"Namaste! I'm here to help. Who is this for, and what's the concern — fever, a nursing need, a lab test, or a doctor consult?",official_sanocare
+S0126,operation ke baad ghar pe dressing karani hai,operation ke baad ghar pe dressing karani hai,Hinglish,home_nursing,same_day,,,official_sanocare
+S0127,एक्सीडेंट के बाद खून नहीं रुक रहा,eksident ke bad khun nhin ruk rha,Hindi,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0128,Need a second opinion on my child's prescription,need a second opinion on my child s prescription,English,teleconsultation,same_day,,,official_sanocare
+S0129,बच्चे की दवा पर सेकंड ओपिनियन चाहिए,bchche ki dva pr seknd opiniyn chahie,Hindi,teleconsultation,same_day,,,official_sanocare
+S0130,cbc aur thyroid test ghar se sample lekar,cbc aur thyroid test ghar se sample lekar,Hinglish,lab_test_home,scheduled,,,official_sanocare
+S0131,पापा को तेज सीने में दर्द है और सांस नहीं आ रही,papa ko tej sine men drd hai aur sans nhin aa rhi,Hindi,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0132,पापा को तेज सीने में दर्द है और सांस नहीं आ रही,papa ko tej sine men drd hai aur sans nhin aa rhi,Hindi,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0133,"Doctor prescribed an injection, can someone come home",doctor prescribed an injection can someone come home,English,home_nursing,same_day,,,official_sanocare
+S0134,पापा को तेज सीने में दर्द है और सांस नहीं आ रही,papa ko tej sine men drd hai aur sans nhin aa rhi,Hindi,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0137,cbc aur thyroid test ghar se sample lekar,cbc aur thyroid test ghar se sample lekar,Hinglish,lab_test_home,scheduled,,,official_sanocare
+S0138,Need a second opinion on my child's prescription,need a second opinion on my child s prescription,English,teleconsultation,same_day,,,official_sanocare
+S0139,"Book a full body checkup, home collection",book a full body checkup home collection,English,lab_test_home,scheduled,,,official_sanocare
+S0142,कल सुबह शुगर टेस्ट घर पर,kl subh shugr test ghr pr,Hindi,lab_test_home,scheduled,,,official_sanocare
+S0144,"डॉक्टर ने इंजेक्शन लिखा है, घर कोई आ सकता है",d ktr ne injekshn likha hai ghr koee aa skta hai,Hindi,home_nursing,same_day,,,official_sanocare
+S0145,रिपोर्ट के बारे में डॉक्टर से बात करनी है,riport ke bare men d ktr se bat krni hai,Hindi,teleconsultation,same_day,,,official_sanocare
+S0146,पापा को तेज सीने में दर्द है और सांस नहीं आ रही,papa ko tej sine men drd hai aur sans nhin aa rhi,Hindi,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0148,"डॉक्टर ने इंजेक्शन लिखा है, घर कोई आ सकता है",d ktr ne injekshn likha hai ghr koee aa skta hai,Hindi,home_nursing,same_day,,,official_sanocare
+S0149,"डॉक्टर ने इंजेक्शन लिखा है, घर कोई आ सकता है",d ktr ne injekshn likha hai ghr koee aa skta hai,Hindi,home_nursing,same_day,,,official_sanocare
+S0150,My father has had fever and cough for 2 days,my father has had fever and cough for 2 days,English,paramedic_home_visit,same_day,,,official_sanocare
+S0152,mummy ke liye kuch book karna hai,mummy ke liye kuch book karna hai,Hinglish,follow_up,,,"Happy to help. Could you tell me the main symptom or service you need (home visit, nursing, lab test, or teleconsult)?",official_sanocare
+S0153,फुल बॉडी चेकअप घर से सैंपल,phul b di chekap ghr se sainpl,Hindi,lab_test_home,scheduled,,,official_sanocare
+S0156,kal subah sugar test ghar pe,kal subah diabetes test ghar pe,Hinglish,lab_test_home,scheduled,,,official_sanocare
+S0157,Heavy bleeding that won't stop after an accident,heavy bleeding that won t stop after an accident,English,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0159,"Doctor prescribed an injection, can someone come home",doctor prescribed an injection can someone come home,English,home_nursing,same_day,,,official_sanocare
+S0160,Need a second opinion on my child's prescription,need a second opinion on my child s prescription,English,teleconsultation,same_day,,,official_sanocare
+S0163,Need wound dressing at home after surgery,need wound dressing at home after surgery,English,home_nursing,same_day,,,official_sanocare
+S0164,"दादाजी कमजोर हैं, घर पर जांच चाहिए",dadaji kmjor hain ghr pr janch chahie,Hindi,paramedic_home_visit,same_day,,,official_sanocare
+S0165,"Grandfather is weak and not eating, want a home check-up",grandfather is weak and not eating want a home check up,English,paramedic_home_visit,same_day,,,official_sanocare
+S0166,घर पर इंजेक्शन लगवाना है,ghr pr injekshn lgvana hai,Hindi,home_nursing,same_day,,,official_sanocare
+S0167,papa ko severe chest pain hai saans nahi aa rahi,papa ko severe chest pain hai saans nahi aa rahi,Hinglish,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0168,Insulin injection help needed for elderly father,insulin injection help needed for elderly father,English,home_nursing,same_day,,,official_sanocare
+S0169,रिपोर्ट के बारे में डॉक्टर से बात करनी है,riport ke bare men d ktr se bat krni hai,Hindi,teleconsultation,same_day,,,official_sanocare
+S0171,फुल बॉडी चेकअप घर से सैंपल,phul b di chekap ghr se sainpl,Hindi,lab_test_home,scheduled,,,official_sanocare
+S0172,बच्चे की दवा पर सेकंड ओपिनियन चाहिए,bchche ki dva pr seknd opiniyn chahie,Hindi,teleconsultation,same_day,,,official_sanocare
+S0173,He suddenly collapsed and is not responding,he suddenly collapsed and is not responding,English,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0175,"Hi, is anyone there?",hi is anyone there,English,follow_up,,,"Happy to help. Could you tell me the main symptom or service you need (home visit, nursing, lab test, or teleconsult)?",official_sanocare
+S0176,"dadaji weak hain, ghar pe checkup chahiye",dadaji weak hain ghar pe checkup chahiye,Hinglish,paramedic_home_visit,same_day,,,official_sanocare
+S0177,Insulin injection help needed for elderly father,insulin injection help needed for elderly father,English,home_nursing,same_day,,,official_sanocare
+S0178,I want to book something for my mother,i want to book something for my mother,English,follow_up,,,"Happy to help. Could you tell me the main symptom or service you need (home visit, nursing, lab test, or teleconsult)?",official_sanocare
+S0179,Insulin injection help needed for elderly father,insulin injection help needed for elderly father,English,home_nursing,same_day,,,official_sanocare
+S0180,"Hi, is anyone there?",hi is anyone there,English,follow_up,,,"Happy to help. Could you tell me the main symptom or service you need (home visit, nursing, lab test, or teleconsult)?",official_sanocare
+S0181,operation ke baad ghar pe dressing karani hai,operation ke baad ghar pe dressing karani hai,Hinglish,home_nursing,same_day,,,official_sanocare
+S0182,Need an IM injection given at home,need an im injection given at home,English,home_nursing,same_day,,,official_sanocare
+S0183,"dadaji weak hain, ghar pe checkup chahiye",dadaji weak hain ghar pe checkup chahiye,Hinglish,paramedic_home_visit,same_day,,,official_sanocare
+S0184,"सुबह से एसिडिटी है, डॉक्टर से सलाह चाहिए",subh se esiditi hai d ktr se slah chahie,Hindi,teleconsultation,same_day,,,official_sanocare
+S0185,फुल बॉडी चेकअप घर से सैंपल,phul b di chekap ghr se sainpl,Hindi,lab_test_home,scheduled,,,official_sanocare
+S0186,mummy ka bp sugar ghar pe check karwana hai,mummy ka hypertension diabetes ghar pe check karwana hai,Hinglish,paramedic_home_visit,same_day,,,official_sanocare
+S0187,Doctor chahiye,doctor chahiye,English,follow_up,,,"Happy to help. Could you tell me the main symptom or service you need (home visit, nursing, lab test, or teleconsult)?",official_sanocare
+S0188,"Doctor prescribed an injection, can someone come home",doctor prescribed an injection can someone come home,English,home_nursing,same_day,,,official_sanocare
+S0189,Grandmother has a bedsore that needs dressing,grandmother has a bedsore that needs dressing,English,home_nursing,same_day,,,official_sanocare
+S0190,doctor chahiye,doctor chahiye,Hinglish,follow_up,,,"Namaste! I'm here to help. Who is this for, and what's the concern — fever, a nursing need, a lab test, or a doctor consult?",official_sanocare
+S0191,Post-operative dressing change required for my wife,post operative dressing change required for my wife,English,home_nursing,same_day,,,official_sanocare
+S0192,papa ko severe chest pain hai saans nahi aa rahi,papa ko severe chest pain hai saans nahi aa rahi,Hinglish,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0193,"Doctor prescribed an injection, can someone come home",doctor prescribed an injection can someone come home,English,home_nursing,same_day,,,official_sanocare
+S0195,घर पर इंजेक्शन लगवाना है,ghr pr injekshn lgvana hai,Hindi,home_nursing,same_day,,,official_sanocare
+S0196,वो अचानक गिर गए और जवाब नहीं दे रहे,vo achank gir ge aur jvab nhin de rhe,Hindi,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0197,help chahiye,help chahiye,Hinglish,follow_up,,,"Namaste! I'm here to help. Who is this for, and what's the concern — fever, a nursing need, a lab test, or a doctor consult?",official_sanocare
+S0198,papa ko insulin injection chahiye ghar pe,papa ko insulin injection chahiye ghar pe,Hinglish,home_nursing,same_day,,,official_sanocare
+S0202,Post-operative dressing change required for my wife,post operative dressing change required for my wife,English,home_nursing,same_day,,,official_sanocare
+S0204,mummy ka bp sugar ghar pe check karwana hai,mummy ka hypertension diabetes ghar pe check karwana hai,Hinglish,paramedic_home_visit,same_day,,,official_sanocare
+S0205,kal subah sugar test ghar pe,kal subah diabetes test ghar pe,Hinglish,lab_test_home,scheduled,,,official_sanocare
+S0206,Need wound dressing at home after surgery,need wound dressing at home after surgery,English,home_nursing,same_day,,,official_sanocare
+S0207,Heavy bleeding that won't stop after an accident,heavy bleeding that won t stop after an accident,English,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0208,"Grandfather is weak and not eating, want a home check-up",grandfather is weak and not eating want a home check up,English,paramedic_home_visit,same_day,,,official_sanocare
+S0209,full body checkup home collection,full body checkup home collection,Hinglish,lab_test_home,scheduled,,,official_sanocare
+S0210,papa ko do din se bukhar hai aur khansi bhi,papa ko do din se fever hai aur cough bhi,Hinglish,paramedic_home_visit,same_day,,,official_sanocare
+S0211,"dadaji weak hain, ghar pe checkup chahiye",dadaji weak hain ghar pe checkup chahiye,Hinglish,paramedic_home_visit,same_day,,,official_sanocare
+S0213,"Doctor prescribed an injection, can someone come home",doctor prescribed an injection can someone come home,English,home_nursing,same_day,,,official_sanocare
+S0214,papa ko severe chest pain hai saans nahi aa rahi,papa ko severe chest pain hai saans nahi aa rahi,Hinglish,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0215,"Book a full body checkup, home collection",book a full body checkup home collection,English,lab_test_home,scheduled,,,official_sanocare
+S0216,operation ke baad ghar pe dressing karani hai,operation ke baad ghar pe dressing karani hai,Hinglish,home_nursing,same_day,,,official_sanocare
+S0217,मदद चाहिए,mdd chahie,Hindi,follow_up,,,"Happy to help. Could you tell me the main symptom or service you need (home visit, nursing, lab test, or teleconsult)?",official_sanocare
+S0219,operation ke baad ghar pe dressing karani hai,operation ke baad ghar pe dressing karani hai,Hinglish,home_nursing,same_day,,,official_sanocare
+S0221,wo achanak gir gaye response nahi de rahe,wo achanak gir gaye response nahi de rahe,Hinglish,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0222,Doctor chahiye,doctor chahiye,English,follow_up,,,"Namaste! I'm here to help. Who is this for, and what's the concern — fever, a nursing need, a lab test, or a doctor consult?",official_sanocare
+S0223,full body checkup home collection,full body checkup home collection,Hinglish,lab_test_home,scheduled,,,official_sanocare
+S0224,My father has had fever and cough for 2 days,my father has had fever and cough for 2 days,English,paramedic_home_visit,same_day,,,official_sanocare
+S0225,My father is having severe chest pain and can't breathe,my father is having severe chest pain and can t breathe,English,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0226,papa ko do din se bukhar hai aur khansi bhi,papa ko do din se fever hai aur cough bhi,Hinglish,paramedic_home_visit,same_day,,,official_sanocare
+S0229,"dadaji weak hain, ghar pe checkup chahiye",dadaji weak hain ghar pe checkup chahiye,Hinglish,paramedic_home_visit,same_day,,,official_sanocare
+S0231,Insulin injection help needed for elderly father,insulin injection help needed for elderly father,English,home_nursing,same_day,,,official_sanocare
+S0232,बच्चे की दवा पर सेकंड ओपिनियन चाहिए,bchche ki dva pr seknd opiniyn chahie,Hindi,teleconsultation,same_day,,,official_sanocare
+S0233,cbc aur thyroid test ghar se sample lekar,cbc aur thyroid test ghar se sample lekar,Hinglish,lab_test_home,scheduled,,,official_sanocare
+S0234,operation ke baad ghar pe dressing karani hai,operation ke baad ghar pe dressing karani hai,Hinglish,home_nursing,same_day,,,official_sanocare
+S0235,Need a second opinion on my child's prescription,need a second opinion on my child s prescription,English,teleconsultation,same_day,,,official_sanocare
+S0236,He suddenly collapsed and is not responding,he suddenly collapsed and is not responding,English,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0239,I want to book something for my mother,i want to book something for my mother,English,follow_up,,,"Namaste! I'm here to help. Who is this for, and what's the concern — fever, a nursing need, a lab test, or a doctor consult?",official_sanocare
+S0240,cbc aur thyroid test ghar se sample lekar,cbc aur thyroid test ghar se sample lekar,Hinglish,lab_test_home,scheduled,,,official_sanocare
+S0241,Need a second opinion on my child's prescription,need a second opinion on my child s prescription,English,teleconsultation,same_day,,,official_sanocare
+S0242,help chahiye,help chahiye,Hinglish,follow_up,,,"Happy to help. Could you tell me the main symptom or service you need (home visit, nursing, lab test, or teleconsult)?",official_sanocare
+S0244,"नमस्ते, कोई है?",nmste koee hai,Hindi,follow_up,,,"Namaste! I'm here to help. Who is this for, and what's the concern — fever, a nursing need, a lab test, or a doctor consult?",official_sanocare
+S0245,Need a second opinion on my child's prescription,need a second opinion on my child s prescription,English,teleconsultation,same_day,,,official_sanocare
+S0246,operation ke baad ghar pe dressing karani hai,operation ke baad ghar pe dressing karani hai,Hinglish,home_nursing,same_day,,,official_sanocare
+S0247,Post-operative dressing change required for my wife,post operative dressing change required for my wife,English,home_nursing,same_day,,,official_sanocare
+S0248,operation ke baad ghar pe dressing karani hai,operation ke baad ghar pe dressing karani hai,Hinglish,home_nursing,same_day,,,official_sanocare
+S0249,वो अचानक गिर गए और जवाब नहीं दे रहे,vo achank gir ge aur jvab nhin de rhe,Hindi,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0251,Heavy bleeding that won't stop after an accident,heavy bleeding that won t stop after an accident,English,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0252,bacche ki medicine pe second opinion chahiye,bacche ki medicine pe second opinion chahiye,Hinglish,teleconsultation,same_day,,,official_sanocare
+S0255,He suddenly collapsed and is not responding,he suddenly collapsed and is not responding,English,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0258,पापा को तेज सीने में दर्द है और सांस नहीं आ रही,papa ko tej sine men drd hai aur sans nhin aa rhi,Hindi,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0260,रिपोर्ट के बारे में डॉक्टर से बात करनी है,riport ke bare men d ktr se bat krni hai,Hindi,teleconsultation,same_day,,,official_sanocare
+S0262,operation ke baad ghar pe dressing karani hai,operation ke baad ghar pe dressing karani hai,Hinglish,home_nursing,same_day,,,official_sanocare
+S0263,"सुबह से एसिडिटी है, डॉक्टर से सलाह चाहिए",subh se esiditi hai d ktr se slah chahie,Hindi,teleconsultation,same_day,,,official_sanocare
+S0265,Need an IM injection given at home,need an im injection given at home,English,home_nursing,same_day,,,official_sanocare
+S0267,hello koi hai?,hello koi hai,Hinglish,follow_up,,,"Namaste! I'm here to help. Who is this for, and what's the concern — fever, a nursing need, a lab test, or a doctor consult?",official_sanocare
+S0268,papa ko insulin injection chahiye ghar pe,papa ko insulin injection chahiye ghar pe,Hinglish,home_nursing,same_day,,,official_sanocare
+S0269,He suddenly collapsed and is not responding,he suddenly collapsed and is not responding,English,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0270,एक्सीडेंट के बाद खून नहीं रुक रहा,eksident ke bad khun nhin ruk rha,Hindi,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0271,"Book a full body checkup, home collection",book a full body checkup home collection,English,lab_test_home,scheduled,,,official_sanocare
+S0272,कल सुबह शुगर टेस्ट घर पर,kl subh shugr test ghr pr,Hindi,lab_test_home,scheduled,,,official_sanocare
+S0274,I want to book something for my mother,i want to book something for my mother,English,follow_up,,,"Namaste! I'm here to help. Who is this for, and what's the concern — fever, a nursing need, a lab test, or a doctor consult?",official_sanocare
+S0275,वो अचानक गिर गए और जवाब नहीं दे रहे,vo achank gir ge aur jvab nhin de rhe,Hindi,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0276,Post-operative dressing change required for my wife,post operative dressing change required for my wife,English,home_nursing,same_day,,,official_sanocare
+S0277,hello koi hai?,hello koi hai,Hinglish,follow_up,,,"Namaste! I'm here to help. Who is this for, and what's the concern — fever, a nursing need, a lab test, or a doctor consult?",official_sanocare
+S0280,घर पर इंजेक्शन लगवाना है,ghr pr injekshn lgvana hai,Hindi,home_nursing,same_day,,,official_sanocare
+S0281,"Book a full body checkup, home collection",book a full body checkup home collection,English,lab_test_home,scheduled,,,official_sanocare
+S0282,help chahiye,help chahiye,Hinglish,follow_up,,,"Happy to help. Could you tell me the main symptom or service you need (home visit, nursing, lab test, or teleconsult)?",official_sanocare
+S0283,वो अचानक गिर गए और जवाब नहीं दे रहे,vo achank gir ge aur jvab nhin de rhe,Hindi,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0284,My father is having severe chest pain and can't breathe,my father is having severe chest pain and can t breathe,English,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0287,mummy ka bp sugar ghar pe check karwana hai,mummy ka hypertension diabetes ghar pe check karwana hai,Hinglish,paramedic_home_visit,same_day,,,official_sanocare
+S0288,"डॉक्टर ने इंजेक्शन लिखा है, घर कोई आ सकता है",d ktr ne injekshn likha hai ghr koee aa skta hai,Hindi,home_nursing,same_day,,,official_sanocare
+S0289,"डॉक्टर ने इंजेक्शन लिखा है, घर कोई आ सकता है",d ktr ne injekshn likha hai ghr koee aa skta hai,Hindi,home_nursing,same_day,,,official_sanocare
+S0290,Insulin injection help needed for elderly father,insulin injection help needed for elderly father,English,home_nursing,same_day,,,official_sanocare
+S0291,पापा को तेज सीने में दर्द है और सांस नहीं आ रही,papa ko tej sine men drd hai aur sans nhin aa rhi,Hindi,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0292,"दादाजी कमजोर हैं, घर पर जांच चाहिए",dadaji kmjor hain ghr pr janch chahie,Hindi,paramedic_home_visit,same_day,,,official_sanocare
+S0293,सीबीसी और थायराइड टेस्ट घर से सैंपल लेकर,sibisi aur thayraid test ghr se sainpl lekr,Hindi,lab_test_home,scheduled,,,official_sanocare
+S0294,reports ke baare me doctor se baat karni hai,reports ke baare me doctor se baat karni hai,Hinglish,teleconsultation,same_day,,,official_sanocare
+S0296,wo achanak gir gaye response nahi de rahe,wo achanak gir gaye response nahi de rahe,Hinglish,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0298,bacche ki medicine pe second opinion chahiye,bacche ki medicine pe second opinion chahiye,Hinglish,teleconsultation,same_day,,,official_sanocare
+S0299,full body checkup home collection,full body checkup home collection,Hinglish,lab_test_home,scheduled,,,official_sanocare
+S0301,"Grandfather is weak and not eating, want a home check-up",grandfather is weak and not eating want a home check up,English,paramedic_home_visit,same_day,,,official_sanocare
+S0303,operation ke baad ghar pe dressing karani hai,operation ke baad ghar pe dressing karani hai,Hinglish,home_nursing,same_day,,,official_sanocare
+S0304,"Hi, is anyone there?",hi is anyone there,English,follow_up,,,"Namaste! I'm here to help. Who is this for, and what's the concern — fever, a nursing need, a lab test, or a doctor consult?",official_sanocare
+S0305,full body checkup home collection,full body checkup home collection,Hinglish,lab_test_home,scheduled,,,official_sanocare
+S0306,papa ko severe chest pain hai saans nahi aa rahi,papa ko severe chest pain hai saans nahi aa rahi,Hinglish,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0307,फुल बॉडी चेकअप घर से सैंपल,phul b di chekap ghr se sainpl,Hindi,lab_test_home,scheduled,,,official_sanocare
+S0308,My father has had fever and cough for 2 days,my father has had fever and cough for 2 days,English,paramedic_home_visit,same_day,,,official_sanocare
+S0309,Need a second opinion on my child's prescription,need a second opinion on my child s prescription,English,teleconsultation,same_day,,,official_sanocare
+S0310,वो अचानक गिर गए और जवाब नहीं दे रहे,vo achank gir ge aur jvab nhin de rhe,Hindi,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0313,wo achanak gir gaye response nahi de rahe,wo achanak gir gaye response nahi de rahe,Hinglish,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0314,wife ki post-op dressing change karwani hai,wife ki post op dressing change karwani hai,Hinglish,home_nursing,same_day,,,official_sanocare
+S0315,kal subah sugar test ghar pe,kal subah diabetes test ghar pe,Hinglish,lab_test_home,scheduled,,,official_sanocare
+S0317,I want to book something for my mother,i want to book something for my mother,English,follow_up,,,"Namaste! I'm here to help. Who is this for, and what's the concern — fever, a nursing need, a lab test, or a doctor consult?",official_sanocare
+S0318,papa ko insulin injection chahiye ghar pe,papa ko insulin injection chahiye ghar pe,Hinglish,home_nursing,same_day,,,official_sanocare
+S0319,सीबीसी और थायराइड टेस्ट घर से सैंपल लेकर,sibisi aur thayraid test ghr se sainpl lekr,Hindi,lab_test_home,scheduled,,,official_sanocare
+S0320,cbc aur thyroid test ghar se sample lekar,cbc aur thyroid test ghar se sample lekar,Hinglish,lab_test_home,scheduled,,,official_sanocare
+S0321,cbc aur thyroid test ghar se sample lekar,cbc aur thyroid test ghar se sample lekar,Hinglish,lab_test_home,scheduled,,,official_sanocare
+S0322,full body checkup home collection,full body checkup home collection,Hinglish,lab_test_home,scheduled,,,official_sanocare
+S0323,reports ke baare me doctor se baat karni hai,reports ke baare me doctor se baat karni hai,Hinglish,teleconsultation,same_day,,,official_sanocare
+S0324,पापा को इंसुलिन लगवाना है,papa ko insulin lgvana hai,Hindi,home_nursing,same_day,,,official_sanocare
+S0325,Post-operative dressing change required for my wife,post operative dressing change required for my wife,English,home_nursing,same_day,,,official_sanocare
+S0326,"Hi, is anyone there?",hi is anyone there,English,follow_up,,,"Namaste! I'm here to help. Who is this for, and what's the concern — fever, a nursing need, a lab test, or a doctor consult?",official_sanocare
+S0327,My father has had fever and cough for 2 days,my father has had fever and cough for 2 days,English,paramedic_home_visit,same_day,,,official_sanocare
+S0329,"Doctor prescribed an injection, can someone come home",doctor prescribed an injection can someone come home,English,home_nursing,same_day,,,official_sanocare
+S0330,"Grandfather is weak and not eating, want a home check-up",grandfather is weak and not eating want a home check up,English,paramedic_home_visit,same_day,,,official_sanocare
+S0331,doctor chahiye,doctor chahiye,Hinglish,follow_up,,,"Happy to help. Could you tell me the main symptom or service you need (home visit, nursing, lab test, or teleconsult)?",official_sanocare
+S0334,Post-operative dressing change required for my wife,post operative dressing change required for my wife,English,home_nursing,same_day,,,official_sanocare
+S0335,I want to book something for my mother,i want to book something for my mother,English,follow_up,,,"Happy to help. Could you tell me the main symptom or service you need (home visit, nursing, lab test, or teleconsult)?",official_sanocare
+S0336,My father has had fever and cough for 2 days,my father has had fever and cough for 2 days,English,paramedic_home_visit,same_day,,,official_sanocare
+S0337,एक्सीडेंट के बाद खून नहीं रुक रहा,eksident ke bad khun nhin ruk rha,Hindi,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+S0338,कल सुबह शुगर टेस्ट घर पर,kl subh shugr test ghr pr,Hindi,lab_test_home,scheduled,,,official_sanocare
+S0340,My father is having severe chest pain and can't breathe,my father is having severe chest pain and can t breathe,English,emergency_112,emergency,chest_pain;breathlessness,,official_sanocare
+SYN_0001,papa ko do din se bukhar hai aur khansi bhi,papa ko do din se fever hai aur cough bhi,Hinglish,paramedic_home_visit,same_day,,,synthetic_llm
+SYN_0002,mummy ko 3 din se bukhar aur thakan hai,mummy ko 3 din se fever aur fatigue hai,Hinglish,paramedic_home_visit,same_day,,,synthetic_llm
+SYN_0003,dadi ko bukhar aur ulti ho rahi hai ghar pe medic bhejo,dadi ko fever aur vomiting ho rahi hai ghar pe medic bhejo,Hinglish,paramedic_home_visit,same_day,,,synthetic_llm
+SYN_0004,Father is weak and has fever for 2 days need home visit,father is weak and has fever for 2 days need home visit,English,paramedic_home_visit,same_day,,,synthetic_llm
+SYN_0005,Elderly grandfather needs vitals monitoring and sugar BP check at home,elderly grandfather needs vitals monitoring and diabetes hypertension check at home,English,paramedic_home_visit,same_day,,,synthetic_llm
+SYN_0006,पिताजी को दो दिन से तेज बुखार और कमजोरी है घर पर दिखाएं,pitaji ko do din se tej fever aur kmjori hai ghr pr dikhaen,Hindi,paramedic_home_visit,same_day,,,synthetic_llm
+SYN_0007,मम्मी को खांसी और बुखार है घर पर मेडिक भेजें,mmmi ko cough aur fever hai ghr pr medik bhejen,Hindi,paramedic_home_visit,same_day,,,synthetic_llm
+SYN_0008,bachhe ko bukhar hai aur badan dard ghar pe dekhna hai,bachhe ko fever hai aur badan dard ghar pe dekhna hai,Hinglish,paramedic_home_visit,same_day,,,synthetic_llm
+SYN_0009,bedridden patient vitals check at home,bedridden patient vitals check at home,English,paramedic_home_visit,same_day,,,synthetic_llm
+SYN_0010,Senior citizen with high fever and chills needs in-person examination,senior citizen with high fever and chills needs in person examination,English,paramedic_home_visit,same_day,,,synthetic_llm
+SYN_0011,"Doctor prescribed an injection, can someone come home",doctor prescribed an injection can someone come home,English,home_nursing,same_day,,,synthetic_llm
+SYN_0012,ghar pe IM injection lagwana hai,ghar pe im injection lagwana hai,Hinglish,home_nursing,same_day,,,synthetic_llm
+SYN_0013,ghar par IV drip lagwane ke liye nurse chahiye,ghar par iv drip lagwane ke liye nurse chahiye,Hinglish,home_nursing,same_day,,,synthetic_llm
+SYN_0014,surgical wound dressing change at home,surgical wound dressing change at home,English,home_nursing,same_day,,,synthetic_llm
+SYN_0015,टांके कटवाने हैं और पट्टी बदलवानी है घर पर,tanke ktvane hain aur ptti bdlvani hai ghr pr,Hindi,home_nursing,same_day,,,synthetic_llm
+SYN_0016,catheter change and bladder wash at home,catheter change and bladder wash at home,English,home_nursing,same_day,,,synthetic_llm
+SYN_0017,bedsore dressing for elderly patient,bedsore dressing for elderly patient,English,home_nursing,same_day,,,synthetic_llm
+SYN_0018,home nursing for postoperative wound cleaning,home nursing for postoperative wound cleaning,English,home_nursing,same_day,,,synthetic_llm
+SYN_0019,insulin injection administration needed at home,insulin injection administration needed at home,English,home_nursing,same_day,,,synthetic_llm
+SYN_0020,dadi ke ghutne ke operation ke baad dressing karwani hai,dadi ke ghutne ke operation ke baad dressing karwani hai,Hinglish,home_nursing,same_day,,,synthetic_llm
+SYN_0021,full body checkup home collection,full body checkup home collection,English,lab_test_home,scheduled,,,synthetic_llm
+SYN_0022,blood sample collection at home for diabetes test,blood sample collection at home for diabetes test,English,lab_test_home,scheduled,,,synthetic_llm
+SYN_0023,ghar pe blood test ke liye sample lene wala chahiye,ghar pe blood test ke liye sample lene wala chahiye,Hinglish,lab_test_home,scheduled,,,synthetic_llm
+SYN_0024,lipid profile and CBC test sample collection tomorrow,lipid profile and cbc test sample collection tomorrow,English,lab_test_home,scheduled,,,synthetic_llm
+SYN_0025,घर पर खून की जांच के लिए सैंपल कलेक्शन भेजना है,ghr pr khun ki janch ke lie sainpl klekshn bhejna hai,Hindi,lab_test_home,scheduled,,,synthetic_llm
+SYN_0026,thyroid test home phlebotomy needed,thyroid test home phlebotomy needed,English,lab_test_home,scheduled,,,synthetic_llm
+SYN_0027,routine blood test at home for senior citizen,routine blood test at home for senior citizen,English,lab_test_home,scheduled,,,synthetic_llm
+SYN_0028,sugar test blood test home sample pick,diabetes test blood test home sample pick,English,lab_test_home,scheduled,,,synthetic_llm
+SYN_0029,ghar aakar khoon ki jaanch ka sample le jayein,ghar aakar khoon ki jaanch ka sample le jayein,Hinglish,lab_test_home,scheduled,,,synthetic_llm
+SYN_0030,doctor chahiye online baat karne ke liye,doctor chahiye online baat karne ke liye,Hinglish,teleconsultation,same_day,,,synthetic_llm
+SYN_0031,want to consult a doctor online for acidity,want to consult a doctor online for acidity,English,teleconsultation,same_day,,,synthetic_llm
+SYN_0032,mild cold and sore throat doctor consult,mild cold and sore throat doctor consult,English,teleconsultation,same_day,,,synthetic_llm
+SYN_0033,report review with doctor over video call,report review with doctor over video call,English,teleconsultation,same_day,,,synthetic_llm
+SYN_0034,doctor se online baat karni hai dawa ke liye,doctor se online baat karni hai dawa ke liye,Hinglish,teleconsultation,same_day,,,synthetic_llm
+SYN_0035,डॉक्टर से ऑनलाइन परामर्श लेना है सिरदर्द के लिए,d ktr se ऑnlain pramrsh lena hai sirdrd ke lie,Hindi,teleconsultation,same_day,,,synthetic_llm
+SYN_0036,general doctor video consultation,general doctor video consultation,English,teleconsultation,same_day,,,synthetic_llm
+SYN_0037,mujhe sir dard hai kal se doctor se consult karna hai,mujhe headache hai kal se doctor se consult karna hai,Hinglish,teleconsultation,same_day,,,synthetic_llm
+SYN_0038,skin allergy general doctor advice video,skin allergy general doctor advice video,English,teleconsultation,same_day,,,synthetic_llm
+SYN_0039,chest pain ho raha hai papa ko,chest pain ho raha hai papa ko,Hinglish,emergency_112,emergency,chest_pain,,synthetic_llm
+SYN_0040,severe crushing chest pain left arm sweating,severe crushing chest pain left arm sweating,English,emergency_112,emergency,chest_pain,,synthetic_llm
+SYN_0041,सीने में तेज दर्द और पसीना आ रहा है,sine men tej drd aur psina aa rha hai,Hindi,emergency_112,emergency,chest_pain,,synthetic_llm
+SYN_0042,saans nahi aa rahi dam ghut raha hai,saans nahi aa rahi dam ghut raha hai,Hinglish,emergency_112,emergency,breathlessness,,synthetic_llm
+SYN_0043,cannot breathe choking gasping for breath,cannot breathe choking gasping for breath,English,emergency_112,emergency,breathlessness,,synthetic_llm
+SYN_0044,सांस फूल रही है और होंठ नीले पड़ रहे हैं,sans phul rhi hai aur honth nile pd rhe hain,Hindi,emergency_112,emergency,breathlessness,,synthetic_llm
+SYN_0045,meri maa behosh ho gayi hai koi hosh nahi,meri maa behosh ho gayi hai koi hosh nahi,Hinglish,emergency_112,emergency,unconsciousness,,synthetic_llm
+SYN_0046,patient fainted and completely unresponsive,patient fainted and completely unresponsive,English,emergency_112,emergency,unconsciousness,,synthetic_llm
+SYN_0047,अचानक बेहोश होकर गिर पड़ा कोई जवाब नहीं दे रहा,achank behosh hokr gir pd a koee jvab nhin de rha,Hindi,emergency_112,emergency,unconsciousness,,synthetic_llm
+SYN_0048,accident ke baad heavy bleeding ruk nahi rahi,accident ke baad heavy bleeding ruk nahi rahi,Hinglish,emergency_112,emergency,severe_bleeding,,synthetic_llm
+SYN_0049,spurting blood profuse arterial bleeding won't stop,spurting blood profuse arterial bleeding won t stop,English,emergency_112,emergency,severe_bleeding,,synthetic_llm
+SYN_0050,खून बहना बंद नहीं हो रहा बहुत ज्यादा खून निकल रहा है,khun bhna bnd nhin ho rha bhut jyada khun nikl rha hai,Hindi,emergency_112,emergency,severe_bleeding,,synthetic_llm
+SYN_0051,chehra tedha ho gaya aur bol nahi pa raha,chehra tedha ho gaya aur bol nahi pa raha,Hinglish,emergency_112,emergency,stroke_symptoms,,synthetic_llm
+SYN_0052,sudden face drooping and one sided arm paralysis stroke,sudden face drooping and one sided arm paralysis stroke,English,emergency_112,emergency,stroke_symptoms,,synthetic_llm
+SYN_0053,लकवा मार गया आवाज लड़खड़ा रही है चेहरा टेढ़ा,lkva mar gya aavaj ld khd a rhi hai chehra tedh a,Hindi,emergency_112,emergency,stroke_symptoms,,synthetic_llm
+SYN_0054,mirgi ka daura pad gaya jhatke aa rahe,mirgi ka daura pad gaya jhatke aa rahe,Hinglish,emergency_112,emergency,seizure,,synthetic_llm
+SYN_0055,continuous violent seizure fits shaking violently,continuous violent seizure fits shaking violently,English,emergency_112,emergency,seizure,,synthetic_llm
+SYN_0056,दौरे पड़ रहे हैं मरीज जोर-जोर से कांप रहा है,daure pd rhe hain mrij jor jor se kanp rha hai,Hindi,emergency_112,emergency,seizure,,synthetic_llm
+SYN_0057,2 mahine ke bachhe ko 104 bukhar hai,2 mahine ke bachhe ko 104 fever hai,Hinglish,emergency_112,emergency,high_fever_infant,,synthetic_llm
+SYN_0058,newborn baby high fever 104 degrees lethargic,newborn baby high fever 104 degrees lethargic,English,emergency_112,emergency,high_fever_infant,,synthetic_llm
+SYN_0059,नवजात शिशु को तेज बुखार है और सुस्त है,nvjat shishu ko tej fever hai aur sust hai,Hindi,emergency_112,emergency,high_fever_infant,,synthetic_llm
+SYN_0060,khud ko marna chahta hu suicide karna hai,khud ko marna chahta hu suicide karna hai,Hinglish,emergency_112,emergency,suicidal_ideation,,synthetic_llm
+SYN_0061,suicidal ideation wanting to end life,suicidal ideation wanting to end life,English,emergency_112,emergency,suicidal_ideation,,synthetic_llm
+SYN_0062,जान देना चाहता हूँ खुदकुशी का विचार,jan dena chahta hu khudkushi ka vichar,Hindi,emergency_112,emergency,suicidal_ideation,,synthetic_llm
+SYN_0063,severe dehydration aankhen dhas gayi no urine 24 hours,severe dehydration aankhen dhas gayi no urine 24 hours,Hinglish,emergency_112,emergency,severe_dehydration,,synthetic_llm
+SYN_0064,unresponsive severe dehydration sunken eyes no urine,unresponsive severe dehydration sunken eyes no urine,English,emergency_112,emergency,severe_dehydration,,synthetic_llm
+SYN_0065,पानी की गंभीर कमी आंखें धंस गई पेशाब नहीं आ रहा,pani ki gnbhir kmi aankhen dhns gee peshab nhin aa rha,Hindi,emergency_112,emergency,severe_dehydration,,synthetic_llm
+SYN_0066,tabiyat theek nahi,tabiyat theek nahi,Hinglish,follow_up,,,What is the problem? Please tell us the main symptom.,synthetic_llm
+SYN_0067,kuch help chahiye,kuch help chahiye,Hinglish,follow_up,,,What is the problem? Please tell us the main symptom.,synthetic_llm
+SYN_0068,bimar hu,bimar hu,Hinglish,follow_up,,,What is the problem? Please tell us the main symptom.,synthetic_llm
+SYN_0069,not feeling well,not feeling well,English,follow_up,,,What is the problem? Please tell us the main symptom.,synthetic_llm
+SYN_0070,kripya madad karein,kripya madad karein,Hinglish,follow_up,,,What is the problem? Please tell us the main symptom.,synthetic_llm
+SYN_0071,need assistance,need assistance,English,follow_up,,,What is the problem? Please tell us the main symptom.,synthetic_llm

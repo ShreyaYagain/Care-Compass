@@ -30,6 +30,7 @@ try:
         urgency = Column(String, nullable=True)
         confidence = Column(Float, nullable=True)
         reasoning = Column(Text, nullable=True)
+        debug_trace = Column(JSON, nullable=True)
         created_at = Column(DateTime, default=datetime.utcnow)
 
 except ImportError:
@@ -46,7 +47,7 @@ except ImportError:
             self.created_at = datetime.utcnow()
 
     class AuditLog:
-        def __init__(self, user_input, language=None, red_flags=None, probabilities=None, care_type=None, urgency=None, confidence=None, reasoning=None):
+        def __init__(self, user_input, language=None, red_flags=None, probabilities=None, care_type=None, urgency=None, confidence=None, reasoning=None, debug_trace=None):
             self.id = f"AUD_{uuid.uuid4().hex[:10]}"
             self.user_input = user_input
             self.language = language
@@ -56,4 +57,5 @@ except ImportError:
             self.urgency = urgency
             self.confidence = confidence
             self.reasoning = reasoning
+            self.debug_trace = debug_trace
             self.created_at = datetime.utcnow()

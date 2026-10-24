@@ -25,25 +25,27 @@ fun LanguageToggle(
 
     Row(
         modifier = modifier
-            .clip(RoundedCornerShape(24.dp))
-            .background(Color(0xFFE0E0E0))
-            .padding(4.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .background(Color(0xFFE5E7EB))
+            .padding(3.dp)
     ) {
         languages.forEach { (code, label) ->
             val isSelected = selectedLanguage == code
             val bg = if (isSelected) PrimaryBlue else Color.Transparent
-            val textCol = if (isSelected) Color.White else Color(0xFF424242)
+            val textCol = if (isSelected) Color.White else Color(0xFF374151)
 
             Text(
                 text = label,
-                fontSize = 16.sp,
+                fontSize = 14.sp,
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                 color = textCol,
+                maxLines = 1,
+                softWrap = false,
                 modifier = Modifier
-                    .clip(RoundedCornerShape(20.dp))
+                    .clip(RoundedCornerShape(16.dp))
                     .background(bg)
                     .clickable { onLanguageSelected(code) }
-                    .padding(horizontal = 14.dp, vertical = 8.dp)
+                    .padding(horizontal = 10.dp, vertical = 6.dp)
             )
         }
     }

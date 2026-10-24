@@ -45,6 +45,8 @@ data class ContextUsedInfo(
     @SerializedName("season") val season: String? = null,
     @SerializedName("weather") val weather: String? = null,
     @SerializedName("aqi") val aqi: Double? = null,
+    @SerializedName("location") val location: String? = null,
+    @SerializedName("time") val time: String? = null,
     @SerializedName("tags") val tags: List<String> = emptyList(),
     @SerializedName("reason") val reason: String? = null
 )

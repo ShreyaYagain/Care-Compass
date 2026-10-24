@@ -149,6 +149,21 @@ fun ResultScreen(
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        if (!contextInfo.location.isNullOrBlank()) {
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = Color(0xFFE8F0FE)
+                            ) {
+                                Text(
+                                    text = contextInfo.location,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = PrimaryBlue,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                )
+                            }
+                        }
+
                         if (!contextInfo.season.isNullOrBlank()) {
                             Surface(
                                 shape = RoundedCornerShape(12.dp),
@@ -194,6 +209,20 @@ fun ResultScreen(
                                     fontSize = 12.sp,
                                     fontWeight = if (contextInfo.aqi >= 200) FontWeight.Bold else FontWeight.Normal,
                                     color = if (contextInfo.aqi >= 200) Color(0xFFC62828) else Color(0xFF424242),
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                )
+                            }
+                        }
+
+                        if (!contextInfo.time.isNullOrBlank()) {
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = Color(0xFFF1F3F4)
+                            ) {
+                                Text(
+                                    text = contextInfo.time,
+                                    fontSize = 12.sp,
+                                    color = Color(0xFF424242),
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                                 )
                             }

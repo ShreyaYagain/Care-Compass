@@ -115,9 +115,11 @@ fun HomeScreen(
                 inputText = partial
             },
             onFinalResult = { finalResult ->
+                // Fill the field so the user can review/correct the
+                // transcription, then press send themselves.
                 inputText = finalResult
                 if (finalResult.isNotBlank()) {
-                    viewModel.submitUserInput(finalResult)
+                    userMessage = "Transcription ready — check it, then press send."
                 }
             },
             onError = { errMsg ->
@@ -502,19 +504,21 @@ fun HomeScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    OutlinedButton(
+                    Button(
                         onClick = {
                             val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:112"))
                             context.startActivity(intent)
                         },
                         modifier = Modifier.weight(1f).height(48.dp),
                         shape = RoundedCornerShape(10.dp),
-                        border = BorderStroke(1.5.dp, EmergencyRed),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = EmergencyRed)
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = EmergencyRed,
+                            contentColor = Color.White
+                        )
                     ) {
-                        Icon(Icons.Default.Warning, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Icon(Icons.Default.Warning, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color.White)
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Emergency: 112", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        Text("Emergency: 112", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     }
 
                     val bookServicesLabel = when (uiState.selectedLanguage) {
@@ -522,16 +526,18 @@ fun HomeScreen(
                         "hinglish" -> stringResource(R.string.book_services_hinglish)
                         else -> stringResource(R.string.book_services_en)
                     }
-                    OutlinedButton(
+                    Button(
                         onClick = { onBookServices() },
                         modifier = Modifier.weight(1f).height(48.dp),
                         shape = RoundedCornerShape(10.dp),
-                        border = BorderStroke(1.5.dp, PrimaryBlue),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = PrimaryBlue)
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = PrimaryBlue,
+                            contentColor = Color.White
+                        )
                     ) {
-                        Icon(Icons.Default.CalendarMonth, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Icon(Icons.Default.CalendarMonth, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color.White)
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text(bookServicesLabel, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        Text(bookServicesLabel, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     }
                 }
             }

@@ -2,6 +2,16 @@
 
 CareCompass understands patient requests in English, Hindi, and Hinglish (text or voice), asks targeted follow-up questions, classifies care type and urgency, flags red-flag symptoms, and matches the best available caregiver.
 
+### Dataset Citation
+Trained and evaluated using:
+> **"Sanocare synthetic care-triage dataset v1 (2026), provided for the IIIT-Delhi hackathon."**
+
+### Official Label Specification
+- **Care Types**: `paramedic_home_visit`, `home_nursing`, `lab_test_home`, `teleconsultation`, `emergency_112`
+- **Urgencies**: `emergency`, `same_day`, `scheduled`
+- **Red Flags**: `chest_pain`, `breathlessness`, `unconsciousness`, `severe_bleeding`, `stroke_symptoms`, `seizure`, `high_fever_infant`, `suicidal_ideation`, `severe_dehydration`
+- **Deterministic Urgency**: Urgency is mapped directly from care type via `CARE_TO_URGENCY`.
+
 ## Tech Stack
 - **Language**: Python 3.11
 - **API**: FastAPI, Uvicorn, Pydantic v2

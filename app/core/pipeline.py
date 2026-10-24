@@ -49,7 +49,9 @@ def run_triage_pipeline(
     debug: bool = False,
 ) -> TriageResponse:
     """
-    Executes the triage pipeline with full diagnostic tracing.
+    Executes the triage pipeline with full diagnostic tracing adhering to the official labels:
+    CARE_TYPES = ["paramedic_home_visit", "home_nursing", "lab_test_home", "teleconsultation", "emergency_112"]
+    URGENCIES = ["emergency", "same_day", "scheduled"]
     """
     user_input = request.user_input
     history_dicts = [{"role": m.role, "text": m.text or m.content or ""} for m in request.conversation_history]
@@ -61,7 +63,7 @@ def run_triage_pipeline(
     orig_text, norm_text, detected_lang = detect_and_normalise(user_input)
     lang = request.language if request.language != "auto" else detected_lang
 
-    # 2. Red-flag check (only high-severity flags go into high_flags)
+    # 2. Red-flag check (only high-severity flags from the 9 official categories)
     high_flags, medium_flags, severity, is_high_emergency = check_red_flags(
         orig_text, norm_text, return_medium=True
     )
@@ -71,11 +73,11 @@ def run_triage_pipeline(
         reasoning = build_reasoning(
             symptoms=[],
             duration=None,
-            breathing_difficulty=True if "severe_breathlessness" in high_flags else None,
+            breathing_difficulty=True if "breathlessness" in high_flags else None,
             chest_pain=True if "chest_pain" in high_flags else None,
             red_flags=high_flags,
-            care_type="emergency_referral",
-            urgency="immediate",
+            care_type="emergency_112",
+            urgency="emergency",
             modifiers=[],
             language=lang,
         )
@@ -83,22 +85,22 @@ def run_triage_pipeline(
         debug_trace = {
             "red_flags_high": high_flags,
             "red_flags_medium": medium_flags,
-            "model_probs": {"care_type": None, "urgency": {"immediate": 1.0}},
-            "urgency_after_cost_matrix": "immediate",
-            "urgency_after_risk_modifiers": "immediate",
-            "urgency_after_confidence_fallback": "immediate",
+            "model_probs": {"emergency_112": 1.0},
+            "urgency_after_cost_matrix": "emergency",
+            "urgency_after_risk_modifiers": "emergency",
+            "urgency_after_confidence_fallback": "emergency",
             "confidence": 1.0,
             "slots": {},
-            "final_care_type": "emergency_referral",
-            "final_urgency": "immediate",
-            "reasons": ["High-severity red flag triggered immediate emergency bypass"],
+            "final_care_type": "emergency_112",
+            "final_urgency": "emergency",
+            "reasons": ["High-severity official red flag triggered immediate 112 emergency bypass"],
         }
 
         resp = TriageResponse(
             follow_up_question=None,
             follow_up_options=[],
-            care_type="emergency_referral",
-            urgency="immediate",
+            care_type="emergency_112",
+            urgency="emergency",
             red_flags=high_flags,
             reasoning=reasoning,
             confidence=1.0,
@@ -113,9 +115,9 @@ def run_triage_pipeline(
                     user_input=user_input,
                     language=lang,
                     red_flags=high_flags,
-                    probabilities={"immediate": 1.0},
-                    care_type="emergency_referral",
-                    urgency="immediate",
+                    probabilities={"emergency_112": 1.0},
+                    care_type="emergency_112",
+                    urgency="emergency",
                     confidence=1.0,
                     reasoning=reasoning,
                     debug_trace=debug_trace,
@@ -172,28 +174,21 @@ def run_triage_pipeline(
         substantive_tokens.append(norm_text.strip())
     patient_text = " ".join(substantive_tokens) if substantive_tokens else norm_text
 
-    # 5. Triage model prediction
+    # 5. Triage model prediction (predicts care_type; urgency derived from CARE_TO_URGENCY)
     care_type, urgency, probs, confidence = predict_triage(slots, patient_text)
-    urgency_after_cost_matrix = urgency
-    reasons.append(f"Stage 5 (Model/Cost Matrix): care_type={care_type}, urgency={urgency_after_cost_matrix}, probs={probs}, conf={confidence}")
+    reasons.append(f"Stage 5 (Model Prediction): care_type={care_type}, urgency={urgency}, probs={probs}, conf={confidence}")
 
-    # 6. Risk modifiers (Rule E: max +1 bump, capped at same_day)
+    # 6. Risk modifiers
     urgency_after_risk_modifiers, care_type, applied_modifiers = apply_risk_modifiers(
-        request.patient, slots, urgency_after_cost_matrix, care_type
+        request.patient, slots, urgency, care_type
     )
-    if medium_flags:
-        if "high_fever_infant" in medium_flags:
-            if urgency_after_risk_modifiers == "routine":
-                urgency_after_risk_modifiers = "same_day"
-            applied_modifiers.append("infant_high_fever_observed")
-    reasons.append(f"Stage 6 (Risk Modifiers): urgency={urgency_after_risk_modifiers}, applied={applied_modifiers}")
+    reasons.append(f"Stage 6 (Risk Modifiers): urgency={urgency_after_risk_modifiers}, care_type={care_type}, applied={applied_modifiers}")
 
-    # 7. Confidence fallback (Rule F)
+    # 7. Confidence fallback (Rule 2: low confidence returns follow_up_question with care_type=null and urgency=null)
     urgency_after_confidence_fallback = urgency_after_risk_modifiers
-    confidence_escalated = False
     if (
-        urgency_after_risk_modifiers != "immediate"
-        and care_type != "emergency_referral"
+        urgency_after_risk_modifiers != "emergency"
+        and care_type != "emergency_112"
         and confidence < settings.CONF_THRESHOLD
     ):
         if history_turns < settings.MAX_FOLLOWUPS:
@@ -202,14 +197,14 @@ def run_triage_pipeline(
                 "red_flags_high": high_flags,
                 "red_flags_medium": medium_flags,
                 "model_probs": probs,
-                "urgency_after_cost_matrix": urgency_after_cost_matrix,
+                "urgency_after_cost_matrix": urgency,
                 "urgency_after_risk_modifiers": urgency_after_risk_modifiers,
-                "urgency_after_confidence_fallback": urgency_after_risk_modifiers,
+                "urgency_after_confidence_fallback": None,
                 "confidence": confidence,
                 "slots": slots,
                 "final_care_type": None,
                 "final_urgency": None,
-                "reasons": reasons + [f"Stage 7: Low confidence ({confidence:.2f} < {settings.CONF_THRESHOLD}), asking follow-up question."],
+                "reasons": reasons + [f"Stage 7: Low confidence ({confidence:.2f} < {settings.CONF_THRESHOLD}), returning follow-up question."],
             }
             return TriageResponse(
                 follow_up_question=q_text,
@@ -224,56 +219,43 @@ def run_triage_pipeline(
                 debug=debug_trace if debug else None,
             )
         else:
-            if urgency_after_risk_modifiers == "routine":
-                urgency_after_confidence_fallback = "same_day"
-                confidence_escalated = True
-                reasons.append(f"Stage 7: Low confidence ({confidence:.2f}), turns exhausted; escalated routine -> same_day.")
-            else:
-                reasons.append(f"Stage 7: Low confidence ({confidence:.2f}), turns exhausted; capped at same_day.")
-    else:
-        reasons.append(f"Stage 7 (Confidence Fallback): kept urgency={urgency_after_confidence_fallback}")
+            reasons.append(f"Stage 7: Low confidence ({confidence:.2f}), turns exhausted; proceeding with best prediction.")
 
-    # 8. Check for emergency escalation (Rule A & Rule C)
+    # 8. Check for emergency escalation (Rule 2)
     user_answered_yes_high = (
         slots.get("breathing_difficulty") is True
         or slots.get("chest_pain") is True
         or slots.get("consciousness") == "unconscious"
         or slots.get("bleeding") is True
     )
-    model_p_immediate = probs.get("immediate", 0.0) if isinstance(probs, dict) else 0.0
+    model_p_emergency = probs.get("emergency_112", 0.0) if isinstance(probs, dict) else 0.0
     has_pregnancy_emergency = "pregnancy_acute_risk" in applied_modifiers
-    is_emergency = is_high_emergency or user_answered_yes_high or (model_p_immediate >= 0.50) or has_pregnancy_emergency
+
+    is_emergency = is_high_emergency or user_answered_yes_high or (model_p_emergency >= 0.50) or has_pregnancy_emergency
 
     if is_emergency:
-        final_care_type = "emergency_referral"
-        final_urgency = "immediate"
+        final_care_type = "emergency_112"
+        final_urgency = "emergency"
         emergency_steps = _get_emergency_steps(lang)
         matched_caregivers = []
-        reasons.append("Stage 8 (Emergency Rule A): Triggered emergency_referral & immediate")
+        reasons.append("Stage 8 (Rule 2): Emergency triggered -> emergency_112 & emergency")
     else:
-        final_urgency = urgency_after_confidence_fallback
-        if final_urgency == "immediate":
-            final_urgency = "same_day"
-
+        # Non-emergency
         final_care_type = care_type
-        # Rule C: emergency_referral ONLY when urgency is immediate
-        if final_care_type == "emergency_referral":
-            if "fever" in slots.get("symptoms", []) and "cough" in slots.get("symptoms", []):
-                final_care_type = "paramedic_home_visit"
-            elif final_urgency == "same_day":
-                final_care_type = "paramedic_home_visit"
-            else:
-                final_care_type = "gp_teleconsult"
+        if final_care_type == "emergency_112":
+            final_care_type = "paramedic_home_visit" if ("fever" in slots.get("symptoms", [])) else "teleconsultation"
 
+        final_urgency = settings.CARE_TO_URGENCY.get(final_care_type, "same_day")
         emergency_steps = []
         matched_caregivers = rank_caregivers(
             care_type=final_care_type,
             urgency=final_urgency,
             user_location=request.location,
             user_language=lang,
+            user_text=user_input,
             limit=3,
         )
-        reasons.append(f"Stage 8: Normal routing: care_type={final_care_type}, urgency={final_urgency}")
+        reasons.append(f"Stage 8: Non-emergency routing: care_type={final_care_type}, urgency={final_urgency}")
 
     # 9. Explainability
     reasoning = build_reasoning(
@@ -287,16 +269,12 @@ def run_triage_pipeline(
         modifiers=applied_modifiers,
         language=lang,
     )
-    if confidence_escalated:
-        reasoning += " Not fully sure, so we suggest a visit today."
-    if medium_flags and "infant_high_fever_observed" in applied_modifiers:
-        reasoning += " High fever in infant requires close same-day clinical assessment."
 
     debug_trace = {
         "red_flags_high": high_flags,
         "red_flags_medium": medium_flags,
         "model_probs": probs,
-        "urgency_after_cost_matrix": urgency_after_cost_matrix,
+        "urgency_after_cost_matrix": urgency,
         "urgency_after_risk_modifiers": urgency_after_risk_modifiers,
         "urgency_after_confidence_fallback": urgency_after_confidence_fallback,
         "confidence": confidence,

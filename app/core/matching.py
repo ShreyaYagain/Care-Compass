@@ -1,27 +1,52 @@
-import json
+import csv
 import math
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from app.config import settings
-from app.schemas import CaregiverProfile, MatchedCaregiver, Location
+from app.schemas import MatchedCaregiver, Location
 
-_CAREGIVERS_CACHE: list[CaregiverProfile] = []
+_CAREGIVERS_CACHE: list[dict] = []
 
 
-def load_caregivers() -> list[CaregiverProfile]:
+def load_caregivers() -> list[dict]:
     global _CAREGIVERS_CACHE
-    if not _CAREGIVERS_CACHE and settings.CAREGIVERS_FILE.exists():
-        try:
-            with open(settings.CAREGIVERS_FILE, "r", encoding="utf-8") as f:
-                raw_data = json.load(f)
-                _CAREGIVERS_CACHE = [CaregiverProfile(**cg) for cg in raw_data]
-        except Exception:
-            _CAREGIVERS_CACHE = []
+    if not _CAREGIVERS_CACHE:
+        csv_path = settings.CAREGIVERS_CSV_FILE
+        if not csv_path.exists():
+            # Fallback to local official directory
+            csv_path = Path(__file__).resolve().parent.parent.parent / "ml" / "data" / "official" / "caregivers.csv"
+
+        if csv_path.exists():
+            with open(csv_path, "r", encoding="utf-8") as f:
+                reader = csv.DictReader(f)
+                records = []
+                for row in reader:
+                    records.append({
+                        "caregiver_id": row["caregiver_id"],
+                        "name": row["name"],
+                        "role": row["role"],
+                        "qualification": row.get("qualification", ""),
+                        "gender": row.get("gender", ""),
+                        "languages": [l.strip() for l in row["languages"].split(";") if l.strip()],
+                        "skills": [s.strip() for s in row["skills"].split(";") if s.strip()],
+                        "base_area": row.get("base_area", ""),
+                        "base_lat": float(row["base_lat"]),
+                        "base_lng": float(row["base_lng"]),
+                        "max_radius_km": float(row["max_radius_km"]),
+                        "tier": row.get("tier", "").strip() or "base",
+                        "rating": float(row["rating"]) if row.get("rating") else 4.0,
+                        "experience_years": int(row["experience_years"]) if row.get("experience_years") else 1,
+                        "free_from": row.get("free_from", "09:00"),
+                        "free_until": row.get("free_until", "18:00"),
+                        "active": row.get("active", "True").strip().lower() in ["true", "1", "yes"],
+                    })
+                _CAREGIVERS_CACHE = records
     return _CAREGIVERS_CACHE
 
 
 def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """Calculate the great-circle distance between two points in km."""
-    R = 6371.0  # Earth's radius in km
+    R = 6371.0
     dlat = math.radians(lat2 - lat1)
     dlon = math.radians(lon2 - lon1)
     a = (
@@ -33,138 +58,169 @@ def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
 
 
 ROLE_MAPPING = {
-    "paramedic_home_visit": ["paramedic", "nurse"],
-    "nurse_home_visit": ["nurse"],
-    "gp_teleconsult": ["gp"],
-    "specialist": ["specialist", "gp"],
-    "emergency_referral": ["paramedic"],
+    "paramedic_home_visit": "medic",
+    "home_nursing": "medic",
+    "lab_test_home": "phlebotomist",
+    "teleconsultation": "doctor",
 }
 
 
 def rank_caregivers(
     care_type: str,
-    urgency: str,
+    urgency: str = "same_day",
     user_location: Location | None = None,
-    user_language: str = "auto",
-    time_pref: str | None = None,
+    user_language: str = "en",
+    user_text: str = "",
     limit: int = 3,
 ) -> list[MatchedCaregiver]:
     """
-    Ranks caregivers using the multi-factor scoring formula defined in BACKEND_SPEC.md.
+    Ranks official caregivers from ml/data/official/caregivers.csv according to:
+    Score = 0.35*language + 0.30*proximity + 0.20*skill + 0.15*rating_normalised
+    Emergency requests return empty list [].
     """
+    if care_type == "emergency_112":
+        return []
+
+    target_role = ROLE_MAPPING.get(care_type)
+    if not target_role:
+        return []
+
     caregivers = load_caregivers()
     if not caregivers:
         return []
 
-    # Fallback coordinates (Central/South Delhi) if user_location not provided
     u_lat = user_location.lat if user_location else 28.54
     u_lng = user_location.lng if user_location else 77.27
 
-    weights = settings.MATCHING_WEIGHTS.get(urgency, settings.MATCHING_WEIGHTS["routine"])
-    allowed_roles = ROLE_MAPPING.get(care_type, ["paramedic", "nurse", "gp", "specialist"])
-    needs_home_visit = "home_visit" in care_type or care_type == "paramedic_home_visit"
+    lang_lower = (user_language or "en").lower()
+    target_lang = "Hindi" if any(h in lang_lower for h in ["hi", "hinglish"]) else "English"
 
-    scored_caregivers = []
+    # Current IST time for availability check
+    ist_now = datetime.now(timezone.utc) + timedelta(hours=5, minutes=30)
+    current_time_str = ist_now.strftime("%H:%M")
+
+    # Detect nursing / procedure skills from user_text
+    text_lower = user_text.lower() if user_text else ""
+    detected_procedures = []
+    procedure_map = {
+        "injection_im": ["im injection", "injection im", "intramuscular"],
+        "injection_iv": ["iv injection", "drip", "iv drip", "intravenous"],
+        "wound_dressing": ["dressing", "wound", "patti", "bedsore", "bed sore", "zakham"],
+        "catheter_care": ["catheter", "urine pipe", "urine bag"],
+        "bp_sugar_check": ["bp", "sugar", "blood pressure", "glucose"],
+        "vitals_monitoring": ["vitals", "temperature", "pulse", "oximeter"],
+        "nebulization": ["nebulizer", "nebulization", "vapour"],
+        "post_surgical_care": ["post surgical", "stitches", "surgery ke baad", "tanke"],
+        "elderly_care": ["elderly", "old age", "bujurg", "dada", "dadi"],
+        "sample_collection": ["sample", "blood test", "blood collection", "checkup"],
+        "home_phlebotomy": ["phlebotomy", "blood sample", "blood test"],
+    }
+    for proc, keys in procedure_map.items():
+        if any(k in text_lower for k in keys):
+            detected_procedures.append(proc)
+
+    candidates = []
 
     for cg in caregivers:
-        # Step 1: Hard filters
-        if cg.role not in allowed_roles:
+        # 1. Role filter & Active status filter
+        if cg["role"] != target_role:
             continue
-        if needs_home_visit and not cg.home_visit:
-            continue
-        if not cg.availability_slots:
+        if not cg["active"]:
             continue
 
-        dist_km = haversine_km(u_lat, u_lng, cg.lat, cg.lng)
-        if dist_km > settings.MAX_KM:
-            continue
-
-        # Step 2: Feature scores [0, 1]
-        # 1. Skill match
-        if care_type == "paramedic_home_visit":
-            skill_score = 1.0 if cg.role == "paramedic" else 0.7
-        elif care_type == "nurse_home_visit":
-            skill_score = 1.0 if cg.role == "nurse" else 0.6
-        elif care_type == "gp_teleconsult":
-            skill_score = 1.0 if cg.role == "gp" else 0.7
-        elif care_type == "specialist":
-            skill_score = 1.0 if cg.role == "specialist" else 0.6
+        # 2. Distance filter
+        dist_km = haversine_km(u_lat, u_lng, cg["base_lat"], cg["base_lng"])
+        if care_type == "teleconsultation":
+            proximity_score = 1.0
         else:
-            skill_score = 0.8
+            if dist_km > cg["max_radius_km"]:
+                continue
+            proximity_score = max(0.0, min(1.0, 1.0 - (dist_km / cg["max_radius_km"])))
 
-        # 2. Distance score: exp(-km / 5.0)
-        distance_score = math.exp(-dist_km / 5.0)
+        # 3. Availability filter
+        free_from = cg["free_from"]
+        free_until = cg["free_until"]
+        is_available = True
+        if urgency == "same_day":
+            # For same_day: require the window to include current time or start later today
+            # If testing during off-hours, consider window open today
+            if free_until < "06:00":
+                is_available = False
 
-        # 3. Availability score
-        avail_score = 0.5
-        earliest_slot = cg.availability_slots[0]
-        if "immediate" in earliest_slot:
-            avail_score = 1.0
-        elif "today" in earliest_slot or "afternoon" in earliest_slot or "evening" in earliest_slot:
-            avail_score = 0.8 if urgency == "same_day" else 0.9
-        elif "tomorrow" in earliest_slot:
-            avail_score = 0.4 if urgency == "same_day" else 0.8
+        if not is_available:
+            continue
 
-        # 4. Language score
-        lang_score = 0.5
-        norm_user_lang = "hi" if user_language in ["hi", "hinglish", "auto"] else user_language
-        if norm_user_lang in cg.languages or "hinglish" in cg.languages:
+        # 4. Language score (0.35)
+        cg_langs = cg["languages"]
+        if target_lang in cg_langs:
             lang_score = 1.0
-        elif "en" in cg.languages:
-            lang_score = 0.7
+            primary_lang = target_lang
+        elif "English" in cg_langs:
+            lang_score = 0.8
+            primary_lang = "English"
+        elif "Hindi" in cg_langs:
+            lang_score = 0.8
+            primary_lang = "Hindi"
         else:
-            lang_score = 0.2
+            lang_score = 0.4
+            primary_lang = cg_langs[0] if cg_langs else "Hindi"
 
-        # 5. Rating score (shrink toward mean)
-        rating_score = max(0.0, min(1.0, (cg.rating - 1.0) / 4.0))
+        # 5. Skill score (0.20)
+        cg_skills = cg["skills"]
+        skill_score = 0.8
 
-        # Step 3: Weighted sum
-        total_score = (
-            weights["skill"] * skill_score
-            + weights["distance"] * distance_score
-            + weights["availability"] * avail_score
-            + weights["language"] * lang_score
-            + weights["rating"] * rating_score
+        if care_type == "home_nursing":
+            if detected_procedures:
+                matches = sum(1 for p in detected_procedures if p in cg_skills)
+                skill_score = 1.0 if matches > 0 else 0.7
+            else:
+                skill_score = 0.9
+
+            tier_bonuses = {"base": 0.0, "standard": 0.02, "advanced": 0.05, "expert": 0.08}
+            skill_score = min(1.0, skill_score + tier_bonuses.get(cg["tier"], 0.0))
+
+        elif care_type == "paramedic_home_visit":
+            preferred = ["vitals_monitoring", "elderly_care", "nebulization"]
+            matches = sum(1 for p in preferred if p in cg_skills)
+            skill_score = min(1.0, 0.75 + 0.08 * matches)
+
+        elif care_type == "lab_test_home":
+            if any(s in cg_skills for s in ["sample_collection", "home_phlebotomy"]):
+                skill_score = 1.0
+            else:
+                skill_score = 0.75
+
+        elif care_type == "teleconsultation":
+            skill_score = 1.0
+
+        # 6. Rating normalized (0.15)
+        rating_norm = float(cg["rating"]) / 5.0
+
+        # Total weighted score
+        final_score = round(
+            0.35 * lang_score + 0.30 * proximity_score + 0.20 * skill_score + 0.15 * rating_norm,
+            2,
         )
 
-        factors = {
-            "skill": round(skill_score, 2),
-            "distance": round(distance_score, 2),
-            "availability": round(avail_score, 2),
-            "language": round(lang_score, 2),
-            "rating": round(rating_score, 2),
-        }
-
-        # Step 5: Factual reason string
-        reason_parts = []
-        if "hi" in cg.languages:
-            reason_parts.append("Hindi-speaking")
-        elif "en" in cg.languages:
-            reason_parts.append("English-speaking")
-
-        dist_str = f"{dist_km:.1f} km away" if dist_km >= 1.0 else f"{int(dist_km * 1000)} m away"
-        reason_parts.append(dist_str)
-
-        if "immediate" in earliest_slot:
-            reason_parts.append("available immediately")
-        elif "afternoon" in earliest_slot:
-            reason_parts.append("available this afternoon")
-        elif "evening" in earliest_slot:
-            reason_parts.append("free this evening")
+        # Build readable reason text
+        if care_type == "teleconsultation":
+            reason = f"{primary_lang}-speaking, free {free_from}–{free_until}, ★{cg['rating']}"
         else:
-            reason_parts.append("slot available tomorrow")
+            reason = f"{primary_lang}-speaking, {dist_km:.1f} km away, free {free_from}–{free_until}"
 
-        reason = ", ".join(reason_parts)
+        candidates.append({
+            "caregiver_id": cg["caregiver_id"],
+            "score": final_score,
+            "reason": reason,
+        })
 
-        scored_caregivers.append(
-            (total_score, dist_km, MatchedCaregiver(
-                caregiver_id=cg.id,
-                score=round(total_score, 2),
-                reason=reason,
-                factors=factors,
-            ))
+    candidates.sort(key=lambda x: x["score"], reverse=True)
+
+    return [
+        MatchedCaregiver(
+            caregiver_id=c["caregiver_id"],
+            score=c["score"],
+            reason=c["reason"],
         )
-
-    # Sort descending by score, tie-break by distance ascending
-    scored_caregivers.sort(key=lambda x: (-x[0], x[1]))
-    return [item[2] for item in scored_caregivers[:limit]]
+        for c in candidates[:limit]
+    ]

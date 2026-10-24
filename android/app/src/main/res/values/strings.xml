@@ -40,5 +40,30 @@
     <string name="symptom_headache_hinglish">Sir dard</string>
     <string name="symptom_other_hinglish">Kuch aur</string>
 
+    <!-- Symptom & Service Buttons -->
+    <string name="symptom_service_fever_cough_en">Fever / Cough</string>
+    <string name="symptom_service_fever_cough_hi">बुखार / खांसी</string>
+    <string name="symptom_service_fever_cough_hinglish">Bukhar / Khansi</string>
+
+    <string name="symptom_service_pain_injury_en">Pain / Injury</string>
+    <string name="symptom_service_pain_injury_hi">दर्द / चोट</string>
+    <string name="symptom_service_pain_injury_hinglish">Dard / Injury</string>
+
+    <string name="symptom_service_nursing_en">Nursing (Injection/Dressing)</string>
+    <string name="symptom_service_nursing_hi">नर्सिंग (इंजेक्शन / ड्रेसिंग)</string>
+    <string name="symptom_service_nursing_hinglish">Nursing (Injection / Dressing)</string>
+
+    <string name="symptom_service_lab_test_en">Lab Test at Home</string>
+    <string name="symptom_service_lab_test_hi">लैब टेस्ट (ब्लड सैंपल)</string>
+    <string name="symptom_service_lab_test_hinglish">Lab Test (Blood test)</string>
+
+    <string name="symptom_service_doctor_consult_en">Doctor Consult</string>
+    <string name="symptom_service_doctor_consult_hi">डॉक्टर परामर्श</string>
+    <string name="symptom_service_doctor_consult_hinglish">Doctor Consult</string>
+
+    <string name="symptom_service_elderly_weak_en">Elderly / Weakness</string>
+    <string name="symptom_service_elderly_weak_hi">बुजुर्ग / कमजोरी</string>
+    <string name="symptom_service_elderly_weak_hinglish">Elderly / Kamzori</string>
+
     <string name="btn_continue">Continue</string>
 </resources>

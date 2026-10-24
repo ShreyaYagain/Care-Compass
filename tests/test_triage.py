@@ -10,8 +10,8 @@ class TestTriagePipeline(unittest.TestCase):
             location=Location(lat=28.54, lng=77.27),
         )
         resp = run_triage_pipeline(req)
-        self.assertEqual(resp.care_type, "emergency_referral")
-        self.assertEqual(resp.urgency, "immediate")
+        self.assertEqual(resp.care_type, "emergency_112")
+        self.assertEqual(resp.urgency, "emergency")
         self.assertTrue(len(resp.emergency_steps) > 0)
         self.assertTrue(any("112" in step for step in resp.emergency_steps))
         self.assertEqual(len(resp.matched_caregivers), 0)
@@ -28,10 +28,9 @@ class TestTriagePipeline(unittest.TestCase):
         self.assertEqual(resp.emergency_steps, [])
 
     def test_final_decision_paramedic_home_visit(self):
-        # Case from problem statement PDF: "Papa ko do din se bukhar hai aur khansi bhi" + answered breathing difficulty
         hist = [
             ChatMessage(role="user", text="papa ko do din se bukhar hai aur khansi bhi"),
-            ChatMessage(role="assistant", text="Is there any difficulty in breathing?"),
+            ChatMessage(role="assistant", text="Kya saans lene mein dikkat hai?"),
         ]
         req = TriageRequest(
             user_input="nahi saans me koi dikkat nahi hai",

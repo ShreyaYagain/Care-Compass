@@ -18,12 +18,12 @@ curl -s -X POST "$BASE_URL/triage" \
   -H "Content-Type: application/json" \
   -d '{"user_input": "papa ko bukhar hai", "language": "hinglish", "conversation_history": []}' | grep -q "follow_up_question" && echo "PASS: Correctly triggered follow-up question" || echo "FAIL: Follow-up"
 
-# 3. Case 2: Chest pain Hinglish (High-severity Red Flag -> Emergency immediate)
+# 3. Case 2: Chest pain Hinglish (High-severity Red Flag -> emergency_112)
 echo -e "\n3. POST /triage (Chest pain emergency in Hinglish)"
 RESP_CASE2=$(curl -s -X POST "$BASE_URL/triage" \
   -H "Content-Type: application/json" \
   -d '{"user_input": "papa ko seene me tez dard hai aur paseena aa raha hai", "language": "hinglish", "conversation_history": []}')
-echo "$RESP_CASE2" | grep -q "emergency_referral" && echo "$RESP_CASE2" | grep -q "emergency_steps" && echo "PASS: Correctly routed to emergency_referral with emergency_steps" || echo "FAIL: Emergency"
+echo "$RESP_CASE2" | grep -q "emergency_112" && echo "$RESP_CASE2" | grep -q "emergency_steps" && echo "PASS: Correctly routed to emergency_112 with emergency_steps" || echo "FAIL: Emergency"
 
 # 4. Case 3: Negation handling (Fever with NO breathing problem)
 echo -e "\n4. POST /triage (Negation: no breathing problem)"

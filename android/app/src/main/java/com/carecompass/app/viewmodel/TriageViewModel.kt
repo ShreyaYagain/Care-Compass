@@ -84,7 +84,7 @@ class TriageViewModel(
         val currentHistory = _uiState.value.conversationHistory.toMutableList()
 
         val isEmergency = response.redFlags.isNotEmpty() ||
-                response.careType == "emergency_referral"
+                response.careType == "emergency_112"
 
         if (isEmergency) {
             val steps = if (response.emergencySteps.isNotEmpty()) {

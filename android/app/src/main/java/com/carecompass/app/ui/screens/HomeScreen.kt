@@ -50,14 +50,12 @@ private data class SymptomOption(
 )
 
 private val SYMPTOM_OPTIONS = listOf(
-    SymptomOption("fever", Icons.Default.Whatshot, "fever", R.string.symptom_fever_en, R.string.symptom_fever_hi, R.string.symptom_fever_hinglish),
-    SymptomOption("cough", Icons.Default.Air, "cough", R.string.symptom_cough_en, R.string.symptom_cough_hi, R.string.symptom_cough_hinglish),
-    SymptomOption("pain", Icons.Default.Healing, "body pain", R.string.symptom_pain_en, R.string.symptom_pain_hi, R.string.symptom_pain_hinglish),
-    SymptomOption("injury", Icons.Default.MedicalServices, "injury wound", R.string.symptom_injury_en, R.string.symptom_injury_hi, R.string.symptom_injury_hinglish),
-    SymptomOption("breathing", Icons.Default.Air, "difficulty in breathing", R.string.symptom_breathing_en, R.string.symptom_breathing_hi, R.string.symptom_breathing_hinglish),
-    SymptomOption("stomach", Icons.Default.Restaurant, "stomach pain and vomiting", R.string.symptom_stomach_en, R.string.symptom_stomach_hi, R.string.symptom_stomach_hinglish),
-    SymptomOption("headache", Icons.Default.Psychology, "headache", R.string.symptom_headache_en, R.string.symptom_headache_hi, R.string.symptom_headache_hinglish),
-    SymptomOption("other", Icons.Default.MoreHoriz, "general discomfort", R.string.symptom_other_en, R.string.symptom_other_hi, R.string.symptom_other_hinglish)
+    SymptomOption("fever_cough", Icons.Default.Whatshot, "fever and cough", R.string.symptom_service_fever_cough_en, R.string.symptom_service_fever_cough_hi, R.string.symptom_service_fever_cough_hinglish),
+    SymptomOption("pain_injury", Icons.Default.Healing, "severe pain and injury wound", R.string.symptom_service_pain_injury_en, R.string.symptom_service_pain_injury_hi, R.string.symptom_service_pain_injury_hinglish),
+    SymptomOption("nursing", Icons.Default.MedicalServices, "ghar pe IM injection lagwana hai dressing", R.string.symptom_service_nursing_en, R.string.symptom_service_nursing_hi, R.string.symptom_service_nursing_hinglish),
+    SymptomOption("lab_test", Icons.Default.Science, "full body checkup home collection", R.string.symptom_service_lab_test_en, R.string.symptom_service_lab_test_hi, R.string.symptom_service_lab_test_hinglish),
+    SymptomOption("doctor", Icons.Default.Psychology, "doctor chahiye consult", R.string.symptom_service_doctor_consult_en, R.string.symptom_service_doctor_consult_hi, R.string.symptom_service_doctor_consult_hinglish),
+    SymptomOption("elderly_weak", Icons.Default.Person, "elderly weak patient home visit", R.string.symptom_service_elderly_weak_en, R.string.symptom_service_elderly_weak_hi, R.string.symptom_service_elderly_weak_hinglish)
 )
 
 @Composable

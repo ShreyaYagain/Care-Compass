@@ -70,34 +70,26 @@ class TestApiContract(unittest.TestCase):
         with self.assertRaises(ValueError):
             ChatMessage(role="system", text="System message")
 
-    def test_immediate_urgency_without_red_flag_forces_emergency_referral(self):
-        # (b) Patient presentation causing immediate urgency without a high-severity red flag match
-        # E.g. Pregnant patient with acute severe symptoms
+    def test_emergency_triggers_care_type_emergency_112(self):
         req = TriageRequest(
-            user_input="Patient is 7 months pregnant experiencing sudden acute abdomen pain",
+            user_input="Severe chest pain and difficulty breathing",
             location=Location(lat=28.54, lng=77.27),
-            patient=PatientProfile(pregnant=True, age=26),
         )
         resp = run_triage_pipeline(req)
-        # Even if red_flags didn't have high-severity pattern, urgency immediate forces care_type = emergency_referral
-        self.assertEqual(resp.urgency, "immediate")
-        self.assertEqual(resp.care_type, "emergency_referral")
-        self.assertTrue(len(resp.emergency_steps) > 0, "emergency_steps must be non-empty on immediate urgency")
-        self.assertEqual(resp.matched_caregivers, [], "Caregiver matching must be skipped on immediate urgency")
+        self.assertEqual(resp.urgency, "emergency")
+        self.assertEqual(resp.care_type, "emergency_112")
+        self.assertTrue(len(resp.emergency_steps) > 0, "emergency_steps must be non-empty on emergency")
+        self.assertEqual(resp.matched_caregivers, [], "Caregiver matching must be skipped on emergency")
 
-    def test_medium_severity_only_returns_empty_red_flags(self):
-        # (c) Medium-severity-only case (e.g. 'newborn ko bukhar')
+    def test_non_emergency_returns_empty_red_flags(self):
         req = TriageRequest(
-            user_input="newborn ko bukhar hai",
+            user_input="mujhe sir dard hai kal se",
             location=Location(lat=28.54, lng=77.27),
-            conversation_history=[
-                ChatMessage(role="user", text="newborn ko bukhar hai"),
-                ChatMessage(role="assistant", text="Is there any breathing problem?"),
-            ],
+            conversation_history=[],
         )
         resp = run_triage_pipeline(req)
-        # red_flags in response must contain only high-severity flags, so medium-severity returns []
         self.assertEqual(resp.red_flags, [])
+        self.assertEqual(resp.emergency_steps, [])
 
     def test_smoke_test_cases(self):
         # (d.1) Case 1: Simple vague fever -> asks follow-up
@@ -106,14 +98,14 @@ class TestApiContract(unittest.TestCase):
         self.assertIsNotNone(resp1.follow_up_question)
         self.assertEqual(resp1.emergency_steps, [])
 
-        # (d.2) Case 2: Chest pain Hinglish -> emergency_referral + immediate + high red flag
+        # (d.2) Case 2: Chest pain Hinglish -> emergency_112 + emergency + high red flag
         req2 = TriageRequest(
             user_input="papa ko seene me tez dard hai aur paseena aa raha hai",
             conversation_history=[]
         )
         resp2 = run_triage_pipeline(req2)
-        self.assertEqual(resp2.care_type, "emergency_referral")
-        self.assertEqual(resp2.urgency, "immediate")
+        self.assertEqual(resp2.care_type, "emergency_112")
+        self.assertEqual(resp2.urgency, "emergency")
         self.assertIn("chest_pain", resp2.red_flags)
         self.assertTrue(len(resp2.emergency_steps) > 0)
         self.assertEqual(resp2.matched_caregivers, [])
@@ -124,7 +116,7 @@ class TestApiContract(unittest.TestCase):
             language="hinglish",
             conversation_history=[
                 ChatMessage(role="user", text="papa ko do din se bukhar hai aur khansi bhi"),
-                ChatMessage(role="assistant", text="Is there any difficulty in breathing?"),
+                ChatMessage(role="assistant", text="Kya saans lene mein dikkat hai?"),
             ],
             location=Location(lat=28.54, lng=77.27),
         )

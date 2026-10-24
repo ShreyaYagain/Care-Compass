@@ -37,16 +37,18 @@ fun ResultScreen(
     val caregivers = resp?.matchedCaregivers ?: emptyList()
 
     val (urgencyColor, urgencyBg, urgencyLabel) = when (urgency) {
-        "routine" -> Triple(GreenSafe, GreenSafe.copy(alpha = 0.12f), "Routine (Non-Urgent)")
-        "same_day" -> Triple(AmberWarning, AmberWarning.copy(alpha = 0.12f), "Same-Day Attention")
-        else -> Triple(Color(0xFFD32F2F), Color(0xFFD32F2F).copy(alpha = 0.12f), "Immediate Care")
+        "scheduled" -> Triple(GreenSafe, GreenSafe.copy(alpha = 0.12f), "Scheduled")
+        "same_day" -> Triple(AmberWarning, AmberWarning.copy(alpha = 0.12f), "Same-Day")
+        "emergency" -> Triple(Color(0xFFD32F2F), Color(0xFFD32F2F).copy(alpha = 0.12f), "Emergency")
+        else -> Triple(AmberWarning, AmberWarning.copy(alpha = 0.12f), "Same-Day")
     }
 
     val careTypeTitle = when (careType) {
-        "paramedic_home_visit" -> "Paramedic Home Visit"
-        "nurse_home_visit" -> "Nurse Home Visit"
-        "gp_teleconsult" -> "Doctor Tele-Consult"
-        "specialist" -> "Specialist Consultation"
+        "paramedic_home_visit" -> "Medic home visit"
+        "home_nursing" -> "Home nursing"
+        "lab_test_home" -> "Lab test at home"
+        "teleconsultation" -> "Doctor video consult"
+        "emergency_112" -> "Emergency (112)"
         else -> careType.replace("_", " ").capitalize()
     }
 
@@ -132,7 +134,7 @@ fun ResultScreen(
 
         if (caregivers.isEmpty()) {
             Text(
-                text = "No caregivers available right now. Try a teleconsult.",
+                text = "No caregiver free right now. Try a doctor video consult.",
                 fontSize = 16.sp,
                 color = Color.Gray,
                 modifier = Modifier.padding(vertical = 16.dp)

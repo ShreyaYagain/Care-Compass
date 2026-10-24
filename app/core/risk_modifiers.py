@@ -54,21 +54,21 @@ def apply_risk_modifiers(
             triggered = True
             applied.append("chronic_condition_with_acute_symptoms")
 
-        # 3. Pregnancy with acute severe pain or bleeding
+        # 3. Pregnancy with acute severe pain or bleeding -> emergency
         if patient.pregnant or slots.get("pregnancy"):
             if slots.get("bleeding") or "severe" in str(slots.get("severity")) or "acute" in str(slots.get("severity")):
-                final_urgency = "immediate"
-                final_care_type = "emergency_referral"
+                final_urgency = "emergency"
+                final_care_type = "emergency_112"
                 applied.append("pregnancy_acute_risk")
 
-    # 3. Symptoms > 5 days -> at least same_day
+    # 4. Symptoms > 5 days -> at least same_day
     duration = slots.get("duration", "")
     if duration and (">5" in str(duration) or "week" in str(duration)):
         triggered = True
         applied.append("prolonged_symptom_duration")
 
-    # Rule E: At most +1 bump, and only up to same_day
-    if triggered and final_urgency == "routine":
+    # Raise scheduled -> same_day if clinical modifiers triggered
+    if triggered and final_urgency == "scheduled":
         final_urgency = "same_day"
 
     return final_urgency, final_care_type, applied

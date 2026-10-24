@@ -138,7 +138,7 @@ def rule_based_extract(text: str, history: list[dict] = None) -> dict:
                         slots["chest_pain"] = True
                 break
 
-    # Additional common symptom keywords with word boundary matching
+    # Additional common symptom and service keywords
     if any(re.search(rf"\b{re.escape(w)}\b", norm) for w in ["sir dard", "sar dard", "headache", "migraine"]):
         if "headache" not in detected_symptoms:
             detected_symptoms.append("headache")
@@ -146,6 +146,21 @@ def rule_based_extract(text: str, history: list[dict] = None) -> dict:
     if any(re.search(rf"\b{re.escape(w)}\b", norm) for w in ["pet dard", "pet me dard", "pet mein dard", "stomach pain", "stomach ache", "abdominal pain", "abdomen pain", "pet kharab"]):
         if "stomach_pain" not in detected_symptoms:
             detected_symptoms.append("stomach_pain")
+
+    # Service intents
+    if any(re.search(rf"\b{re.escape(w)}\b", norm) for w in ["injection", "im injection", "iv drip", "drip", "dressing", "patti", "catheter", "tanke", "stitches", "bedsore", "wound cleaning"]):
+        if "nursing_procedure" not in detected_symptoms:
+            detected_symptoms.append("nursing_procedure")
+
+    if any(re.search(rf"\b{re.escape(w)}\b", norm) for w in ["full body checkup", "checkup", "blood test", "sample collection", "home collection", "phlebotomy", "blood sample", "lipid profile"]):
+        if "lab_test" not in detected_symptoms:
+            detected_symptoms.append("lab_test")
+
+    # If the user only said "doctor chahiye" without symptom, don't treat "doctor" as symptom
+    slots["is_vague_doctor_request"] = bool(
+        re.search(r"\b(doctor chahiye|need doctor|consult doctor|doctor please)\b", norm)
+        and not any(s in detected_symptoms for s in ["headache", "stomach_pain", "fever", "cough", "nursing_procedure", "lab_test"])
+    )
 
     slots["symptoms"] = detected_symptoms
 
@@ -239,23 +254,27 @@ Return JSON matching this exact structure:
 def needs_more_info(slots: dict, history_turns: int) -> bool:
     """
     Check if we need to ask follow-up questions.
-    Max 4 turns. Prefer 2.
-    Rule G: Empty or very short input (< 2 meaningful words, or empty, or no symptoms) -> ask to describe the problem.
+    Max 4 turns.
+    Rule: Empty, vague, or generic queries without symptom or service ("doctor chahiye") need follow-up.
     """
     if history_turns >= settings.MAX_FOLLOWUPS:
         return False
 
     symptoms = slots.get("symptoms", [])
 
-    # Rule G: If no symptoms extracted or vague/empty input, ask for main symptom
+    if slots.get("is_vague_doctor_request"):
+        return True
+
+    # Rule G: If no symptoms or services extracted -> ask to describe the problem
     if not symptoms:
         return True
 
     # If single isolated symptom without duration and without patient relation / severity
-    # on the first turn, ask clarifying question (e.g. "fever" alone, or "papa ko bukhar hai" without duration)
+    # on first turn, ask clarifying question (e.g. "fever" alone)
     if (
         history_turns == 0
         and len(symptoms) == 1
+        and symptoms[0] in ["fever", "cough"]
         and not slots.get("duration")
         and not slots.get("severity")
         and slots.get("breathing_difficulty") is None
@@ -271,8 +290,7 @@ def needs_more_info(slots: dict, history_turns: int) -> bool:
 
 def select_follow_up_question(slots: dict, lang: str = "en") -> tuple[str, list[str]]:
     """
-    Select follow-up question based on safety priority from symptoms.yaml.
-    Rule G: Empty/vague input returns "What is the problem? Please tell us the main symptom."
+    Select follow-up question based on safety priority and user intent.
     """
     _load_symptoms_config()
     slots_config = _SYMPTOMS_CONFIG.get("slots", {})
@@ -280,7 +298,19 @@ def select_follow_up_question(slots: dict, lang: str = "en") -> tuple[str, list[
     target_lang = "hi" if lang == "hi" else ("hinglish" if lang == "hinglish" else "en")
     symptoms = slots.get("symptoms", [])
 
-    # Rule G: Empty or no symptoms
+    if slots.get("is_vague_doctor_request"):
+        if lang == "hi":
+            return (
+                "हम सहायता के लिए तैयार हैं — यह किसके लिए है और मुख्य परेशानी क्या है (बुखार, चोट, लैब टेस्ट या डॉक्टर परामर्श)?",
+                ["बुखार", "चोट", "लैब टेस्ट", "डॉक्टर परामर्श"],
+            )
+        else:
+            return (
+                "Happy to help — who is this for and what's the main concern (fever, injury, a lab test, or just a doctor consult)?",
+                ["Fever", "Injury", "Lab test", "Doctor consult"],
+            )
+
+    # Empty or no symptoms
     if not symptoms:
         if lang == "hi":
             return "क्या परेशानी है? कृपया हमें मुख्य लक्षण बताएं।", ["बुखार", "खांसी", "सिर दर्द", "पेट दर्द", "अन्य"]

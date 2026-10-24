@@ -574,7 +574,7 @@ def run_triage_pipeline(
                         logger.warning(f"Failed to write audit log: {e}")
                 return resp
 
-    # 2.4b Combined failsafe question: Groq down + local fallback empty + the
+    # 2.4b Combined failsafe question: Gemini down + local fallback empty + the
     # keyword rules found NO red flag + the message contains a symptom. Ask
     # ONE combined screening question from the closed bank — unless a red-flag
     # screening question was already answered this session. Never a silent
@@ -611,7 +611,7 @@ def run_triage_pipeline(
                     "output_violations": output_violations,
                     "template_replaced": template_replaced,
                 },
-                "reasons": ["Semantic screen unavailable (Groq down after retry, local fallback empty); asking combined failsafe question"],
+                "reasons": ["Semantic screen unavailable (Gemini down after retry, local fallback empty); asking combined failsafe question"],
             }
             resp = TriageResponse(
                 follow_up_question=q_text,

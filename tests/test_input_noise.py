@@ -1,4 +1,4 @@
-"""Input-noise rule tests (Groq mocked).
+"""Input-noise rule tests (Gemini mocked).
 
 Covers the four input-noise rules:
   1. Gibberish/unrelated input -> symptom question, no care_type, no slots;
@@ -19,7 +19,7 @@ from app.core.intake import extract_slots, get_question_by_id
 
 LOC = Location(lat=28.54, lng=77.27)
 
-# The semantic screen is a separate (Groq) concern; these tests isolate the
+# The semantic screen is a separate (Gemini) concern; these tests isolate the
 # input-noise rules, so the screen is stubbed to "skip".
 SKIP_SCREEN = {"status": "skip", "flags": [], "combined": False}
 

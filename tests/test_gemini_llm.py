@@ -4,13 +4,13 @@ from app.core.intake import (
     extract_slots,
     needs_more_info,
     select_follow_up_question,
-    GroqSlotExtraction,
+    SlotExtraction,
 )
 from app.schemas import TriageRequest, ChatMessage
 from app.core.pipeline import run_triage_pipeline
 
 
-class TestGroqLLMAndIntake(unittest.TestCase):
+class TestGeminiLLMAndIntake(unittest.TestCase):
 
     def test_never_asks_severity_question(self):
         # Even with various vague inputs and slots, select_follow_up_question must NEVER return severity question
@@ -32,10 +32,10 @@ class TestGroqLLMAndIntake(unittest.TestCase):
         self.assertNotIn("breathing", q_text.lower())
         self.assertNotIn("saans", q_text.lower())
 
-    @patch("app.core.intake.groq_json")
-    def test_out_of_dataset_unfamiliar_mapping(self, mock_groq):
+    @patch("app.core.intake.llm_json")
+    def test_out_of_dataset_unfamiliar_mapping(self, mock_llm):
         # e.g. physiotherapy mapped to paramedic_home_visit or teleconsultation
-        mock_groq.return_value = GroqSlotExtraction(
+        mock_llm.return_value = SlotExtraction(
             symptoms=["knee pain", "difficulty walking"],
             service_requested="none",
             who_for="self",

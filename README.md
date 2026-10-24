@@ -16,7 +16,7 @@ Trained and evaluated using:
 - **Language**: Python 3.11 / 3.14
 - **API**: FastAPI, Uvicorn, Pydantic v2
 - **ML**: scikit-learn, LightGBM, sentence-transformers, PyTorch
-- **LLM & Speech**: Groq Cloud SDK (`openai/gpt-oss-120b`, `llama-3.3-70b-versatile`, `whisper-large-v3-turbo`), Gemini API fallback, rule/regex deterministic safety fallback
+- **LLM & Speech**: Gemini API (`gemini-2.5-flash` for structured JSON and for speech-to-text transcription), rule/regex deterministic safety fallback
 - **Context & Weather**: Open-Meteo real-time weather & air quality API, North India seasonal modeling
 - **Database**: Supabase (Postgres + Auth) with automatic SQLite fallback when unconfigured
 - **Frontend**: Android Native (Kotlin, Jetpack Compose, Material 3, MVVM, Retrofit, Location API)
@@ -59,7 +59,7 @@ Runs automated test cases:
 4. `POST /triage` - Negation handling ("saans me koi dikkat nahi" -> Paramedic home visit, same-day)
 5. `POST /match` - Standalone Caregiver ranking
 6. `POST /book` - Appointment booking
-7. `POST /transcribe` - Groq Whisper speech transcription
+7. `POST /transcribe` - Gemini speech transcription
 
 ---
 
@@ -149,7 +149,7 @@ curl "http://localhost:8000/caregivers/CG_001/slots?date=2026-11-01" -H "Authori
 6. Click **Run 'app'** (`Shift + F10`) to build and launch the app.
 
 ### 5. Voice & Context Features
-1. **Groq Whisper Voice Transcription**:
+1. **Gemini Voice Transcription**:
    - High-accuracy multilingual Hindi/Hinglish/English voice input via `/transcribe`.
    - On-device speech recognition via Android `SpeechRecognizer` (`hi-IN`, `en-IN`) with real-time partial results and pulsing microphone indicator.
 2. **Environmental & Seasonal Context**:

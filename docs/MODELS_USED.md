@@ -13,16 +13,17 @@ This system is trained and benchmarked on the official dataset:
 
 ---
 
-## 2. Groq LLM & Speech AI (Cloud Acceleration)
-- **Groq Llama / GPT-OSS Inference (`openai/gpt-oss-120b`, `openai/gpt-oss-20b`, `llama-3.3-70b-versatile`)**:
+## 2. Gemini LLM & Speech AI (Cloud Acceleration)
+- **Gemini (`gemini-2.5-flash`)**:
   - Used strictly for structured intake slot extraction (symptoms, service requested, relation, duration, age group).
   - Out-of-dataset mapping: canonicalizes unfamiliar medical queries (physiotherapy, dental, vaccinations, certificates) to the 5 official care types without inventing labels.
   - Follow-up question generation: enforces the zero-severity-question policy (never asks the user to rate discomfort), eliminates duplicate questions, and prioritizes screening of ambiguous red flags.
-  - Fallback order: Groq $\rightarrow$ Gemini $\rightarrow$ deterministic rule/regex layer (never crashes).
-- **Groq Whisper Audio Transcription (`whisper-large-v3-turbo`)**:
-  - Cloud STT endpoint at `/transcribe` accepting `.m4a`, `.wav`, `.mp3`, `.ogg`, `.webm`, `.flac`.
+  - Semantic red-flag screening (`app/core/semantic_screen.py`): meaning-based detection of the nine official red flags, gated on evidence quotes present in the user's message.
+  - Fallback order: Gemini $\rightarrow$ deterministic rule/regex layer (never crashes).
+- **Gemini Audio Transcription (`gemini-2.5-flash`)**:
+  - Cloud STT endpoint at `/transcribe` accepting `.m4a`, `.wav`, `.mp3`, `.ogg`, `.webm`, `.flac` (multimodal audio input).
   - Tuned with Hindi/English medical vocabulary prompt hints (`bukhar, khansi, dard, saans, ulti, injection, dressing, checkup, fever, cough`).
-  - Timeout bounded (5s) with clean 503 fallback.
+  - Timeout bounded (min 10s deadline) with clean 503 fallback.
 
 ---
 

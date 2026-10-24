@@ -1,13 +1,13 @@
 """Semantic red-flag screen: meaning-based emergency detection.
 
-Runs AFTER the keyword rules and BEFORE the classifier. Groq assesses the nine
+Runs AFTER the keyword rules and BEFORE the classifier. Gemini assesses the nine
 official red flags with a strict JSON schema; a flag is only used if it is
 `present=true` AND its `evidence_quote` is a real substring of the user's
 message. A present flag becomes a single CONFIRMATION QUESTION from the closed
 question bank — the LLM never decides an emergency by itself and never lowers a
 rule-based decision.
 
-On Groq failure/timeout, a local per-flag TF-IDF classifier (trained on our
+On Gemini failure/timeout, a local per-flag TF-IDF classifier (trained on our
 red-flag sentences + augmented paraphrases) supplies the same "ask, don't
 decide" signal.
 """
@@ -21,7 +21,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from app.config import settings
 from app.core.language import normalise_text
-from app.core.llm import groq_json, is_groq_available
+from app.core.llm import llm_json, is_llm_available
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +67,7 @@ def map_combined_category(text: str) -> Optional[str]:
             return flag
     return None
 
-# Vague/health words that indicate a health concern (for the Groq-down failsafe),
+# Vague/health words that indicate a health concern (for the LLM-down failsafe),
 # beyond the symptoms.yaml lexicon.
 _VAGUE_HEALTH_WORDS = {
     "sweat", "sweaty", "sweating", "paseena", "weird", "ajib", "ajeeb", "uneasy",
@@ -142,28 +142,18 @@ def _validate(text: str, out: SemanticScreenOut) -> list[str]:
     return flags
 
 
-def _groq_screen(text: str) -> list[str] | None:
-    """Screens with Groq under a hard 2.5 s per-call budget (fast model),
-    retrying ONCE on any error / timeout / rate limit. Returns None when the
+def _llm_screen(text: str) -> list[str] | None:
+    """Screens with Gemini under a hard per-call budget, retrying once. Returns None when the
     screen cannot be completed, so the caller falls back to the local
     classifier and then the combined failsafe question."""
-    models = [
-        settings.GROQ_FAST_MODEL or settings.GROQ_MODEL,
-        settings.GROQ_MODEL or "llama-3.3-70b-versatile",
-    ]
-    for attempt, model in enumerate(models):
-        if not model or (attempt > 0 and model == models[0]):
-            break
-        try:
-            out = groq_json(system=SYSTEM_PROMPT, user=f"Patient message: \"{text}\"",
-                            schema=SemanticScreenOut, model=model,
-                            timeout=settings.SCREEN_TIMEOUT_S, retries=0)
-            if out is not None:
-                return _validate(text, out)
-        except Exception as e:
-            logger.warning(f"Semantic screen Groq call failed ({model}, attempt {attempt + 1}): {e}")
-        # groq_json returns None on timeout/429/schema errors too; the loop
-        # above is the ONE retry the screen is allowed before falling back.
+    try:
+        out = llm_json(system=SYSTEM_PROMPT, user=f"Patient message: \"{text}\"",
+                        schema=SemanticScreenOut, model=settings.GEMINI_MODEL,
+                        timeout=settings.SCREEN_TIMEOUT_S, retries=1)
+        if out is not None:
+            return _validate(text, out)
+    except Exception as e:
+        logger.warning(f"Semantic screen Gemini call failed: {e}")
     return None
 
 
@@ -220,7 +210,7 @@ _SERVICE_SYMPTOM_NAMES = {"nursing_procedure", "lab_test", "teleconsultation_que
 def _has_health_concern(text: str) -> bool:
     """Lightweight, deterministic check that the message describes a health
     concern (not a pure service request or off-topic). Used only for the
-    Groq-down failsafe so we ask a combined screening question instead of
+    LLM-down failsafe so we ask a combined screening question instead of
     deciding silently."""
     norm = normalise_text(text)
     tokens = set(norm.split())
@@ -245,13 +235,13 @@ _LAST_SCREEN_STATUS: str = "skip"
 
 def get_screen_status() -> str:
     """Status of the most recent screen run, for /health & debug:
-    groq_ok | fallback_local | failsafe_question | skip."""
+    gemini_ok | fallback_local | failsafe_question | skip."""
     return _LAST_SCREEN_STATUS
 
 
 def screen_red_flags(text: str, lang: str = "en") -> dict:
     """Assesses the nine official red flags. Returns:
-        {"status": "groq_ok"|"fallback_local"|"failsafe_question"|"skip",
+        {"status": "gemini_ok"|"fallback_local"|"failsafe_question"|"skip",
          "flags": [...], "combined": bool}
 
     Never escalates by itself; the caller turns flags/combined into questions.
@@ -268,12 +258,12 @@ def screen_red_flags(text: str, lang: str = "en") -> dict:
 
     result: dict = {"status": "skip", "flags": [], "combined": False}
 
-    if is_groq_available():
-        flags = _groq_screen(text)
+    if is_llm_available():
+        flags = _llm_screen(text)
         if flags is not None:
-            result = {"status": "groq_ok", "flags": flags, "combined": False}
+            result = {"status": "gemini_ok", "flags": flags, "combined": False}
         else:
-            # Groq failed (after the single retry): local TF-IDF fallback.
+            # Gemini failed (after the single retry): local TF-IDF fallback.
             flags = _local_screen(text)
             if flags:
                 result = {"status": "fallback_local", "flags": flags, "combined": False}

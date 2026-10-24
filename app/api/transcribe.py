@@ -5,12 +5,31 @@ from typing import Optional
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 from app.config import settings
 from app.schemas import TranscribeResponse
-from app.core.llm import get_groq_client, is_groq_available
+from app.core.language import detect_script_and_language
+from app.core.llm import gemini_transcribe, is_gemini_available
 
 router = APIRouter(tags=["Transcription"])
 logger = logging.getLogger(__name__)
 
-PROMPT_HINT = "bukhar, khansi, dard, saans, ulti, injection, dressing, checkup, fever, cough"
+_MIME_BY_SUFFIX = {
+    ".m4a": "audio/mp4",
+    ".mp4": "audio/mp4",
+    ".wav": "audio/wav",
+    ".mp3": "audio/mpeg",
+    ".ogg": "audio/ogg",
+    ".webm": "audio/webm",
+    ".flac": "audio/flac",
+    ".aac": "audio/aac",
+}
+
+
+def _detect_lang(text: str) -> str:
+    lang = detect_script_and_language(text)
+    if lang == "hi":
+        return "hi"
+    if lang == "hinglish":
+        return "hinglish"
+    return "en"
 
 
 @router.post("/transcribe", response_model=TranscribeResponse)
@@ -19,74 +38,34 @@ async def transcribe_audio(
     language: Optional[str] = Form("auto")
 ):
     """
-    Transcribes uploaded audio file (.m4a, .wav, .mp3, .ogg, .webm, .flac)
-    Primary: Groq Whisper API (whisper-large-v3-turbo) with medical prompt hint and 5s timeout.
-    Fallback: local faster-whisper if available, or HTTP 503.
+    Transcribes uploaded audio (.m4a, .wav, .mp3, .ogg, .webm, .flac) to text
+    using Gemini's multimodal audio input.
     """
-    lang_hint = None
-    if language:
-        l_lower = language.lower()
-        if "en" in l_lower:
-            lang_hint = "en"
-        elif "hi" in l_lower or "hinglish" in l_lower:
-            lang_hint = "hi"
-
     contents = await audio.read()
-    suffix = os.path.splitext(audio.filename or "")[1] or ".wav"
+    suffix = os.path.splitext(audio.filename or "")[1].lower() or ".wav"
+    mime_type = _MIME_BY_SUFFIX.get(suffix, "audio/mpeg")
 
-    with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
-        tmp.write(contents)
-        tmp_path = tmp.name
-
-    try:
-        # 1. Primary: Groq Whisper API
-        if is_groq_available():
-            client = get_groq_client()
-            if client:
-                try:
-                    with open(tmp_path, "rb") as file_handle:
-                        transcription_kwargs = {
-                            "file": (os.path.basename(tmp_path), file_handle),
-                            "model": settings.GROQ_STT_MODEL,
-                            "prompt": PROMPT_HINT,
-                            "temperature": 0.0,
-                            "response_format": "verbose_json",
-                        }
-                        if lang_hint:
-                            transcription_kwargs["language"] = lang_hint
-
-                        groq_res = client.audio.transcriptions.create(**transcription_kwargs)
-
-                    text = getattr(groq_res, "text", "") or ""
-                    detected_language = getattr(groq_res, "language", None) or (lang_hint or "en")
-                    return TranscribeResponse(
-                        text=text.strip(),
-                        language="hi" if "hi" in detected_language.lower() else "en"
-                    )
-                except Exception as e:
-                    logger.warning(f"Groq Whisper transcription failed: {e}. Trying local fallback if available...")
-
-        # 2. Fallback: local faster-whisper
-        try:
-            from faster_whisper import WhisperModel
-            model = WhisperModel("small", device="cpu", compute_type="int8")
-            segments, info = model.transcribe(tmp_path, language=lang_hint)
-            full_text = " ".join([seg.text.strip() for seg in segments]).strip()
-            detected_lang = info.language or ("hi" if lang_hint == "hi" else "en")
-            return TranscribeResponse(text=full_text, language=detected_lang)
-        except ImportError:
-            pass
-        except Exception as e:
-            logger.warning(f"Local faster-whisper fallback failed: {e}")
-
-        # If both fail or unavailable
+    if not is_gemini_available():
         raise HTTPException(
             status_code=503,
             detail="Audio transcription service temporarily unavailable. Please type your symptoms."
         )
-    finally:
-        if os.path.exists(tmp_path):
-            try:
-                os.remove(tmp_path)
-            except Exception:
-                pass
+
+    try:
+        text = gemini_transcribe(contents, mime_type)
+        if not text:
+            raise HTTPException(
+                status_code=503,
+                detail="Audio transcription failed. Please type your symptoms."
+            )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.warning(f"Transcription error: {e}")
+        raise HTTPException(
+            status_code=503,
+            detail="Audio transcription service temporarily unavailable. Please type your symptoms."
+        )
+
+    detected = _detect_lang(text)
+    return TranscribeResponse(text=text, language=detected)

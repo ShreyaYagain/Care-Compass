@@ -20,15 +20,12 @@ try:
         DATABASE_URL: str = f"sqlite:///{BASE_DIR}/carecompass.db"
 
         # LLM Settings
-        GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
-        GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
-        GROQ_FAST_MODEL: str = os.getenv("GROQ_FAST_MODEL", "llama-3.1-8b-instant")
-        GROQ_STT_MODEL: str = os.getenv("GROQ_STT_MODEL", "whisper-large-v3-turbo")
         LLM_TIMEOUT_S: float = float(os.getenv("LLM_TIMEOUT_S", "3.0"))
         SCREEN_TIMEOUT_S: float = float(os.getenv("SCREEN_TIMEOUT_S", "2.5"))
 
-        GEMINI_API_KEY: str = ""
-        GEMINI_MODEL: str = "gemini-1.5-flash"
+        GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
+        GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+        GEMINI_STT_MODEL: str = os.getenv("GEMINI_STT_MODEL", "gemini-2.5-flash")
         LLM_TIMEOUT_SECONDS: float = 3.0
 
         # Supabase (Postgres + Auth). Empty -> SQLite fallback (no-key demo/tests).
@@ -107,15 +104,12 @@ except ImportError:
         PORT: int = 8000
         DATABASE_URL: str = f"sqlite:///{BASE_DIR}/carecompass.db"
 
-        GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
-        GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
-        GROQ_FAST_MODEL: str = os.getenv("GROQ_FAST_MODEL", "llama-3.1-8b-instant")
-        GROQ_STT_MODEL: str = os.getenv("GROQ_STT_MODEL", "whisper-large-v3-turbo")
         LLM_TIMEOUT_S: float = float(os.getenv("LLM_TIMEOUT_S", "3.0"))
         SCREEN_TIMEOUT_S: float = float(os.getenv("SCREEN_TIMEOUT_S", "2.5"))
 
         GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
-        GEMINI_MODEL: str = "gemini-1.5-flash"
+        GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+        GEMINI_STT_MODEL: str = os.getenv("GEMINI_STT_MODEL", "gemini-2.5-flash")
         LLM_TIMEOUT_SECONDS: float = 3.0
 
         # Supabase (Postgres + Auth). Empty -> SQLite fallback (no-key demo/tests).

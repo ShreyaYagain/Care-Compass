@@ -8,30 +8,29 @@ logger = logging.getLogger(__name__)
 
 T = TypeVar("T", bound=BaseModel)
 
-_GROQ_CLIENTS: dict[float, Any] = {}
+_GEMINI_CLIENTS: dict[float, Any] = {}
 
 
-def get_groq_client(timeout: float | None = None):
-    """Returns a cached Groq client. `timeout` (seconds) creates/returns a
-    dedicated client, so the screen can run on its own 2.5 s budget while the
-    rest of the app keeps the default LLM_TIMEOUT_S."""
+def _get_gemini_client(timeout: float | None = None) -> Any:
+    """Returns a cached Gemini client. `timeout` (seconds) creates/returns a
+    dedicated client so callers can run on their own time budget. Gemini
+    requires a minimum deadline of 10s, so shorter budgets are clamped up."""
     timeout = timeout or settings.LLM_TIMEOUT_S
-    client = _GROQ_CLIENTS.get(timeout)
+    client = _GEMINI_CLIENTS.get(timeout)
     if client is None:
-        api_key = settings.GROQ_API_KEY.strip() if settings.GROQ_API_KEY else ""
-        if api_key:
-            try:
-                from groq import Groq
-                client = Groq(api_key=api_key, timeout=timeout)
-            except Exception as e:
-                logger.warning(f"Could not initialize Groq client: {e}")
-                client = None
-        _GROQ_CLIENTS[timeout] = client
+        try:
+            from google import genai
+            from google.genai import types
+            timeout_ms = max(int(timeout * 1000), 10_000)
+            client = genai.Client(
+                api_key=settings.GEMINI_API_KEY,
+                http_options=types.HttpOptions(timeout=timeout_ms),
+            )
+        except Exception as e:
+            logger.warning(f"Could not initialise Gemini client: {e}")
+            client = None
+        _GEMINI_CLIENTS[timeout] = client
     return client
-
-
-def is_groq_available() -> bool:
-    return bool(settings.GROQ_API_KEY and settings.GROQ_API_KEY.strip())
 
 
 def is_gemini_available() -> bool:
@@ -39,21 +38,25 @@ def is_gemini_available() -> bool:
 
 
 def is_llm_available() -> bool:
-    return is_groq_available() or is_gemini_available()
+    return is_gemini_available()
 
 
-def call_gemini_json(prompt: str, system_instruction: str = "") -> dict | None:
+def call_gemini_json(
+    prompt: str,
+    system_instruction: str = "",
+    model: str | None = None,
+    timeout: float | None = None,
+) -> dict | None:
     """
-    Calls Gemini API with strict JSON schema output. Returns parsed dict or None.
+    Calls Gemini with strict JSON output. Returns parsed dict or None.
     """
     if not is_gemini_available():
         return None
 
     try:
-        from google import genai
         from google.genai import types
 
-        client = genai.Client(api_key=settings.GEMINI_API_KEY)
+        client = _get_gemini_client(timeout)
         config = types.GenerateContentConfig(
             response_mime_type="application/json",
             temperature=0.0,
@@ -62,7 +65,7 @@ def call_gemini_json(prompt: str, system_instruction: str = "") -> dict | None:
             config.system_instruction = system_instruction
 
         response = client.models.generate_content(
-            model=settings.GEMINI_MODEL,
+            model=model or settings.GEMINI_MODEL,
             contents=prompt,
             config=config,
         )
@@ -74,7 +77,7 @@ def call_gemini_json(prompt: str, system_instruction: str = "") -> dict | None:
     return None
 
 
-def groq_json(
+def llm_json(
     system: str,
     user: str,
     schema: Type[T] | None = None,
@@ -83,60 +86,54 @@ def groq_json(
     retries: int = 1,
 ) -> T | dict | None:
     """
-    Forces JSON output from Groq LLM, validates with Pydantic schema.
-    `retries` = extra attempts after the first one (default 1).
-    Fallback chain: Groq -> Gemini (if key exists) -> None (rule/regex layer takes over).
-    Never crashes.
+    Forces JSON output from Gemini, validates with a Pydantic schema.
+    `retries` = extra attempts after the first one (default 1). Never crashes;
+    returns None so the rule/regex layer takes over cleanly.
     """
-    client = get_groq_client(timeout=timeout)
-    model_to_use = model or settings.GROQ_MODEL
+    for attempt in range(retries + 1):
+        data = call_gemini_json(
+            prompt=user,
+            system_instruction=system,
+            model=model or settings.GEMINI_MODEL,
+            timeout=timeout,
+        )
+        if data is None:
+            logger.warning(f"Gemini LLM call attempt {attempt + 1} failed")
+            continue
 
-    if client:
-        for attempt in range(retries + 1):
+        if schema is not None:
             try:
-                messages = []
-                if system:
-                    messages.append({"role": "system", "content": system})
-                messages.append({"role": "user", "content": user})
-
-                resp = client.chat.completions.create(
-                    model=model_to_use,
-                    messages=messages,
-                    response_format={"type": "json_object"},
-                    temperature=0.1,
-                )
-                raw_text = resp.choices[0].message.content or ""
-                data = json.loads(raw_text)
-
-                if schema is not None:
-                    if hasattr(schema, "model_validate"):
-                        return schema.model_validate(data)
-                    return schema(**data)
-                return data
+                if hasattr(schema, "model_validate"):
+                    return schema.model_validate(data)
+                return schema(**data)
             except Exception as e:
-                err_str = str(e)
-                # If model not found, try fallback fast model or gpt-oss model
-                if "model_not_found" in err_str and model_to_use != "openai/gpt-oss-120b":
-                    model_to_use = "openai/gpt-oss-120b"
-                    continue
-                logger.warning(f"Groq LLM call attempt {attempt + 1} failed: {e}")
-                if attempt >= retries:
-                    break
+                logger.warning(f"Gemini output failed schema validation: {e}")
+                return None
+        return data
 
-    # Fallback to Gemini if configured
-    if is_gemini_available():
-        logger.info("Falling back from Groq to Gemini...")
-        g_data = call_gemini_json(prompt=user, system_instruction=system)
-        if g_data:
-            if schema is not None:
-                try:
-                    if hasattr(schema, "model_validate"):
-                        return schema.model_validate(g_data)
-                    return schema(**g_data)
-                except Exception as e:
-                    logger.warning(f"Gemini output failed schema validation: {e}")
-                    return None
-            return g_data
-
-    # Return None so downstream rule/regex layer takes over cleanly
     return None
+
+
+def gemini_transcribe(audio_bytes: bytes, mime_type: str) -> str:
+    """
+    Transcribes speech to text with Gemini (multimodal audio input).
+    Returns the transcription text, or "" on failure.
+    """
+    if not is_gemini_available():
+        return ""
+
+    try:
+        from google.genai import types
+
+        client = _get_gemini_client(timeout=settings.LLM_TIMEOUT_S)
+        response = client.models.generate_content(
+            model=settings.GEMINI_STT_MODEL,
+            contents=[
+                "Transcribe the speech in this audio verbatim. Output only the transcription text, with no preamble.",
+                types.Part.from_bytes(data=audio_bytes, mime_type=mime_type),
+            ],
+        )
+        return (response.text or "").strip()
+    except Exception as e:
+        logger.warning(f"Gemini transcription failed: {e}")
+        return ""

@@ -1,6 +1,6 @@
-"""Groq-down failsafe, question budget, and parallel-screen tests.
+"""LLM-down failsafe, question budget, and parallel-screen tests.
 
-Unit level: semantic_screen.screen_red_flags with Groq mocked to fail.
+Unit level: semantic_screen.screen_red_flags with Gemini mocked to fail.
 Pipeline level: the combined failsafe question, escalation flows, and the
 two-question budget (conftest neutralises the screen by default; these tests
 override it with app.core.pipeline.screen_red_flags).
@@ -30,45 +30,46 @@ def _failsafe():
 
 
 class TestScreenFailsafeUnit(unittest.TestCase):
-    """The screen itself (Groq mocked to fail) must never decide silently."""
+    """The screen itself (Gemini mocked to fail) must never decide silently."""
 
-    def test_groq_mocked_failure_returns_failsafe_combined(self):
-        with patch("app.core.semantic_screen.is_groq_available", return_value=True), \
-             patch("app.core.semantic_screen.groq_json", return_value=None):
+    def test_gemini_mocked_failure_returns_failsafe_combined(self):
+        with patch("app.core.semantic_screen.is_llm_available", return_value=True), \
+             patch("app.core.semantic_screen.llm_json", return_value=None):
             res = screen_red_flags("my dad feels weird and sweaty")
         self.assertEqual(res["status"], "failsafe_question")
         self.assertEqual(res["flags"], [])
         self.assertTrue(res["combined"])
 
     def test_no_key_unavailable_path_returns_failsafe_combined(self):
-        # conftest clears GROQ_API_KEY: Groq unavailable.
+        # conftest clears GEMINI_API_KEY: Gemini unavailable.
         res = screen_red_flags("my dad feels weird and sweaty")
         self.assertEqual(res["status"], "failsafe_question")
         self.assertTrue(res["combined"])
 
     def test_pure_service_request_no_failsafe(self):
-        with patch("app.core.semantic_screen.is_groq_available", return_value=True), \
-             patch("app.core.semantic_screen.groq_json", return_value=None):
+        with patch("app.core.semantic_screen.is_llm_available", return_value=True), \
+             patch("app.core.semantic_screen.llm_json", return_value=None):
             res = screen_red_flags("need a nurse for an injection")
         self.assertNotEqual(res["status"], "failsafe_question")
         self.assertFalse(res["combined"])
 
-    def test_groq_failure_retries_once_before_falling_back(self):
-        with patch("app.core.semantic_screen.is_groq_available", return_value=True), \
-             patch("app.core.semantic_screen.groq_json", return_value=None) as mock_groq:
+    def test_gemini_failure_retries_once_before_falling_back(self):
+        with patch("app.core.semantic_screen.is_llm_available", return_value=True), \
+             patch("app.core.semantic_screen.llm_json", return_value=None) as mock_llm:
             screen_red_flags("my dad feels weird and sweaty")
-        # Two attempts: the screen retries ONCE after the first failure.
-        self.assertEqual(mock_groq.call_count, 2)
+        # The screen delegates the retry to llm_json (retries=1 = one extra attempt).
+        self.assertEqual(mock_llm.call_count, 1)
+        self.assertEqual(mock_llm.call_args.kwargs.get("retries"), 1)
 
     def test_screen_status_tracker_and_health(self):
-        with patch("app.core.semantic_screen.is_groq_available", return_value=True), \
-             patch("app.core.semantic_screen.groq_json", return_value=None):
+        with patch("app.core.semantic_screen.is_llm_available", return_value=True), \
+             patch("app.core.semantic_screen.llm_json", return_value=None):
             screen_red_flags("my dad feels weird and sweaty")
         self.assertEqual(get_screen_status(), "failsafe_question")
 
         from app.api.health import get_health
         health = get_health()
-        self.assertIn(health.screen_status, ["groq_ok", "fallback_local", "failsafe_question", "skip"])
+        self.assertIn(health.screen_status, ["gemini_ok", "fallback_local", "failsafe_question", "skip"])
 
 
 class TestScreenFailsafePipeline(unittest.TestCase):
@@ -160,7 +161,7 @@ class TestScreenFailsafePipeline(unittest.TestCase):
 
     def test_combined_skipped_when_red_flag_question_already_answered(self):
         with patch("app.core.pipeline.screen_red_flags") as mock_screen:
-            mock_screen.return_value = {"status": "groq_ok", "flags": ["chest_pain"], "combined": False}
+            mock_screen.return_value = {"status": "gemini_ok", "flags": ["chest_pain"], "combined": False}
             r1 = run_triage_pipeline(TriageRequest(
                 user_input="my chest feels like someone is sitting on it",
                 language="en", location=LOC, conversation_history=[]))
@@ -235,7 +236,7 @@ class TestScreenFailsafePipeline(unittest.TestCase):
     @patch("app.core.pipeline.screen_red_flags")
     @patch("app.core.pipeline.extract_slots")
     def test_async_path_runs_screen_and_extraction_in_parallel(self, mock_extract, mock_screen):
-        mock_screen.return_value = {"status": "groq_ok", "flags": [], "combined": False}
+        mock_screen.return_value = {"status": "gemini_ok", "flags": [], "combined": False}
         mock_extract.return_value = {"symptoms": ["fever"], "service_requested": "none",
                                      "age_group": "adult", "patient_relation": "self",
                                      "consciousness": "alert", "severity": None, "duration": None}

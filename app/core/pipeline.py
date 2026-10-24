@@ -36,7 +36,10 @@ from app.core.semantic_screen import (
     COMBINED_QUESTION_ID,
     WHICH_ONE_QUESTION_ID,
     map_combined_category,
+    _filter_unconsciousness_for_plain_headaches,
 )
+from app.core.redflag_model import predict_flags as ml_predict_flags
+from app.core.second_opinion import run_second_opinion, reconcile as reconcile_second_opinion
 from app.core.triage_model import predict_triage
 from app.core.risk_modifiers import apply_risk_modifiers
 from app.core.matching import rank_caregivers
@@ -591,6 +594,17 @@ def run_triage_pipeline(
     semantic_flags = list(screen_result.get("flags") or [])
     combined_needed = bool(screen_result.get("combined"))
 
+    # ML red-flag model (ML-first): decides together with the rules and the
+    # screen. Its positive hits flow into the same single confirmation question.
+    ml_red_flags: list[str] = []
+    if user_input.strip().lower() not in _BARE_ANSWERS and history_turns < settings.MAX_FOLLOWUPS:
+        try:
+            ml_red_flags = ml_predict_flags(user_input)
+            ml_red_flags = _filter_unconsciousness_for_plain_headaches(user_input, ml_red_flags)
+            semantic_flags = list(set(semantic_flags + ml_red_flags))
+        except Exception as e:
+            logger.warning(f"ML red-flag model failed: {e}")
+
     if semantic_flags:
         asked_ids = get_asked_ids(history_dicts)
         for s_flag in semantic_flags:
@@ -958,6 +972,73 @@ def run_triage_pipeline(
 
     reasons.append(f"Stage 5 (Model Prediction): care_type={care_type}, urgency={urgency}, probs={probs}, conf={confidence}")
 
+    # 5.5 LLM second opinion (ML-first). Runs AFTER the ML decision and can only
+    # raise severity: agree -> confidence up; more severe -> ask ONE confirmation
+    # question (never decide); less severe -> ignored.
+    second_opinion = None
+    llm_opinion = run_second_opinion(user_input, lang)
+    recon = reconcile_second_opinion(care_type, list(set(high_flags + ml_red_flags)), llm_opinion)
+    if llm_opinion is not None:
+        second_opinion = {
+            "agrees": recon["agrees"],
+            "llm_care_type": recon["llm_care_type"],
+            "note": recon["note"],
+            "reason": llm_opinion.get("reason", ""),
+        }
+        reasons.append(f"Stage 5.5 (Second opinion): {recon['note']}")
+
+    if recon["agrees"]:
+        confidence = round(min(confidence + 0.05, 0.99), 4)
+    elif recon["ask"] and history_turns < settings.MAX_FOLLOWUPS:
+        # LLM more severe than ML: ask ONE confirmation question, never decide.
+        ask_flags = recon.get("ask_flags") or []
+        qid = flag_question_id(ask_flags[0]) if ask_flags else COMBINED_QUESTION_ID
+        q_text, q_options = get_question_by_id(qid, lang)
+        q_text = enforce_question_bank(q_text, lang)
+        guard_q = output_guard(q_text, lang=lang, is_emergency=False, care_type="teleconsultation", field_name="follow_up_question")
+        if not guard_q["ok"]:
+            output_violations.extend(guard_q["violations"])
+            template_replaced = True
+        q_text = guard_q["safe_text"]
+
+        debug_trace = {
+            "red_flags_high": high_flags,
+            "red_flags_medium": medium_flags,
+            "model_probs": probs,
+            "calibrated_probabilities": probs,
+            "urgency_after_cost_matrix": urgency,
+            "urgency_after_risk_modifiers": None,
+            "urgency_after_confidence_fallback": None,
+            "confidence": confidence,
+            "slots": slots,
+            "final_care_type": None,
+            "final_urgency": None,
+            "context_info": context,
+            "screen_status": screen_status,
+            "second_opinion": second_opinion,
+            "ml_red_flags": ml_red_flags,
+            "guardrails": {
+                "input_guard": input_guard_res,
+                "output_violations": output_violations,
+                "template_replaced": template_replaced,
+            },
+            "reasons": reasons + ["Second opinion more severe than ML; asking one confirmation question"],
+        }
+        return TriageResponse(
+            follow_up_question=q_text,
+            follow_up_options=q_options,
+            care_type=None,
+            urgency=None,
+            red_flags=[],
+            reasoning=None,
+            confidence=None,
+            matched_caregivers=[],
+            emergency_steps=[],
+            context_used=None,
+            second_opinion=second_opinion,
+            debug=debug_trace if debug else None,
+        )
+
     # Out-of-dataset mapping from LLM if model has low confidence
     if slots.get("unfamiliar_care_type_mapped") and confidence < 0.65:
         mapped_type = slots["unfamiliar_care_type_mapped"]
@@ -1278,6 +1359,9 @@ def run_triage_pipeline(
         "urgency_after_confidence_fallback": urgency_after_confidence_fallback,
         "confidence": confidence,
         "slots": slots,
+        "extraction_source": slots.get("extraction_source"),
+        "ml_red_flags": ml_red_flags,
+        "second_opinion": second_opinion,
         "final_care_type": final_care_type,
         "final_urgency": final_urgency,
         "context_info": context,
@@ -1325,6 +1409,7 @@ def run_triage_pipeline(
         debug=debug_trace if debug else None,
         card_lines=card_lines,
         disclaimer=get_disclaimer(lang),
+        second_opinion=second_opinion,
         details={
             "symptoms": slots.get("symptoms", []),
             "answers": {},
@@ -1333,6 +1418,8 @@ def run_triage_pipeline(
             "care_type": final_care_type,
             "urgency": final_urgency,
             "red_flags": high_flags,
+            "ml_features": top_terms,
+            "extraction_source": slots.get("extraction_source"),
         },
     )
 

@@ -42,7 +42,7 @@ class TestSufficiency(unittest.TestCase):
         "buzurg ko khansi hai",
         "meri maa ko bukhar hai",
         "dada ko bukhar hai",
-        "newborn ko halka bukhar hai",
+        "teen saal ke bache ko halka bukhar hai",
         # symptom + relation
         "papa ko bukhar hai",
         "meri beti ko pet dard hai",

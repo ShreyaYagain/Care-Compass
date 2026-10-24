@@ -22,6 +22,42 @@ logger = logging.getLogger(__name__)
 
 _model: Optional[dict] = None
 
+# Deterministic corroboration guardrails: a flag is kept only when the raw text
+# has at least one supporting indicator, so the ML model cannot hallucinate a
+# flag the text cannot support (e.g. suicidal_ideation for "asthma + cough",
+# seizure for "dizziness", high_fever_infant for an adult father). These mirror
+# the keyword rules, not a full match — meaning-based paraphrases still pass.
+_FLAG_INDICATORS = {
+    "chest_pain": ("chest", "seene", "sine", "chhati", "chati", "dil", "heart", "cardiac", "dabav", "pressure"),
+    "breathlessness": ("saans", "sans", "breath", "breathe", "breathing", "brething", "dam", "wheez", "gasp", "short of breath", "phool"),
+    "unconsciousness": ("faint", "behosh", "unconscious", "hosh", "passed out", "blackout", "limp", "not responding", "nahi uth", "wake"),
+    "severe_bleeding": ("khoon", "khun", "bleed", "blood", "rakt", "rakta"),
+    "stroke_symptoms": ("face", "chehra", "munh", "tedha", "droop", "lakwa", "falij", "paralysis", "slurred", "bol nahi", "ek side", "ek taraf"),
+    "seizure": ("fit", "jhatke", "jhatka", "seizure", "daura", "daure", "convulsion", "shaking", "shake", "jerk", "jhag", "kampa"),
+    "suicidal_ideation": ("suicid", "kill myself", "mar ja", "jan de", "khud ko", "hurt myself", "end my life", "jeena nahi", "aatmahatya", "khatam kar"),
+    "severe_dehydration": ("peshab", "urine", "dehydrat", "sunken", "dhas", "paani nahi", "paani nahin", "honth sukh", "dry mouth", "nikal nahi"),
+}
+_INFANT_WORDS = ("newborn", "infant", "navjat", "shishu", "naya janm", "mahine ke", "mahina ke", "month old", "chote bacche", "chota bacha", "choti bachi", "naya paida")
+_FEVER_WORDS = ("bukhar", "fever", "taap", "temperature", "jwar", "jvara")
+
+
+def _filter_false_positives(text: str, flags: list[str]) -> list[str]:
+    """Drop flags the raw text cannot support, using per-flag indicators."""
+    if not flags:
+        return flags
+    norm = normalise_text(text)
+    out: list[str] = []
+    for flag in flags:
+        if flag == "high_fever_infant":
+            if not (any(w in norm for w in _INFANT_WORDS) and any(w in norm for w in _FEVER_WORDS)):
+                continue
+        else:
+            indicators = _FLAG_INDICATORS.get(flag)
+            if indicators and not any(w in norm for w in indicators):
+                continue
+        out.append(flag)
+    return out
+
 
 def load_redflag_model() -> Optional[dict]:
     global _model
@@ -57,7 +93,8 @@ def predict_probs(text: str) -> dict[str, float]:
 
 
 def predict_flags(text: str) -> list[str]:
-    """Flags whose probability clears their tuned threshold (recall >= 0.9)."""
+    """Flags whose probability clears their tuned threshold (recall >= 0.9),
+    after removing impossible false positives."""
     model = load_redflag_model()
     if not model:
         return []
@@ -66,4 +103,4 @@ def predict_flags(text: str) -> list[str]:
     for flag, entry in model.get("classifiers", {}).items():
         if probs.get(flag, 0.0) >= entry.get("threshold", 0.999):
             flags.append(flag)
-    return flags
+    return _filter_false_positives(text, flags)

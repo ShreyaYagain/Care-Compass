@@ -159,6 +159,7 @@ class TriageResponse(BaseModel):
     card_lines: Optional[dict[str, str]] = None
     details: Optional[dict[str, Any]] = None
     disclaimer: Optional[str] = None
+    second_opinion: Optional[dict[str, Any]] = None
 
 
 # --- /match ---

@@ -59,6 +59,17 @@ class SupabaseAuthManager(private val context: Context) {
         }
     }
 
+    /**
+     * True only when a real Supabase project is configured. When false, we skip
+     * all network sign-in attempts (which would otherwise hang the request) and
+     * use the local demo token. The backend accepts any token in dev mode.
+     */
+    private val supabaseConfigured: Boolean
+        get() = BuildConfig.SUPABASE_URL.isNotBlank() &&
+            BuildConfig.SUPABASE_URL != "https://mock.supabase.co" &&
+            BuildConfig.SUPABASE_ANON_KEY.isNotBlank() &&
+            BuildConfig.SUPABASE_ANON_KEY != "mock-anon-key-carecompass-2026"
+
     suspend fun getUserId(): String = withContext(Dispatchers.IO) {
         var uid = prefs.getString(KEY_USER_ID, null)
         if (uid.isNullOrBlank()) {
@@ -84,21 +95,23 @@ class SupabaseAuthManager(private val context: Context) {
     }
 
     suspend fun ensureSession(): String? = withContext(Dispatchers.IO) {
-        try {
-            // Check if we can sign in anonymously via Supabase Auth
-            supabase.auth.signInAnonymously()
-            val session = supabase.auth.currentSessionOrNull()
-            if (session != null) {
-                val token = session.accessToken
-                val refreshToken = session.refreshToken
-                val userId = session.user?.id ?: UUID.randomUUID().toString()
-                val expiresAt = System.currentTimeMillis() + (session.expiresIn * 1000L)
+        if (supabaseConfigured) {
+            try {
+                // Check if we can sign in anonymously via Supabase Auth
+                supabase.auth.signInAnonymously()
+                val session = supabase.auth.currentSessionOrNull()
+                if (session != null) {
+                    val token = session.accessToken
+                    val refreshToken = session.refreshToken
+                    val userId = session.user?.id ?: UUID.randomUUID().toString()
+                    val expiresAt = System.currentTimeMillis() + (session.expiresIn * 1000L)
 
-                saveSession(token, refreshToken, userId, expiresAt)
-                return@withContext token
+                    saveSession(token, refreshToken, userId, expiresAt)
+                    return@withContext token
+                }
+            } catch (e: Exception) {
+                Log.e("SupabaseAuth", "Supabase anonymous sign-in failed, checking stored session or fallback", e)
             }
-        } catch (e: Exception) {
-            Log.e("SupabaseAuth", "Supabase anonymous sign-in failed, checking stored session or fallback", e)
         }
 
         // Fallback for offline or mock environment: generate stable user ID and demo JWT token
@@ -118,6 +131,9 @@ class SupabaseAuthManager(private val context: Context) {
     }
 
     suspend fun refreshToken(): String? = withContext(Dispatchers.IO) {
+        if (!supabaseConfigured) {
+            return@withContext null
+        }
         try {
             supabase.auth.refreshCurrentSession()
             val session = supabase.auth.currentSessionOrNull()

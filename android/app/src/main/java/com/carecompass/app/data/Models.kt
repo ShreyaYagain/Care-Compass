@@ -106,7 +106,9 @@ data class BookingRequest(
     @SerializedName("relation") val relation: String? = null,
     @SerializedName("service") val service: String? = null,
     @SerializedName("care_type") val careType: String? = null,
-    @SerializedName("address") val address: String? = null
+    @SerializedName("address") val address: String? = null,
+    @SerializedName("start_time") val startTime: String? = null,
+    @SerializedName("end_time") val endTime: String? = null
 )
 
 data class BookingResponse(

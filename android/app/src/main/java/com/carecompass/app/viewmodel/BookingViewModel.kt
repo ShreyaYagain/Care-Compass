@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.carecompass.app.R
 import com.carecompass.app.data.*
+import com.carecompass.app.util.DateTimeFormatterHelper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -356,6 +357,11 @@ class BookingViewModel(
         val chosenDate = dates.getOrNull(state.selectedDateOffset)?.formattedDate ?: "Today"
         val fullSlotString = "$chosenDate, $slot"
 
+        // The backend requires ISO-8601 start/end times. The slot key looks like "10:00-11:00".
+        val slotHour = slot.substringBefore(":").toIntOrNull() ?: 10
+        val startTime = DateTimeFormatterHelper.buildBookingIso(state.selectedDateOffset, slotHour, 0)
+        val endTime = DateTimeFormatterHelper.buildBookingIso(state.selectedDateOffset, slotHour + 1, 0)
+
         val summary = buildString {
             append("Service: ${state.service?.careType ?: "general"}")
             append(" | Reason: ${state.reason}")
@@ -389,7 +395,9 @@ class BookingViewModel(
                     else -> "Home nursing"
                 },
                 careType = state.service?.careType ?: "home_nursing",
-                address = if (state.service?.isHomeVisit == true) state.address else null
+                address = if (state.service?.isHomeVisit == true) state.address else null,
+                startTime = startTime,
+                endTime = endTime
             )
 
             repository.createBooking(req).fold(

@@ -127,4 +127,20 @@ object DateTimeFormatterHelper {
         val now = ZonedDateTime.now(kolkataZoneId)
         return now.isAfter(endZdt)
     }
+
+    /**
+     * Builds an ISO-8601 timestamp (yyyy-MM-dd'T'HH:mm:ss'Z') for a booking slot.
+     * Uses the device's local wall-clock time so it lines up with the caregiver's
+     * local free window on the backend.
+     */
+    fun buildBookingIso(dayOffset: Int, hour: Int, minute: Int, plusMinutes: Int = 0): String {
+        val zdt = ZonedDateTime.now(kolkataZoneId)
+            .plusDays(dayOffset.toLong())
+            .withHour(hour)
+            .withMinute(minute)
+            .withSecond(0)
+            .withNano(0)
+            .plusMinutes(plusMinutes.toLong())
+        return zdt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'"))
+    }
 }

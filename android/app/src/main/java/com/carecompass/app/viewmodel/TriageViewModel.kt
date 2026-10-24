@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.carecompass.app.BuildConfig
 import com.carecompass.app.data.*
+import com.carecompass.app.util.DateTimeFormatterHelper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -251,6 +252,15 @@ class TriageViewModel(
         relation: String? = null
     ) {
         _uiState.value = _uiState.value.copy(isLoading = true)
+
+        // Slot keys look like "today_15_30" or "tomorrow_9_0" (90-minute slots).
+        val parts = slot.split("_")
+        val dayOffset = if (parts.getOrNull(0) == "tomorrow") 1 else 0
+        val slotHour = parts.getOrNull(1)?.toIntOrNull() ?: 9
+        val slotMinute = parts.getOrNull(2)?.toIntOrNull() ?: 0
+        val startTime = DateTimeFormatterHelper.buildBookingIso(dayOffset, slotHour, slotMinute)
+        val endTime = DateTimeFormatterHelper.buildBookingIso(dayOffset, slotHour, slotMinute, 90)
+
         viewModelScope.launch {
             val req = BookingRequest(
                 caregiverId = caregiverId,
@@ -260,7 +270,9 @@ class TriageViewModel(
                 triageSummary = _uiState.value.latestResponse?.reasoning,
                 patientName = patientName ?: name,
                 relation = relation,
-                careType = _uiState.value.latestResponse?.careType ?: "paramedic_home_visit"
+                careType = _uiState.value.latestResponse?.careType ?: "paramedic_home_visit",
+                startTime = startTime,
+                endTime = endTime
             )
             repository.createBooking(req).fold(
                 onSuccess = { bResp ->

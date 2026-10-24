@@ -904,6 +904,29 @@ def run_triage_pipeline(
     )
     reasons.append(f"Stage 6 (Risk Modifiers): urgency={urgency_after_risk_modifiers}, care_type={care_type}, applied={applied_modifiers}")
 
+    # 6.5 Ambulatory adjustment: routine fever/cough/cold presentations without
+    # red flags, severity, high temperature, or vulnerable age are video-consult
+    # material — not a home visit.
+    _AMBULATORY_SYMPTOMS = {"fever", "cough", "cold", "runny_nose", "headache", "weakness", "vomiting"}
+    if (
+        care_type in ("paramedic_home_visit", "home_nursing")
+        and urgency_after_risk_modifiers in ("same_day", "scheduled")
+        and slots.get("symptoms")
+        and set(slots.get("symptoms", [])) <= _AMBULATORY_SYMPTOMS
+        and slots.get("severity") in (None, "mild")
+        and slots.get("age_group") not in ("child", "senior")
+        and slots.get("patient_relation") in (None, "self", "")
+        and not slots.get("pregnancy")
+        and not slots.get("chronic_conditions")
+        and not (request.patient and request.patient.age and request.patient.age >= 60)
+        and slots.get("duration") not in ("More than a week", "एक हफ्ते से अधिक")
+        and not (slots.get("fever_temp") is not None and float(slots.get("fever_temp") or 0) >= 103)
+        and not high_flags
+    ):
+        care_type = "teleconsultation"
+        urgency_after_risk_modifiers = "same_day"
+        reasons.append("Stage 6.5 (Ambulatory adjustment): routine fever/cough/cold routed to teleconsultation")
+
     # 7. Confidence fallback & Max follow-ups decision rule
     urgency_after_confidence_fallback = urgency_after_risk_modifiers
     unclear_fallback = False

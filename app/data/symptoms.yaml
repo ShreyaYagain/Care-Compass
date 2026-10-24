@@ -188,6 +188,9 @@ symptoms_list:
   cough:
     synonyms: ["khansi", "khasi", "cough", "coughing", "khokhi"]
     related_specialties: ["pulmonology", "general_medicine"]
+  cold:
+    synonyms: ["cold", "zukam", "zukaam", "sardi", "runny nose", "naak behna", "nak behna", "sneezing", "chheenk", "chink"]
+    related_specialties: ["general_medicine"]
   chest_pain:
     synonyms: ["chest pain", "seene me dard", "dil me dard", "chhati dard"]
     related_specialties: ["cardiology"]
@@ -198,7 +201,7 @@ symptoms_list:
     synonyms: ["pet dard", "abdominal pain", "pet kharab", "stomach ache"]
     related_specialties: ["general_medicine", "gastroenterology"]
   injury:
-    synonyms: ["chot", "wound", "accident", "fracture", "moch", "cut"]
+    synonyms: ["chot", "wound", "accident", "fracture", "moch", "cut", "swollen", "soojan", "sujan", "swelling", "bruise", "neel pad gaya"]
     related_specialties: ["orthopaedics", "general_medicine"]
   vomiting:
     synonyms: ["ulti", "vomit", "dast", "loose motion"]

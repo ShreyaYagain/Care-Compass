@@ -346,13 +346,16 @@ def injury_decision(answers: dict, slots: dict, classifier_fn=None) -> dict:
             "reason": f"Elderly patient with hip/thigh pain after a fall: a same-day medic home visit is recommended. {hospital_line}",
         }
 
-    # 5. Moderate pain + swelling, some weight bearing -> medic home visit
+    # 5. Moderate pain + swelling with SOME weight bearing: the leg is usable,
+    # so a doctor video consult is the realistic first step (an X-ray may be
+    # needed; go to hospital if it worsens). Cannot-bear-weight already routed
+    # above to a medic home visit.
     if 4 <= pain <= 7 and swelling:
         return {
-            "care_type": "paramedic_home_visit",
+            "care_type": "teleconsultation",
             "urgency": "same_day",
             "red_flags": [],
-            "reason": f"{summary} and some weight bearing, so a medic home visit is recommended; this could need an X-ray. {hospital_line}",
+            "reason": f"{summary} and you can still bear some weight, so a doctor video consult is recommended; this may need an X-ray, which a hospital can do. If it worsens, go to hospital or call 112.",
         }
 
     # 6. Insufficient information (should not normally happen; the questions
@@ -395,6 +398,17 @@ def merge_answers_into_slots(slots: dict, answers: dict) -> None:
         slots["duration"] = answers["duration"]
     if answers.get("age_group") and not slots.get("age_group"):
         slots["age_group"] = str(answers["age_group"]).lower()
+    if answers.get("temperature") and slots.get("fever_temp") is None:
+        t = str(answers["temperature"]).lower()
+        if "below" in t:
+            slots["fever_temp"] = 99
+        elif "above" in t:
+            slots["fever_temp"] = 103
+        else:
+            slots["fever_temp"] = 101
+        slots["fever_temp_unit"] = "F"
+    if answers.get("rash") in ("Yes", "हाँ") and "rash" not in slots.get("symptoms", []):
+        slots.setdefault("symptoms", []).append("rash")
     if answers.get("swelling") == "Yes":
         slots["swelling"] = True
     if answers.get("vomiting") == "Yes":

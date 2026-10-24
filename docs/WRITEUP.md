@@ -88,13 +88,19 @@ free-form questions. The injury module asks in order: head hit (Yes ->
 `emergency_112` immediately), pain 0-10 (severe -> medic/112 via the
 calibrated classifier gate P(emergency_112) >= 0.50; mild -> teleconsultation
 immediately), weight bearing (cannot bear weight -> medic home visit), then
-swelling (present -> medic home visit, absent -> teleconsultation). Elderly
-hip/thigh after a fall is same_day minimum; heavy bleeding ->
+swelling (present with bearable weight -> teleconsultation, since an X-ray may
+be needed and a hospital does that; go to hospital or call 112 if it worsens).
+Elderly hip/thigh after a fall is same_day minimum; heavy bleeding ->
 `severe_bleeding` -> `emergency_112`. It never diagnoses ("this could need an
 X-ray; a doctor should check it") and the answers are quoted in the
 explanation. The meds-used field is informational only: shown on the booking
 summary, never part of the decision, and no medicine or dose is ever
 suggested.
+
+A post-classifier ambulatory adjustment routes routine fever/cough/cold
+presentations (no red flags, no severity, no high temperature, adult,
+non-vulnerable) to teleconsultation instead of a reflexive home visit, so
+home visits are reserved for cases that actually need a clinician in person.
 
 ### Android screens
 The Android app renders the module follow-ups one question at a time (0-10

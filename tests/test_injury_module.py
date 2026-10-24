@@ -111,14 +111,15 @@ class TestInjuryModule(unittest.TestCase):
                      module_id="injury", module_answers={"head_hit": "No", "pain_level": 6, "weight_bearing": "With pain"})
         self.assertEqual({f["id"] for f in r4.module_card["fields"]}, {"swelling"})
 
-    def test_pipeline_sequential_paramedic_swelling(self):
+    def test_pipeline_sequential_swelling_teleconsult(self):
+        # Pain 4-7 + swelling but can still bear weight: an X-ray may be needed
+        # at a hospital, so a doctor video consult is the realistic first step.
         answers = {"head_hit": "No", "pain_level": 6, "weight_bearing": "With pain", "swelling": "Yes"}
         resp = _triage("I fell down and my leg hurts", history=_card_labels(4),
                        module_id="injury", module_answers=answers)
         self.assertIsNone(resp.module_card)
-        self.assertEqual(resp.care_type, "paramedic_home_visit")
-        self.assertEqual(resp.urgency, "same_day")
-        self.assertTrue(resp.matched_caregivers)
+        self.assertEqual(resp.care_type, "teleconsultation")
+        self.assertIn("X-ray", resp.reasoning or "")
 
     def test_pipeline_sequential_tele_no_swelling(self):
         answers = {"head_hit": "No", "pain_level": 5, "weight_bearing": "With pain", "swelling": "No"}

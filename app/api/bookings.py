@@ -26,6 +26,21 @@ def _with_caregiver(booking: dict) -> dict:
     return booking
 
 
+_SERVICE_NAMES = {
+    "home_nursing": "Home nursing",
+    "paramedic_home_visit": "Medic home visit",
+    "lab_test_home": "Lab test at home",
+    "teleconsultation": "Teleconsultation",
+    "emergency_112": "Emergency (112)",
+}
+
+
+def _service_name(care_type: Optional[str]) -> Optional[str]:
+    if not care_type:
+        return None
+    return _SERVICE_NAMES.get(care_type, care_type.replace("_", " ").title())
+
+
 @router.get("/bookings", response_model=list[BookingItem])
 def list_bookings(
     status: str = Query(default="upcoming"),
@@ -48,6 +63,7 @@ def list_bookings(
             address=b.get("address"),
             status=b.get("status"),
             reason=b.get("reason"),
+            service=_service_name(b.get("care_type")),
         ))
     return items
 

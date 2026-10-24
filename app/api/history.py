@@ -6,6 +6,62 @@ from app.schemas import HistorySessionItem, HistoryDetailResponse, HistoryStepIt
 
 router = APIRouter(tags=["History"])
 
+_CARE_TYPE_SERVICE = {
+    "home_nursing": "Home nursing",
+    "paramedic_home_visit": "Medic home visit",
+    "lab_test_home": "Lab test at home",
+    "teleconsultation": "Teleconsultation",
+    "emergency_112": "Emergency (112)",
+}
+
+
+def _outcome(session: dict) -> str:
+    if session.get("emergency"):
+        return "emergency"
+    if session.get("status") == "needs_info":
+        return "needs_info"
+    if session.get("urgency") == "same_day":
+        return "same_day"
+    return "scheduled"
+
+
+def _android_steps(steps: list[dict], input_mode: str | None) -> list[dict]:
+    """Flatten stored (kind, payload) steps into the Android-friendly shape."""
+    result: list[dict] = []
+    for s in steps:
+        kind = s.get("kind", "")
+        payload = s.get("payload") or {}
+        base = {
+            "step_index": s.get("step_index"),
+            "kind": kind,
+            "payload": payload,
+            "created_at": s.get("created_at"),
+        }
+
+        if kind == "follow_up_question":
+            result.append(dict(base, type="follow_up", title=payload.get("question", "")))
+        elif kind in ("user_message", "user_answer"):
+            result.append(dict(base, type="user_said", subtitle=payload.get("text", ""),
+                               is_voice=input_mode == "voice"))
+        elif kind == "result":
+            result.append(dict(base, type="result",
+                               care_type=payload.get("care_type"),
+                               urgency=payload.get("urgency"),
+                               reasoning=payload.get("reasoning")))
+        elif kind == "emergency":
+            steps_list = payload.get("steps") or []
+            result.append(dict(base, type="emergency_alert",
+                               emergency_text="\n".join(steps_list) if steps_list else payload.get("text", "")))
+        elif kind == "caregivers":
+            cgs = payload.get("caregivers") or []
+            names = [c.get("name") for c in cgs if c.get("name")]
+            result.append(dict(base, type="caregivers",
+                               suggested_caregivers=names,
+                               chosen_caregiver=names[0] if names else None))
+        else:
+            result.append(dict(base, type="user_said", subtitle=str(payload) if payload else ""))
+    return result
+
 
 @router.get("/history", response_model=list[HistorySessionItem])
 def list_history(
@@ -22,6 +78,8 @@ def list_history(
             emergency=bool(s.get("emergency", False)),
             status=s.get("status"),
             created_at=s.get("created_at"),
+            outcome=_outcome(s),
+            via_voice=s.get("input_mode") == "voice",
         )
         for s in sessions
     ]
@@ -46,13 +104,8 @@ def get_history(session_id: str, user: str = Depends(get_current_user)):
         created_at=session.get("created_at"),
         updated_at=session.get("updated_at"),
         steps=[
-            HistoryStepItem(
-                step_index=st["step_index"],
-                kind=st["kind"],
-                payload=st.get("payload", {}),
-                created_at=st.get("created_at"),
-            )
-            for st in session.get("steps", [])
+            HistoryStepItem(**st)
+            for st in _android_steps(session.get("steps", []), session.get("input_mode"))
         ],
         booking=session.get("booking"),
     )

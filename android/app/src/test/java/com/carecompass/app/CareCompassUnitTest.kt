@@ -73,7 +73,7 @@ class CareCompassUnitTest {
 
     @Test
     fun testHistoryViewModel_loadsHistoryAndDetail() = runTest {
-        val repository = Repository(ApiService.create())
+        val repository = Repository(ApiService.create(), useMockRepo = true)
         val historyViewModel = HistoryViewModel(repository)
 
         testDispatcher.scheduler.advanceUntilIdle()
@@ -107,7 +107,7 @@ class CareCompassUnitTest {
 
     @Test
     fun testBookingsViewModel_loadsAndCancels() = runTest {
-        val repository = Repository(ApiService.create())
+        val repository = Repository(ApiService.create(), useMockRepo = true)
         val bookingsViewModel = BookingsViewModel(repository)
 
         testDispatcher.scheduler.advanceUntilIdle()

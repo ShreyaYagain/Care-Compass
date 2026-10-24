@@ -12,7 +12,8 @@ import java.time.temporal.ChronoUnit
 
 class Repository(
     private val apiService: ApiService,
-    private val historyCache: HistoryCache? = null
+    private val historyCache: HistoryCache? = null,
+    private val useMockRepo: Boolean = BuildConfig.USE_MOCK_REPO
 ) {
 
     // In-memory store for mock demo
@@ -348,7 +349,7 @@ class Repository(
     }
 
     suspend fun createBooking(request: BookingRequest): Result<BookingResponse> {
-        if (BuildConfig.USE_MOCK_REPO) {
+        if (useMockRepo) {
             val bId = "BK_" + System.currentTimeMillis().toString().takeLast(6)
             val displayName = if (request.relation != null && request.relation.isNotBlank()) {
                 request.patientName ?: request.userName
@@ -403,7 +404,7 @@ class Repository(
     }
 
     suspend fun getHistory(limit: Int = 5): Result<List<HistorySummary>> {
-        if (BuildConfig.USE_MOCK_REPO) {
+        if (useMockRepo) {
             val summaries = mockHistory.mapNotNull { it.summary }.take(limit)
             historyCache?.saveHistorySummaries(summaries)
             return Result.success(summaries)
@@ -425,7 +426,7 @@ class Repository(
     }
 
     suspend fun getHistoryDetail(id: String): Result<HistoryDetail> {
-        if (BuildConfig.USE_MOCK_REPO) {
+        if (useMockRepo) {
             val item = mockHistory.find { it.id == id }
                 ?: mockHistory.firstOrNull()
                 ?: HistoryDetail(id = id, createdAt = Instant.now().toString())
@@ -448,7 +449,7 @@ class Repository(
     }
 
     suspend fun deleteHistory(id: String): Result<Unit> {
-        if (BuildConfig.USE_MOCK_REPO) {
+        if (useMockRepo) {
             mockHistory.removeAll { it.id == id }
             historyCache?.deleteHistory(id)
             return Result.success(Unit)
@@ -466,7 +467,7 @@ class Repository(
     }
 
     suspend fun getBookings(status: String? = null): Result<List<Booking>> {
-        if (BuildConfig.USE_MOCK_REPO) {
+        if (useMockRepo) {
             val list = if (status == "upcoming") {
                 mockBookings.filter { it.status == "confirmed" || it.status == "pending" }
             } else {
@@ -488,7 +489,7 @@ class Repository(
     }
 
     suspend fun cancelBooking(id: String): Result<Booking> {
-        if (BuildConfig.USE_MOCK_REPO) {
+        if (useMockRepo) {
             val idx = mockBookings.indexOfFirst { it.id == id }
             if (idx != -1) {
                 val updated = mockBookings[idx].copy(status = "cancelled")

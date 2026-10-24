@@ -13,6 +13,8 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -26,6 +28,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -437,6 +440,14 @@ fun HomeScreen(
         Spacer(modifier = Modifier.height(18.dp))
 
         // Text input with Send button (White bold Send icon)
+        val submitTextInput = {
+            val trimmed = inputText.trim()
+            if (trimmed.isNotBlank()) {
+                viewModel.submitUserInput(trimmed)
+                inputText = ""
+            }
+        }
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -453,17 +464,13 @@ fun HomeScreen(
                     focusedBorderColor = PrimaryBlue,
                     unfocusedBorderColor = Color(0xFFBDBDBD)
                 ),
-                maxLines = 3
+                maxLines = 3,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                keyboardActions = KeyboardActions(onSend = { submitTextInput() })
             )
             Spacer(modifier = Modifier.width(8.dp))
             IconButton(
-                onClick = {
-                    val trimmed = inputText.trim()
-                    if (trimmed.isNotBlank()) {
-                        viewModel.submitUserInput(trimmed)
-                        inputText = ""
-                    }
-                },
+                onClick = { submitTextInput() },
                 modifier = Modifier
                     .size(56.dp)
                     .clip(RoundedCornerShape(12.dp))

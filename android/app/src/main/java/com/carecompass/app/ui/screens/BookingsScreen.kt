@@ -55,6 +55,11 @@ fun BookingsScreen(
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
+    // Refresh every time the Bookings tab is opened so new bookings appear.
+    LaunchedEffect(Unit) {
+        viewModel.loadBookings()
+    }
+
     val titleText = when (selectedLanguage) {
         "hi" -> stringResource(R.string.bookings_title_hi)
         "hinglish" -> stringResource(R.string.bookings_title_hinglish)

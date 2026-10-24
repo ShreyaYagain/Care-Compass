@@ -234,6 +234,9 @@ class HistorySessionItem(BaseModel):
     emergency: bool = False
     status: Optional[str] = None
     created_at: Optional[str] = None
+    # Android-friendly fields
+    outcome: Optional[str] = None
+    via_voice: bool = False
 
 
 class HistoryStepItem(BaseModel):
@@ -241,6 +244,21 @@ class HistoryStepItem(BaseModel):
     kind: str = ""
     payload: dict[str, Any] = {}
     created_at: Optional[str] = None
+    # Android-friendly flattened fields
+    type: Optional[str] = None
+    title: Optional[str] = None
+    subtitle: Optional[str] = None
+    is_voice: bool = False
+    user_answer: Optional[str] = None
+    care_type: Optional[str] = None
+    urgency: Optional[str] = None
+    reasoning: Optional[str] = None
+    suggested_caregivers: list[str] = []
+    chosen_caregiver: Optional[str] = None
+    booking_id: Optional[str] = None
+    booking_date: Optional[str] = None
+    booking_time: Optional[str] = None
+    emergency_text: Optional[str] = None
 
 
 class HistoryDetailResponse(BaseModel):
@@ -271,6 +289,8 @@ class BookingItem(BaseModel):
     address: Optional[str] = None
     status: Optional[str] = None
     reason: Optional[str] = None
+    # Android-friendly field
+    service: Optional[str] = None
 
 
 # --- /transcribe ---

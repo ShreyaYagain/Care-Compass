@@ -40,7 +40,7 @@ class BookingsViewModel(
         )
 
         viewModelScope.launch {
-            repository.getBookings().fold(
+            repository.getBookings("all").fold(
                 onSuccess = { allBookings ->
                     // Sort ascending by start_time
                     val sorted = allBookings.sortedBy { it.startTime }

@@ -56,6 +56,11 @@ fun HistoryScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
+    // Refresh every time the History tab is opened so recent chats appear.
+    LaunchedEffect(Unit) {
+        viewModel.loadHistory()
+    }
+
     val titleText = when (selectedLanguage) {
         "hi" -> stringResource(R.string.history_title_hi)
         "hinglish" -> stringResource(R.string.history_title_hinglish)

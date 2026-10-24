@@ -8,6 +8,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Send
@@ -19,6 +21,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
@@ -191,6 +194,14 @@ fun ChatScreen(
         Spacer(modifier = Modifier.height(20.dp))
 
         // Fallback text input (min 56dp)
+        val submitAnswer = {
+            val trimmed = inputText.trim()
+            if (trimmed.isNotBlank()) {
+                viewModel.submitUserInput(trimmed)
+                inputText = ""
+            }
+        }
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -207,17 +218,13 @@ fun ChatScreen(
                     focusedBorderColor = PrimaryBlue,
                     unfocusedBorderColor = Color(0xFFBDBDBD)
                 ),
-                maxLines = 2
+                maxLines = 2,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                keyboardActions = KeyboardActions(onSend = { submitAnswer() })
             )
             Spacer(modifier = Modifier.width(8.dp))
             IconButton(
-                onClick = {
-                    val trimmed = inputText.trim()
-                    if (trimmed.isNotBlank()) {
-                        viewModel.submitUserInput(trimmed)
-                        inputText = ""
-                    }
-                },
+                onClick = { submitAnswer() },
                 modifier = Modifier
                     .size(56.dp)
                     .clip(RoundedCornerShape(12.dp))

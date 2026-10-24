@@ -71,6 +71,7 @@ def rank_caregivers(
     user_location: Location | None = None,
     user_language: str = "en",
     user_text: str = "",
+    time_pref: str | None = None,
     limit: int = 3,
 ) -> list[MatchedCaregiver]:
     """

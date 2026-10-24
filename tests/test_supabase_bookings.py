@@ -75,6 +75,33 @@ class TestSupabaseBookings(unittest.TestCase):
         resp = create_booking(req, db=None, user="user-1")
         self.assertEqual(resp.patient_name, "Myself")
 
+    def test_post_book_endpoint_roundtrip(self):
+        """End-to-end: POST /book, then GET /bookings returns the booking."""
+        from fastapi.testclient import TestClient
+        from app.main import app
+
+        client = TestClient(app)
+        start = _future_start(14)
+        post = client.post(
+            "/book",
+            json={
+                "caregiver_id": "CG_021",
+                "care_type": "teleconsultation",
+                "patient_name": "Rohan",
+                "user_name": "Rohan",
+                "phone": "9876543210",
+                "start_time": start,
+            },
+            headers={"X-Device-Id": "test-device-booking"},
+        )
+        self.assertEqual(post.status_code, 200, post.text)
+        booking_id = post.json().get("booking_id")
+        self.assertIsNotNone(booking_id)
+
+        bookings = client.get("/bookings?status=all", headers={"X-Device-Id": "test-device-booking"}).json()
+        self.assertTrue(any(b["id"] == booking_id for b in bookings), "POST /book must appear in GET /bookings")
+        self.assertTrue(any(b["service"] for b in bookings if b["id"] == booking_id))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -75,6 +75,7 @@ try:
 
         # Safety & Triage Tunables
         CONF_THRESHOLD: float = 0.5
+        HISTORY_KEY_HEADER: str = "X-Device-Id"
         MAX_FOLLOWUPS: int = 2
         MAX_KM: float = 35.0
 
@@ -160,6 +161,7 @@ except ImportError:
         CONF_THRESHOLD: float = 0.5
         MAX_FOLLOWUPS: int = 2
         MAX_KM: float = 35.0
+        HISTORY_KEY_HEADER: str = "X-Device-Id"
 
         EMERGENCY_NUMBERS: list[str] = ["112", "102"]
         MENTAL_HEALTH_HELPLINE: str = "14416 (Tele-MANAS)"

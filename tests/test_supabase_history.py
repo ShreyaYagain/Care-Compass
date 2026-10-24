@@ -68,6 +68,50 @@ class TestSupabaseHistory(unittest.TestCase):
         self.assertNotIn("9876543210", payload_text)
         self.assertNotIn("x@y.com", payload_text)
 
+    def test_triage_then_history_endpoint_returns_session(self):
+        """End-to-end: POST /triage, then GET /history returns that session."""
+        from fastapi.testclient import TestClient
+        from app.main import app
+
+        client = TestClient(app)
+        post = client.post(
+            "/triage",
+            json={"user_input": "papa ko bukhar hai", "language": "hinglish"},
+            headers={"X-Device-Id": "test-device-1"},
+        )
+        self.assertEqual(post.status_code, 200)
+        session_id = post.json().get("session_id")
+        self.assertIsNotNone(session_id)
+
+        hist = client.get("/history?limit=5", headers={"X-Device-Id": "test-device-1"})
+        self.assertEqual(hist.status_code, 200)
+        ids = [s["id"] for s in hist.json()]
+        self.assertIn(session_id, ids, "session created by /triage must appear in /history")
+
+        detail = client.get(f"/history/{session_id}", headers={"X-Device-Id": "test-device-1"})
+        self.assertEqual(detail.status_code, 200)
+        body = detail.json()
+        self.assertEqual(body["id"], session_id)
+        self.assertTrue(body["steps"], "history detail must contain steps")
+
+    def test_history_is_per_device(self):
+        """The history key is the device id header: devices do not share history."""
+        from fastapi.testclient import TestClient
+        from app.main import app
+
+        client = TestClient(app)
+        client.post(
+            "/triage",
+            json={"user_input": "device A only", "language": "en"},
+            headers={"X-Device-Id": "device-a"},
+        )
+        a = client.get("/history?limit=5", headers={"X-Device-Id": "device-a"}).json()
+        b = client.get("/history?limit=5", headers={"X-Device-Id": "device-b"}).json()
+        a_ids = {s["id"] for s in a}
+        b_ids = {s["id"] for s in b}
+        self.assertTrue(a_ids)
+        self.assertTrue(a_ids.isdisjoint(b_ids), "device A and device B must not share sessions")
+
 
 if __name__ == "__main__":
     unittest.main()

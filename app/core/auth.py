@@ -14,7 +14,7 @@ from __future__ import annotations
 import logging
 from typing import Optional
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from app.config import settings
@@ -67,49 +67,57 @@ def _dev_user_id() -> Optional[str]:
     return None
 
 
-def get_current_user(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(_bearer_scheme),
-) -> str:
-    """Required auth. Returns the user id (sub), or 401."""
+def _resolve_history_key(
+    credentials: Optional[HTTPAuthorizationCredentials],
+    request: Optional[Request],
+    required: bool,
+) -> Optional[str]:
+    """Single definition of the history key used by every store call.
+
+    Priority:
+      1. Dev mode: the device id header (settings.HISTORY_KEY_HEADER) sent by
+         the app, so history is keyed per device.
+      2. Dev mode: DEV_USER_ID override.
+      3. A valid bearer JWT (`sub` claim).
+    """
+    # 1. Device id (dev only; the app sends its persisted device id).
+    if settings.ENV == "dev" and request is not None:
+        device = (request.headers.get(settings.HISTORY_KEY_HEADER) or "").strip()
+        if device:
+            return f"device-{device}"
+
+    # 2. Dev user override.
     dev = _dev_user_id()
     if dev:
         return dev
 
-    if credentials is None:
+    # 3. Bearer JWT.
+    if credentials is not None:
+        payload = _decode_token(credentials.credentials)
+        if payload:
+            sub = payload.get("sub")
+            if sub:
+                return str(sub)
+
+    if required:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Missing bearer token",
         )
+    return None
 
-    payload = _decode_token(credentials.credentials)
-    if not payload:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token",
-        )
 
-    sub = payload.get("sub")
-    if not sub:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token is missing the 'sub' claim",
-        )
-    return str(sub)
+def get_current_user(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(_bearer_scheme),
+    request: Request = None,
+) -> str:
+    """Required auth. Returns the history key, or 401."""
+    return _resolve_history_key(credentials, request, required=True)
 
 
 def get_current_user_optional(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(_bearer_scheme),
+    request: Request = None,
 ) -> Optional[str]:
-    """Optional auth for /triage and /book. Returns None if no valid token."""
-    dev = _dev_user_id()
-    if dev:
-        return dev
-
-    if credentials is None:
-        return None
-
-    payload = _decode_token(credentials.credentials)
-    if not payload:
-        return None
-    sub = payload.get("sub")
-    return str(sub) if sub else None
+    """Optional auth for /triage and /book. Returns the history key or None."""
+    return _resolve_history_key(credentials, request, required=False)

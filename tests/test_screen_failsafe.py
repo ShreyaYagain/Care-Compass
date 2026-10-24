@@ -69,7 +69,7 @@ class TestScreenFailsafeUnit(unittest.TestCase):
 
         from app.api.health import get_health
         health = get_health()
-        self.assertIn(health.screen_status, ["gemini_ok", "fallback_local", "failsafe_question", "skip"])
+        self.assertIn(health.screen_status, ["llm_ok", "fallback_local", "failsafe_question", "skip"])
 
 
 class TestScreenFailsafePipeline(unittest.TestCase):
@@ -161,7 +161,7 @@ class TestScreenFailsafePipeline(unittest.TestCase):
 
     def test_combined_skipped_when_red_flag_question_already_answered(self):
         with patch("app.core.pipeline.screen_red_flags") as mock_screen:
-            mock_screen.return_value = {"status": "gemini_ok", "flags": ["chest_pain"], "combined": False}
+            mock_screen.return_value = {"status": "llm_ok", "flags": ["chest_pain"], "combined": False}
             r1 = run_triage_pipeline(TriageRequest(
                 user_input="my chest feels like someone is sitting on it",
                 language="en", location=LOC, conversation_history=[]))
@@ -236,7 +236,7 @@ class TestScreenFailsafePipeline(unittest.TestCase):
     @patch("app.core.pipeline.screen_red_flags")
     @patch("app.core.pipeline.extract_slots")
     def test_async_path_runs_screen_and_extraction_in_parallel(self, mock_extract, mock_screen):
-        mock_screen.return_value = {"status": "gemini_ok", "flags": [], "combined": False}
+        mock_screen.return_value = {"status": "llm_ok", "flags": [], "combined": False}
         mock_extract.return_value = {"symptoms": ["fever"], "service_requested": "none",
                                      "age_group": "adult", "patient_relation": "self",
                                      "consciousness": "alert", "severity": None, "duration": None}

@@ -2,8 +2,6 @@ package com.carecompass.app.util
 
 import android.content.Context
 import android.content.Intent
-import android.media.MediaRecorder
-import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -17,7 +15,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.File
 
 enum class MicState {
     IDLE,
@@ -34,15 +31,10 @@ class SpeechHelper(
     private val onError: (String) -> Unit
 ) {
     private var speechRecognizer: SpeechRecognizer? = null
-    private var mediaRecorder: MediaRecorder? = null
-    private var audioFile: File? = null
-    private var isRecordingFallback = false
-    private var useFallback = false
     private var currentLanguage = "hinglish"
 
     private val mainHandler = Handler(Looper.getMainLooper())
     private val scope = CoroutineScope(Dispatchers.Main)
-    private val maxRecordRunnable = Runnable { stopListening() }
 
     init {
         mainHandler.post { initRecognizer() }
@@ -50,8 +42,7 @@ class SpeechHelper(
 
     private fun initRecognizer() {
         if (!SpeechRecognizer.isRecognitionAvailable(context)) {
-            Log.w("Voice", "SpeechRecognizer is NOT available on this device/emulator. Defaulting to fallback recorder.")
-            useFallback = true
+            Log.w("Voice", "SpeechRecognizer is NOT available on this device/emulator.")
             return
         }
 
@@ -77,22 +68,6 @@ class SpeechHelper(
 
                     override fun onError(error: Int) {
                         Log.e("Voice", "SpeechRecognizer onError code: $error")
-
-                        // Switch to fallback path (b) on client, busy, network, or permissions errors
-                        val switchCodes = listOf(
-                            SpeechRecognizer.ERROR_CLIENT,
-                            SpeechRecognizer.ERROR_RECOGNIZER_BUSY,
-                            SpeechRecognizer.ERROR_NETWORK,
-                            SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS
-                        )
-
-                        if (error in switchCodes && !useFallback) {
-                            Log.w("Voice", "Switching to path (b) MediaRecorder fallback due to error code $error")
-                            useFallback = true
-                            startFallbackRecording(currentLanguage)
-                            return
-                        }
-
                         onStateChanged(MicState.IDLE)
                         val message = when (error) {
                             SpeechRecognizer.ERROR_NO_MATCH ->
@@ -114,12 +89,12 @@ class SpeechHelper(
                     }
 
                     override fun onResults(results: Bundle?) {
-                        onStateChanged(MicState.IDLE)
                         val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
                         val text = matches?.firstOrNull()?.trim()
                         if (!text.isNullOrBlank()) {
-                            onFinalResult(text)
+                            validateAndSubmit(text)
                         } else {
+                            onStateChanged(MicState.IDLE)
                             onError("No speech recognized. Please type your symptoms.")
                         }
                     }
@@ -136,17 +111,17 @@ class SpeechHelper(
                 })
             }
         } catch (e: Exception) {
-            Log.e("Voice", "Failed to create SpeechRecognizer: ${e.localizedMessage}. Using fallback.")
+            Log.e("Voice", "Failed to create SpeechRecognizer: ${e.localizedMessage}")
             speechRecognizer = null
-            useFallback = true
         }
     }
 
     fun startListening(languageCode: String) {
         currentLanguage = languageCode
 
-        if (useFallback || !SpeechRecognizer.isRecognitionAvailable(context)) {
-            startFallbackRecording(languageCode)
+        if (!SpeechRecognizer.isRecognitionAvailable(context)) {
+            onStateChanged(MicState.IDLE)
+            onError("Speech recognition unavailable on this device. Please type your symptoms.")
             return
         }
 
@@ -175,62 +150,14 @@ class SpeechHelper(
                 onStateChanged(MicState.LISTENING)
                 speechRecognizer?.startListening(intent)
             } catch (e: Exception) {
-                Log.e("Voice", "Exception in startListening: ${e.localizedMessage}. Falling back.")
-                useFallback = true
-                startFallbackRecording(languageCode)
-            }
-        }
-    }
-
-    // Path (b) Fallback: MediaRecorder up to 15 seconds -> POST /transcribe
-    private fun startFallbackRecording(languageCode: String) {
-        mainHandler.post {
-            try {
-                audioFile = File(context.cacheDir, "voice_record.m4a")
-                if (audioFile?.exists() == true) {
-                    audioFile?.delete()
-                }
-
-                mediaRecorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    MediaRecorder(context)
-                } else {
-                    @Suppress("DEPRECATION")
-                    MediaRecorder()
-                }.apply {
-                    setAudioSource(MediaRecorder.AudioSource.MIC)
-                    setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
-                    setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
-                    setAudioEncodingBitRate(64000)
-                    setAudioSamplingRate(16000)
-                    setOutputFile(audioFile?.absolutePath)
-                    prepare()
-                    start()
-                }
-
-                isRecordingFallback = true
-                onStateChanged(MicState.LISTENING)
-                onPartialResult("Listening… (Speak now)")
-
-                // Auto stop after 15 seconds
-                mainHandler.removeCallbacks(maxRecordRunnable)
-                mainHandler.postDelayed(maxRecordRunnable, 15000)
-            } catch (e: Exception) {
-                Log.e("Voice", "MediaRecorder fallback failed: ${e.localizedMessage}")
-                isRecordingFallback = false
+                Log.e("Voice", "Exception in startListening: ${e.localizedMessage}")
                 onStateChanged(MicState.IDLE)
-                onError("Microphone unavailable on emulator. Please check mic settings or type symptoms.")
+                onError("Speech could not be recognized. Please type your symptoms.")
             }
         }
     }
 
     fun stopListening() {
-        mainHandler.removeCallbacks(maxRecordRunnable)
-
-        if (isRecordingFallback) {
-            stopFallbackRecording()
-            return
-        }
-
         mainHandler.post {
             try {
                 speechRecognizer?.stopListening()
@@ -241,39 +168,13 @@ class SpeechHelper(
         }
     }
 
-    private fun stopFallbackRecording() {
-        mainHandler.post {
-            try {
-                if (isRecordingFallback) {
-                    isRecordingFallback = false
-                    mediaRecorder?.stop()
-                    mediaRecorder?.release()
-                    mediaRecorder = null
-                    onStateChanged(MicState.PROCESSING)
-
-                    val file = audioFile
-                    if (file != null && file.exists() && file.length() > 0) {
-                        uploadAudioForTranscription(file, currentLanguage)
-                    } else {
-                        onStateChanged(MicState.IDLE)
-                        onError("No audio recorded. Please try again or type.")
-                    }
-                }
-            } catch (e: Exception) {
-                Log.e("Voice", "Error stopping MediaRecorder: ${e.localizedMessage}")
-                isRecordingFallback = false
-                mediaRecorder = null
-                onStateChanged(MicState.IDLE)
-                onError("Audio recording error. Please type symptoms.")
-            }
-        }
-    }
-
-    private fun uploadAudioForTranscription(file: File, languageCode: String) {
+    // On-device recognition produces the raw transcript; DeepSeek validates and
+    // normalises it before it reaches triage.
+    private fun validateAndSubmit(rawText: String) {
+        onStateChanged(MicState.PROCESSING)
         scope.launch {
-            onStateChanged(MicState.PROCESSING)
             val result = withContext(Dispatchers.IO) {
-                repository.transcribeAudio(file, languageCode)
+                repository.validateTranscript(rawText, currentLanguage)
             }
 
             result.fold(
@@ -282,28 +183,21 @@ class SpeechHelper(
                     if (resp.text.isNotBlank()) {
                         onFinalResult(resp.text)
                     } else {
-                        onError("Could not transcribe speech. Please type your symptoms.")
+                        onFinalResult(rawText)
                     }
                 },
                 onFailure = { err ->
-                    Log.e("Voice", "Server transcription error: ${err.localizedMessage}")
+                    Log.w("Voice", "Transcript validation failed: ${err.localizedMessage}")
                     onStateChanged(MicState.IDLE)
-                    onError("Voice transcription error. Please type your symptoms.")
+                    onFinalResult(rawText)
                 }
             )
         }
     }
 
     fun destroy() {
-        mainHandler.removeCallbacks(maxRecordRunnable)
         mainHandler.post {
             try {
-                if (isRecordingFallback) {
-                    mediaRecorder?.stop()
-                    mediaRecorder?.release()
-                    mediaRecorder = null
-                    isRecordingFallback = false
-                }
                 speechRecognizer?.destroy()
                 speechRecognizer = null
             } catch (e: Exception) {}

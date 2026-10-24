@@ -74,7 +74,12 @@ def detect_module(slots: dict) -> Optional[str]:
 
 def llm_select_module(text: str, slots: dict) -> Optional[str]:
     """LLM override for module selection (structured, no free-form text). Falls
-    back to the deterministic symptom-based selection."""
+    back to the deterministic symptom-based selection.
+
+    Never selects a module when no symptom was recognised, so the LLM cannot
+    hallucinate a module for gibberish/irrelevant input."""
+    if not slots.get("symptoms"):
+        return None
     deterministic = detect_module(slots)
     try:
         from app.core.llm import llm_json, is_llm_available

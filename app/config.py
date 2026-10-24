@@ -23,9 +23,10 @@ try:
         LLM_TIMEOUT_S: float = float(os.getenv("LLM_TIMEOUT_S", "3.0"))
         SCREEN_TIMEOUT_S: float = float(os.getenv("SCREEN_TIMEOUT_S", "2.5"))
 
-        GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
-        GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
-        GEMINI_STT_MODEL: str = os.getenv("GEMINI_STT_MODEL", "gemini-2.5-flash")
+        # DeepSeek (OpenAI-compatible chat completions) — primary LLM.
+        DEEPSEEK_API_KEY: str = os.getenv("DEEPSEEK_API_KEY", "")
+        DEEPSEEK_MODEL: str = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
+        DEEPSEEK_BASE_URL: str = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
         LLM_TIMEOUT_SECONDS: float = 3.0
 
         # Supabase (Postgres + Auth). Empty -> SQLite fallback (no-key demo/tests).
@@ -110,9 +111,10 @@ except ImportError:
         LLM_TIMEOUT_S: float = float(os.getenv("LLM_TIMEOUT_S", "3.0"))
         SCREEN_TIMEOUT_S: float = float(os.getenv("SCREEN_TIMEOUT_S", "2.5"))
 
-        GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
-        GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
-        GEMINI_STT_MODEL: str = os.getenv("GEMINI_STT_MODEL", "gemini-2.5-flash")
+        # DeepSeek (OpenAI-compatible chat completions) — primary LLM.
+        DEEPSEEK_API_KEY: str = os.getenv("DEEPSEEK_API_KEY", "")
+        DEEPSEEK_MODEL: str = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
+        DEEPSEEK_BASE_URL: str = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
         LLM_TIMEOUT_SECONDS: float = 3.0
 
         # Supabase (Postgres + Auth). Empty -> SQLite fallback (no-key demo/tests).

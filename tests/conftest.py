@@ -4,7 +4,7 @@ Forces the SQLite fallback (no Supabase) for every test and binds the store to a
 fresh, per-test SQLite database so history/booking tests are isolated and
 deterministic.
 
-The semantic red-flag screen is neutralised by default (gemini_ok, no flags) so
+The semantic red-flag screen is neutralised by default (llm_ok, no flags) so
 tests of other layers are not hijacked by the combined failsafe question; tests
 that exercise the screen patch app.core.pipeline.screen_red_flags (or
 semantic_screen internals) themselves — the inner patch wins.
@@ -17,7 +17,7 @@ def _isolated_sqlite(tmp_path):
     from app.config import settings
     settings.SUPABASE_URL = ""
     settings.SUPABASE_SERVICE_ROLE_KEY = ""
-    settings.GEMINI_API_KEY = ""
+    settings.DEEPSEEK_API_KEY = ""
 
     import app.db.session as sess
     from sqlalchemy import create_engine
@@ -38,6 +38,6 @@ def _neutral_semantic_screen():
     from unittest.mock import patch
     with patch(
         "app.core.pipeline.screen_red_flags",
-        return_value={"status": "gemini_ok", "flags": [], "combined": False},
+        return_value={"status": "llm_ok", "flags": [], "combined": False},
     ):
         yield

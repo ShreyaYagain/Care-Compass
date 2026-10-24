@@ -1,13 +1,14 @@
 """Semantic red-flag screen: meaning-based emergency detection.
 
-Runs AFTER the keyword rules and BEFORE the classifier. Gemini assesses the nine
+Runs AFTER the keyword rules and BEFORE the classifier. The LLM (DeepSeek)
+assesses the nine
 official red flags with a strict JSON schema; a flag is only used if it is
 `present=true` AND its `evidence_quote` is a real substring of the user's
 message. A present flag becomes a single CONFIRMATION QUESTION from the closed
 question bank — the LLM never decides an emergency by itself and never lowers a
 rule-based decision.
 
-On Gemini failure/timeout, a local per-flag TF-IDF classifier (trained on our
+On LLM failure/timeout, a local per-flag TF-IDF classifier (trained on our
 red-flag sentences + augmented paraphrases) supplies the same "ask, don't
 decide" signal.
 """
@@ -143,17 +144,17 @@ def _validate(text: str, out: SemanticScreenOut) -> list[str]:
 
 
 def _llm_screen(text: str) -> list[str] | None:
-    """Screens with Gemini under a hard per-call budget, retrying once. Returns None when the
+    """Screens with the LLM (DeepSeek) under a hard per-call budget, retrying once. Returns None when the
     screen cannot be completed, so the caller falls back to the local
     classifier and then the combined failsafe question."""
     try:
         out = llm_json(system=SYSTEM_PROMPT, user=f"Patient message: \"{text}\"",
-                        schema=SemanticScreenOut, model=settings.GEMINI_MODEL,
+                        schema=SemanticScreenOut, model=settings.DEEPSEEK_MODEL,
                         timeout=settings.SCREEN_TIMEOUT_S, retries=1)
         if out is not None:
             return _validate(text, out)
     except Exception as e:
-        logger.warning(f"Semantic screen Gemini call failed: {e}")
+        logger.warning(f"Semantic screen LLM call failed: {e}")
     return None
 
 
@@ -235,13 +236,13 @@ _LAST_SCREEN_STATUS: str = "skip"
 
 def get_screen_status() -> str:
     """Status of the most recent screen run, for /health & debug:
-    gemini_ok | fallback_local | failsafe_question | skip."""
+    llm_ok | fallback_local | failsafe_question | skip."""
     return _LAST_SCREEN_STATUS
 
 
 def screen_red_flags(text: str, lang: str = "en") -> dict:
     """Assesses the nine official red flags. Returns:
-        {"status": "gemini_ok"|"fallback_local"|"failsafe_question"|"skip",
+        {"status": "llm_ok"|"fallback_local"|"failsafe_question"|"skip",
          "flags": [...], "combined": bool}
 
     Never escalates by itself; the caller turns flags/combined into questions.
@@ -261,9 +262,9 @@ def screen_red_flags(text: str, lang: str = "en") -> dict:
     if is_llm_available():
         flags = _llm_screen(text)
         if flags is not None:
-            result = {"status": "gemini_ok", "flags": flags, "combined": False}
+            result = {"status": "llm_ok", "flags": flags, "combined": False}
         else:
-            # Gemini failed (after the single retry): local TF-IDF fallback.
+            # LLM failed (after the single retry): local TF-IDF fallback.
             flags = _local_screen(text)
             if flags:
                 result = {"status": "fallback_local", "flags": flags, "combined": False}

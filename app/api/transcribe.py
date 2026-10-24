@@ -1,26 +1,14 @@
-import os
-import tempfile
 import logging
 from typing import Optional
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException
-from app.config import settings
-from app.schemas import TranscribeResponse
+
+from fastapi import APIRouter, Form, HTTPException
+
 from app.core.language import detect_script_and_language
-from app.core.llm import gemini_transcribe, is_gemini_available
+from app.core.llm import deepseek_validate_transcript, is_llm_available
+from app.schemas import TranscribeResponse
 
 router = APIRouter(tags=["Transcription"])
 logger = logging.getLogger(__name__)
-
-_MIME_BY_SUFFIX = {
-    ".m4a": "audio/mp4",
-    ".mp4": "audio/mp4",
-    ".wav": "audio/wav",
-    ".mp3": "audio/mpeg",
-    ".ogg": "audio/ogg",
-    ".webm": "audio/webm",
-    ".flac": "audio/flac",
-    ".aac": "audio/aac",
-}
 
 
 def _detect_lang(text: str) -> str:
@@ -32,40 +20,48 @@ def _detect_lang(text: str) -> str:
     return "en"
 
 
+def _normalise_lang(lang: str) -> str:
+    lang = (lang or "").strip().lower()
+    return lang if lang in ("hi", "hinglish", "en") else "en"
+
+
 @router.post("/transcribe", response_model=TranscribeResponse)
 async def transcribe_audio(
-    audio: UploadFile = File(...),
-    language: Optional[str] = Form("auto")
+    text: str = Form(...),
+    language: Optional[str] = Form("auto"),
 ):
     """
-    Transcribes uploaded audio (.m4a, .wav, .mp3, .ogg, .webm, .flac) to text
-    using Gemini's multimodal audio input.
-    """
-    contents = await audio.read()
-    suffix = os.path.splitext(audio.filename or "")[1].lower() or ".wav"
-    mime_type = _MIME_BY_SUFFIX.get(suffix, "audio/mpeg")
+    Validates/normalises a raw on-device speech transcript using DeepSeek.
 
-    if not is_gemini_available():
+    The client performs speech recognition on-device (Android SpeechRecognizer)
+    and posts the resulting text here; DeepSeek cleans it up for triage.
+    """
+    raw = (text or "").strip()
+    if not raw:
+        raise HTTPException(status_code=400, detail="Empty transcript.")
+
+    if not is_llm_available():
         raise HTTPException(
             status_code=503,
-            detail="Audio transcription service temporarily unavailable. Please type your symptoms."
+            detail="Transcription service temporarily unavailable. Please type your symptoms.",
         )
 
     try:
-        text = gemini_transcribe(contents, mime_type)
-        if not text:
+        validated = deepseek_validate_transcript(raw, language or "auto")
+        if validated is None or not (validated.text or "").strip():
             raise HTTPException(
                 status_code=503,
-                detail="Audio transcription failed. Please type your symptoms."
+                detail="Transcription validation failed. Please type your symptoms.",
             )
     except HTTPException:
         raise
     except Exception as e:
-        logger.warning(f"Transcription error: {e}")
+        logger.warning(f"Transcription validation error: {e}")
         raise HTTPException(
             status_code=503,
-            detail="Audio transcription service temporarily unavailable. Please type your symptoms."
+            detail="Transcription service temporarily unavailable. Please type your symptoms.",
         )
 
-    detected = _detect_lang(text)
-    return TranscribeResponse(text=text, language=detected)
+    result_text = validated.text.strip()
+    detected = _normalise_lang(validated.language) if validated.language else _detect_lang(result_text)
+    return TranscribeResponse(text=result_text, language=detected)

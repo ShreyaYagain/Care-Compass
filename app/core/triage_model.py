@@ -170,7 +170,7 @@ def predict_triage(slots: dict, text: str) -> tuple[str, str, dict, float, list[
                     care_pred = sorted_valid[0][0]
                     confidence = sorted_valid[0][1]
 
-                    # Hybrid Decision: If confidence is low and Gemini is available, ask Gemini to refine between top-2
+                    # Hybrid Decision: If confidence is low and the LLM is available, ask it to refine between top-2
                     if confidence < settings.CONF_THRESHOLD:
                         try:
                             from app.core.llm import llm_json, is_llm_available

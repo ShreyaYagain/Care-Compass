@@ -3,8 +3,6 @@ package com.carecompass.app.data
 import android.content.Context
 import com.carecompass.app.data.auth.AuthInterceptor
 import com.carecompass.app.data.auth.SupabaseAuthManager
-import okhttp3.MultipartBody
-import okhttp3.RequestBody
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Response
@@ -45,11 +43,11 @@ interface ApiService {
     @DELETE("history/{id}")
     suspend fun deleteHistory(@Path("id") id: String): Response<Unit>
 
-    @Multipart
+    @FormUrlEncoded
     @POST("transcribe")
-    suspend fun transcribeAudio(
-        @Part audio: MultipartBody.Part,
-        @Part("language") language: RequestBody? = null
+    suspend fun validateTranscript(
+        @Field("text") text: String,
+        @Field("language") language: String? = null
     ): TranscribeResponse
 
     companion object {

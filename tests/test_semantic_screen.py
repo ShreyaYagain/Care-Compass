@@ -13,8 +13,8 @@ def _skip():
     return {"status": "skip", "flags": [], "combined": False}
 
 
-def _gemini_ok(flags):
-    return {"status": "gemini_ok", "flags": flags, "combined": False}
+def _llm_ok(flags):
+    return {"status": "llm_ok", "flags": flags, "combined": False}
 
 
 class TestSemanticScreen(unittest.TestCase):
@@ -33,7 +33,7 @@ class TestSemanticScreen(unittest.TestCase):
 
     @patch("app.core.pipeline.screen_red_flags")
     def test_screen_asks_confirmation_for_fresh_paraphrase(self, mock_screen):
-        mock_screen.return_value = _gemini_ok(["chest_pain"])
+        mock_screen.return_value = _llm_ok(["chest_pain"])
         req = TriageRequest(
             user_input="my chest feels like someone is sitting on it",
             language="en", location=LOC, conversation_history=[],

@@ -54,6 +54,7 @@ class TestGibberish(unittest.TestCase):
             with self.subTest(text=text):
                 resp = _triage(text, lang="en")
                 self.assertIsNotNone(resp.follow_up_question, f"no symptom question for {text!r}")
+                self.assertIn("no symptoms were recognised", resp.follow_up_question.lower())
                 self.assertIsNone(resp.care_type, f"decided care_type for {text!r}")
                 self.assertIsNone(resp.urgency, f"decided urgency for {text!r}")
 
@@ -148,6 +149,16 @@ class TestNoiseIgnored(unittest.TestCase):
         self._assert_no_noise(resp.reasoning)
         self.assertNotIn("lol", resp.reasoning.lower())
 
+    def test_noise_between_symptom_and_duration_ignored(self):
+        slots = extract_slots("lol bukhar hai yaar do din se bro", [])
+        self.assertIn("fever", slots.get("symptoms", []))
+        self.assertEqual(slots.get("duration"), "2 days")
+
+    def test_noise_between_number_and_unit_ignored(self):
+        slots = extract_slots("bukhar hai 2 din se thoda", [])
+        self.assertIn("fever", slots.get("symptoms", []))
+        self.assertEqual(slots.get("duration"), "2 days")
+
 
 class TestNumbers(unittest.TestCase):
     """Rule 3: bare numbers are not durations/temperatures/ages."""
@@ -225,6 +236,29 @@ class TestNumbers(unittest.TestCase):
         age_slots = extract_slots("70 saal ke papa", [])
         self.assertIsNone(age_slots["duration"])
         self.assertEqual(age_slots["age_group"], "senior")
+
+    def test_bare_number_two_is_never_two_days(self):
+        # A lone "2" (or "bukhar 2") is an ignore case, never "2 days".
+        self.assertIsNone(extract_slots("2", [])["duration"])
+        self.assertIsNone(extract_slots("bukhar 2", [])["duration"])
+        self.assertEqual(extract_slots("2 din se bukhar", [])["duration"], "2 days")
+        self.assertEqual(extract_slots("2 days fever", [])["duration"], "2 days")
+
+
+class TestSeverity(unittest.TestCase):
+    """Severity reflects the most serious symptom, not the first keyword."""
+
+    def test_severe_wins_over_mild(self):
+        self.assertEqual(extract_slots("halka bukhar hai aur tez dard", [])["severity"], "severe")
+
+    def test_mild_only(self):
+        self.assertEqual(extract_slots("halka bukhar hai", [])["severity"], "mild")
+
+    def test_severe_only(self):
+        self.assertEqual(extract_slots("bahut tez dard hai", [])["severity"], "severe")
+
+    def test_multiple_mild_symptoms_stay_mild(self):
+        self.assertEqual(extract_slots("halka bukhar aur thoda dard", [])["severity"], "mild")
 
 
 class TestRedFlagNoise(unittest.TestCase):

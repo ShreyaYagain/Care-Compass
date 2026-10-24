@@ -1,5 +1,6 @@
 import csv
 import re
+import json
 import time
 import unittest
 from pathlib import Path
@@ -10,6 +11,8 @@ from app.core.triage_model import predict_triage, load_artifacts
 BASE_DIR = Path(__file__).resolve().parent.parent
 DOCS_DIR = BASE_DIR / "docs"
 UNSEEN_TESTS = BASE_DIR / "ml" / "data" / "unseen_tests.csv"
+REDFLAG_TESTS = BASE_DIR / "ml" / "data" / "redflag_tests.csv"
+RESULTS_FILE = BASE_DIR / "ml" / "results" / "comparison.json"
 
 
 class TestModelCardAndBenchmarks(unittest.TestCase):
@@ -31,11 +34,8 @@ class TestModelCardAndBenchmarks(unittest.TestCase):
         model_e_lines = [l for l in lines if "Model E:" in l]
         self.assertTrue(len(model_e_lines) > 0, "Model E row must exist in comparison table.")
         for l in model_e_lines:
-            # Model E row should say 'NOT RUN' across metric columns and have no digits in metrics
             cells = [c.strip() for c in l.split("|")[1:-1]]
-            # Ensure cell 1 to 9 (metrics) do not contain numbers
             for c in cells[1:]:
-                # If cell is not empty, check it doesn't contain numeric digits
                 digits = re.findall(r"\d+", c)
                 self.assertEqual(len(digits), 0, f"Untrained row for Model E contains numbers: {c}")
 
@@ -116,6 +116,30 @@ class TestModelCardAndBenchmarks(unittest.TestCase):
         # Verify user reasoning does not leak raw weights or floats
         self.assertNotIn("0.", resp.reasoning)
         self.assertNotIn("weight", resp.reasoning)
+
+    def test_small_cluster_validation_invariants(self):
+        """Tests that small-cluster grouping produced >= 50 groups and recorded leave-one-cluster-out recall."""
+        self.assertTrue(RESULTS_FILE.exists(), f"Missing {RESULTS_FILE}")
+        with open(RESULTS_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        selection = data.get("_selection", {})
+        self.assertIn("small_cluster_groups", selection)
+        self.assertGreaterEqual(selection["small_cluster_groups"], 50)
+        self.assertIn("leave_one_cluster_out_mean_recall", selection)
+        self.assertGreaterEqual(selection["leave_one_cluster_out_mean_recall"], 0.80)
+
+    def test_reviewed_by_human_column_present(self):
+        """Tests that evaluation benchmarks track reviewed_by_human flag and have a team review README."""
+        for path in [UNSEEN_TESTS, REDFLAG_TESTS]:
+            with open(path, "r", encoding="utf-8") as f:
+                reader = csv.DictReader(f)
+                self.assertIn("reviewed_by_human", reader.fieldnames, f"{path} missing reviewed_by_human column")
+
+        readme = BASE_DIR / "ml" / "data" / "README.md"
+        self.assertTrue(readme.exists(), "Missing ml/data/README.md")
+        content = readme.read_text(encoding="utf-8")
+        self.assertIn("clinical", content.lower())
 
 
 if __name__ == "__main__":

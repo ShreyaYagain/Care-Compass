@@ -164,8 +164,37 @@ def predict_triage(slots: dict, text: str) -> tuple[str, str, dict, float, list[
             else:
                 valid_probs = {k: v for k, v in care_probs.items() if k != "emergency_112" and k != "follow_up"}
                 if valid_probs:
-                    care_pred = max(valid_probs.items(), key=lambda x: x[1])[0]
-                    confidence = valid_probs[care_pred]
+                    sorted_valid = sorted(valid_probs.items(), key=lambda x: x[1], reverse=True)
+                    care_pred = sorted_valid[0][0]
+                    confidence = sorted_valid[0][1]
+
+                    # Hybrid Decision: If confidence is low and Groq is available, ask Groq to refine between top-2
+                    if confidence < settings.CONF_THRESHOLD:
+                        try:
+                            from app.core.llm import groq_json, is_groq_available
+                            from pydantic import BaseModel
+
+                            class CareTypeWithReason(BaseModel):
+                                care_type: str
+                                reason: str
+
+                            if is_groq_available():
+                                top2_classes = [c for c, _ in sorted_valid[:2]]
+                                sys_prompt = (
+                                    "You are a medical triage assistant. Choose the best healthcare service from:\n"
+                                    "- paramedic_home_visit\n"
+                                    "- home_nursing\n"
+                                    "- lab_test_home\n"
+                                    "- teleconsultation\n"
+                                    "- emergency_112\n"
+                                    "Return valid JSON matching the schema with fields: care_type and reason."
+                                )
+                                res = groq_json(system=sys_prompt, user=f"Patient request: \"{text}\"", schema=CareTypeWithReason)
+                                if res and hasattr(res, "care_type") and res.care_type in top2_classes:
+                                    care_pred = res.care_type
+                                    confidence = valid_probs.get(care_pred, confidence)
+                        except Exception:
+                            pass
                 else:
                     care_pred = rb_care
                     confidence = rb_conf

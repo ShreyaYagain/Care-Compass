@@ -4,6 +4,11 @@
     <string name="describe_symptoms">Describe symptoms or tap mic</string>
     <string name="emergency_call">Emergency: Call 112</string>
 
+    <!-- Home mic card language hints -->
+    <string name="home_mic_hint_en">Speak in Hindi, Hinglish, or English</string>
+    <string name="home_mic_hint_hi">हिंदी, हिंग्लिश या अंग्रेज़ी में बोलें</string>
+    <string name="home_mic_hint_hinglish">Hindi, Hinglish ya English mein boliye</string>
+
     <!-- Permissions and Voice -->
     <string name="mic_permission_denied">Please allow the microphone, or type your symptoms</string>
     <string name="listening">Listening…</string>

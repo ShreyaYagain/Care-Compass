@@ -61,6 +61,11 @@ fun CareCompassNavGraph(
                     navController.navigate("chat")
                 }
             }
+            is ScreenDestination.ModuleCard -> {
+                if (currentRoute != "module_card") {
+                    navController.navigate("module_card")
+                }
+            }
             is ScreenDestination.Result -> {
                 if (currentRoute != "result") {
                     navController.navigate("result")
@@ -153,6 +158,13 @@ fun CareCompassNavGraph(
 
                 composable("chat") {
                     ChatScreen(
+                        viewModel = triageViewModel,
+                        uiState = triageUiState
+                    )
+                }
+
+                composable("module_card") {
+                    ModuleCardScreen(
                         viewModel = triageViewModel,
                         uiState = triageUiState
                     )

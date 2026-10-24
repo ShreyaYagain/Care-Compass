@@ -33,7 +33,10 @@ data class MatchedCaregiver(
     @SerializedName("rating") val rating: Double? = null,
     @SerializedName("free_from") val freeFrom: String? = null,
     @SerializedName("free_until") val freeUntil: String? = null,
-    @SerializedName("distance_km") val distanceKm: Double? = null
+    @SerializedName("distance_km") val distanceKm: Double? = null,
+    @SerializedName("venue") val venue: String? = null,
+    @SerializedName("department") val department: String? = null,
+    @SerializedName("facility_name") val facilityName: String? = null
 )
 
 data class EmergencyInfo(
@@ -45,6 +48,8 @@ data class ContextUsedInfo(
     @SerializedName("season") val season: String? = null,
     @SerializedName("weather") val weather: String? = null,
     @SerializedName("aqi") val aqi: Double? = null,
+    @SerializedName("location") val location: String? = null,
+    @SerializedName("time") val time: String? = null,
     @SerializedName("tags") val tags: List<String> = emptyList(),
     @SerializedName("reason") val reason: String? = null
 )
@@ -64,7 +69,36 @@ data class TriageRequest(
     @SerializedName("conversation_history") val conversationHistory: List<ChatMessage> = emptyList(),
     @SerializedName("patient") val patient: PatientProfile? = null,
     @SerializedName("client_time") val clientTime: String? = null,
-    @SerializedName("context_consent") val contextConsent: Boolean = true
+    @SerializedName("context_consent") val contextConsent: Boolean = true,
+    @SerializedName("module_id") val moduleId: String? = null,
+    @SerializedName("module_answers") val moduleAnswers: Map<String, String>? = null
+)
+
+data class ModuleField(
+    @SerializedName("id") val id: String = "",
+    @SerializedName("type") val type: String = "choice",
+    @SerializedName("question") val question: String = "",
+    @SerializedName("options") val options: List<String> = emptyList(),
+    @SerializedName("bands") val bands: Map<String, String>? = null,
+    @SerializedName("informational") val informational: Boolean = false
+)
+
+data class ModuleCard(
+    @SerializedName("module_id") val moduleId: String = "",
+    @SerializedName("label") val label: String = "",
+    @SerializedName("fields") val fields: List<ModuleField> = emptyList()
+)
+
+data class SecondaryOption(
+    @SerializedName("caregiver_id") val caregiverId: String = "",
+    @SerializedName("name") val name: String = "",
+    @SerializedName("qualification") val qualification: String = "",
+    @SerializedName("venue") val venue: String = "",
+    @SerializedName("facility_name") val facilityName: String? = null,
+    @SerializedName("department") val department: String = "",
+    @SerializedName("rating") val rating: Double = 0.0,
+    @SerializedName("languages") val languages: List<String> = emptyList(),
+    @SerializedName("demo") val demo: Boolean = true
 )
 
 data class TriageResponse(
@@ -78,7 +112,9 @@ data class TriageResponse(
     @SerializedName("matched_caregivers") val matchedCaregivers: List<MatchedCaregiver> = emptyList(),
     @SerializedName("emergency_steps") val emergencySteps: List<String> = emptyList(),
     @SerializedName("emergency") val emergency: EmergencyInfo? = null,
-    @SerializedName("context_used") val contextUsed: ContextUsedInfo? = null
+    @SerializedName("context_used") val contextUsed: ContextUsedInfo? = null,
+    @SerializedName("module_card") val moduleCard: ModuleCard? = null,
+    @SerializedName("secondary_options") val secondaryOptions: List<SecondaryOption> = emptyList()
 )
 
 data class CaregiverProfile(

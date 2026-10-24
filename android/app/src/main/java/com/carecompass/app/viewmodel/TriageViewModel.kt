@@ -16,6 +16,7 @@ sealed class ScreenDestination {
     object Chat : ScreenDestination()
     object Emergency : ScreenDestination()
     object Result : ScreenDestination()
+    object ModuleCard : ScreenDestination()
     data class Booking(val caregiverId: String) : ScreenDestination()
     object BookingConfirmed : ScreenDestination()
     object BookingFlow : ScreenDestination()
@@ -29,14 +30,54 @@ data class TriageUiState(
     val currentQuestion: String? = null,
     val currentOptions: List<String> = emptyList(),
     val latestResponse: TriageResponse? = null,
+    val moduleCard: ModuleCard? = null,
+    val lastModuleAnswers: Map<String, String>? = null,
     val emergencyInfo: EmergencyInfo? = null,
     val emergencySteps: List<String> = emptyList(),
     val bookingResponse: BookingResponse? = null,
     val errorMessage: String? = null,
+    val lastSubmittedInput: String? = null,
     val destination: ScreenDestination = ScreenDestination.Home,
     val contextConsent: Boolean = true,
     val userLocation: Location? = Location(lat = 28.54, lng = 77.27)
 )
+
+/**
+ * Single map of symptom-tile id -> canonical phrase per language. The Home
+ * screen tiles and the unit tests both use this one map.
+ */
+object SymptomTilePhrases {
+    val PHRASES: Map<String, Map<String, String>> = mapOf(
+        "fever" to mapOf("en" to "fever", "hi" to "बुखार", "hinglish" to "bukhar"),
+        "cough_cold" to mapOf("en" to "cough", "hi" to "खांसी", "hinglish" to "khansi"),
+        "headache" to mapOf("en" to "headache", "hi" to "सिर दर्द", "hinglish" to "sir dard"),
+        "stomach_pain" to mapOf("en" to "stomach pain", "hi" to "पेट दर्द", "hinglish" to "pet dard"),
+        "vomiting" to mapOf("en" to "vomiting and loose motion", "hi" to "उल्टी और दस्त", "hinglish" to "ulti aur dast"),
+        "body_pain" to mapOf("en" to "body pain", "hi" to "बदन दर्द", "hinglish" to "badan dard"),
+        "weakness" to mapOf("en" to "weakness", "hi" to "कमजोरी", "hinglish" to "kamzori"),
+        "wound_injury" to mapOf("en" to "wound or injury", "hi" to "चोट या घाव", "hinglish" to "chot ya ghaav"),
+        "skin_problem" to mapOf("en" to "skin rash and itching", "hi" to "दाने और खुजली", "hinglish" to "daane aur khujli"),
+        "not_eating" to mapOf("en" to "can't eat or drink", "hi" to "खा पी नहीं पा रहे", "hinglish" to "kha pee nahi pa rahe"),
+    )
+
+    fun buildMessage(tileIds: List<String>, language: String): String {
+        val phrases = tileIds.mapNotNull { PHRASES[it]?.get(language) }
+        if (phrases.isEmpty()) return ""
+        val join = when (language) {
+            "en" -> " and "
+            "hi" -> " और "
+            else -> " aur "
+        }
+        val body = phrases.joinToString(join)
+        val singleNotEating = phrases.size == 1 && tileIds.firstOrNull() == "not_eating"
+        return when {
+            singleNotEating -> body
+            language == "en" -> "I have $body"
+            language == "hi" -> "मुझे $body है"
+            else -> "mujhe $body hai"
+        }
+    }
+}
 
 class TriageViewModel(
     private val repository: Repository = Repository(ApiService.create())
@@ -136,6 +177,7 @@ class TriageViewModel(
         _uiState.value = state.copy(
             isLoading = true,
             conversationHistory = updatedHistory,
+            lastSubmittedInput = trimmed,
             errorMessage = null
         )
 
@@ -164,6 +206,25 @@ class TriageViewModel(
         }
     }
 
+    /**
+     * Builds natural text in the user's language from the selected symptom
+     * tiles and sends it as a normal user turn.
+     */
+    fun submitSymptomTiles(tileIds: List<String>) {
+        val message = SymptomTilePhrases.buildMessage(tileIds, _uiState.value.selectedLanguage)
+        if (message.isNotBlank()) {
+            submitUserInput(message)
+        }
+    }
+
+    /** Re-sends the last submitted input (used by the visible Retry action). */
+    fun retryLastInput() {
+        val last = _uiState.value.lastSubmittedInput
+        if (!last.isNullOrBlank() && !_uiState.value.isLoading) {
+            submitUserInput(last)
+        }
+    }
+
     private fun handleTriageResponse(response: TriageResponse) {
         val currentHistory = _uiState.value.conversationHistory.toMutableList()
 
@@ -188,13 +249,16 @@ class TriageViewModel(
 
         if (!response.followUpQuestion.isNullOrBlank()) {
             currentHistory.add(ChatMessage(role = "assistant", text = response.followUpQuestion, content = response.followUpQuestion))
+            // A structured module card is rendered instead of the generic chat.
+            val isModule = response.moduleCard != null
             _uiState.value = _uiState.value.copy(
                 isLoading = false,
                 conversationHistory = currentHistory,
                 currentQuestion = response.followUpQuestion,
                 currentOptions = response.followUpOptions,
                 latestResponse = response,
-                destination = ScreenDestination.Chat
+                moduleCard = response.moduleCard,
+                destination = if (isModule) ScreenDestination.ModuleCard else ScreenDestination.Chat
             )
             return
         }
@@ -205,6 +269,39 @@ class TriageViewModel(
             latestResponse = response,
             destination = ScreenDestination.Result
         )
+    }
+
+    /** Submits the collected module-card answers as a structured follow-up turn. */
+    fun submitModuleAnswers(moduleId: String, answers: Map<String, String>) {
+        val state = _uiState.value
+        // Accumulate answers across cards: the backend may return a second
+        // targeted card (e.g. "how did you fall") whose answers must not
+        // discard the first card's answers.
+        val previous = state.lastModuleAnswers ?: emptyMap()
+        val merged = previous + answers
+        _uiState.value = state.copy(isLoading = true, errorMessage = null, moduleCard = null, lastModuleAnswers = merged)
+        viewModelScope.launch {
+            val req = TriageRequest(
+                userInput = state.lastSubmittedInput ?: moduleId,
+                language = state.selectedLanguage,
+                location = if (state.contextConsent) state.userLocation else null,
+                conversationHistory = state.conversationHistory,
+                clientTime = getCurrentClientTime(),
+                contextConsent = state.contextConsent,
+                moduleId = moduleId,
+                moduleAnswers = merged
+            )
+            logTriageRequest("TriageModule", req)
+            repository.triage(req).fold(
+                onSuccess = { handleTriageResponse(it) },
+                onFailure = { err ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = err.localizedMessage ?: "Connection error. Please try again."
+                    )
+                }
+            )
+        }
     }
 
     fun startBooking(caregiverId: String) {

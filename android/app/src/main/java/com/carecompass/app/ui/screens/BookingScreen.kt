@@ -19,6 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.carecompass.app.data.MatchedCaregiver
 import com.carecompass.app.ui.components.BigButton
 import com.carecompass.app.ui.theme.GreenSafe
 import com.carecompass.app.ui.theme.PrimaryBlue
@@ -95,12 +96,38 @@ fun BookingScreen(
     modifier: Modifier = Modifier
 ) {
     val matched = uiState.latestResponse?.matchedCaregivers?.find { it.caregiverId == caregiverId }
+        ?: uiState.latestResponse?.secondaryOptions?.find { it.caregiverId == caregiverId }?.let { opt ->
+            MatchedCaregiver(
+                caregiverId = opt.caregiverId,
+                score = 0.0,
+                reason = opt.qualification,
+                name = opt.name,
+                role = "doctor",
+                qualification = opt.qualification,
+                languages = opt.languages,
+                rating = opt.rating,
+                venue = opt.venue,
+                department = opt.department,
+                facilityName = opt.facilityName
+            )
+        }
     val caregiverName = matched?.name?.takeIf { it.isNotBlank() } ?: "Caregiver $caregiverId"
     val caregiverRole = when (matched?.role?.lowercase()) {
         "medic" -> "Medic"
         "doctor" -> "Doctor"
         "phlebotomist" -> "Lab technician"
         else -> matched?.role?.replaceFirstChar { it.uppercase() } ?: "Caregiver"
+    }
+    val venueLine = matched?.venue?.let { venue ->
+        val dept = matched.department
+            ?.replace("_", " ")
+            ?.replaceFirstChar { it.uppercase() }
+        when (venue) {
+            "home" -> listOfNotNull("Home consult", dept).joinToString(" · ")
+            "virtual" -> listOfNotNull("Video consult", dept).joinToString(" · ")
+            "hospital" -> listOfNotNull("Hospital OPD", dept, matched.facilityName).joinToString(" · ")
+            else -> null
+        }
     }
 
     val freeFrom = matched?.freeFrom ?: "09:00"
@@ -232,6 +259,36 @@ fun BookingScreen(
                         Text(phone, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                     }
 
+                    val triageSummary = uiState.latestResponse?.reasoning
+                    if (!triageSummary.isNullOrBlank()) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        HorizontalDivider(color = Color(0xFFEEEEEE))
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = "Doctor Summary / Medical Notes",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF212121)
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = triageSummary,
+                            fontSize = 14.sp,
+                            color = Color(0xFF424242),
+                            lineHeight = 20.sp
+                        )
+                        val meds = uiState.lastModuleAnswers?.get("meds_used")
+                        if (!meds.isNullOrBlank() && meds != "None") {
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = "Self-care reported: $meds (shared for doctor review only)",
+                                fontSize = 13.sp,
+                                color = Color(0xFF757575),
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+
                     Spacer(modifier = Modifier.height(24.dp))
                     BigButton(
                         text = "Return to Home",
@@ -276,6 +333,14 @@ fun BookingScreen(
                             fontSize = 13.sp,
                             color = Color(0xFF555555)
                         )
+                        if (!venueLine.isNullOrBlank()) {
+                            Text(
+                                text = venueLine,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = PrimaryBlue
+                            )
+                        }
                     }
                 }
             }

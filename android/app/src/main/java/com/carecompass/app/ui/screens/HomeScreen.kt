@@ -9,7 +9,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -47,24 +46,24 @@ import com.carecompass.app.viewmodel.TriageViewModel
 private data class SymptomItem(
     val id: String,
     val icon: ImageVector,
-    val canonicalKeyword: String,
     val labelEnRes: Int,
     val labelHiRes: Int,
     val labelHinglishRes: Int
 )
 
-// Group 1: General symptoms (Multi-select)
+// General symptoms (multi-select). Each tile has a DISTINCT icon; the natural
+// text is built from the single map in TriageViewModel.SymptomTilePhrases.
 private val GENERAL_SYMPTOMS = listOf(
-    SymptomItem("fever", Icons.Default.Whatshot, "fever", R.string.symptom_fever_en, R.string.symptom_fever_hi, R.string.symptom_fever_hinglish),
-    SymptomItem("cough_cold", Icons.Default.Info, "cough and cold", R.string.symptom_cough_cold_en, R.string.symptom_cough_cold_hi, R.string.symptom_cough_cold_hinglish),
-    SymptomItem("headache", Icons.Default.Face, "headache", R.string.symptom_headache_en, R.string.symptom_headache_hi, R.string.symptom_headache_hinglish),
-    SymptomItem("stomach_pain", Icons.Default.Place, "stomach pain", R.string.symptom_stomach_pain_en, R.string.symptom_stomach_pain_hi, R.string.symptom_stomach_pain_hinglish),
-    SymptomItem("vomiting", Icons.Default.Refresh, "vomiting and loose motion", R.string.symptom_vomiting_en, R.string.symptom_vomiting_hi, R.string.symptom_vomiting_hinglish),
-    SymptomItem("body_pain", Icons.Default.Person, "body pain", R.string.symptom_body_pain_en, R.string.symptom_body_pain_hi, R.string.symptom_body_pain_hinglish),
-    SymptomItem("weakness", Icons.Default.Person, "extreme weakness", R.string.symptom_weakness_en, R.string.symptom_weakness_hi, R.string.symptom_weakness_hinglish),
-    SymptomItem("wound_injury", Icons.Default.Healing, "wound injury", R.string.symptom_wound_injury_en, R.string.symptom_wound_injury_hi, R.string.symptom_wound_injury_hinglish),
-    SymptomItem("skin_problem", Icons.Default.Face, "skin rash itching", R.string.symptom_skin_problem_en, R.string.symptom_skin_problem_hi, R.string.symptom_skin_problem_hinglish),
-    SymptomItem("not_eating", Icons.Default.Close, "patient not eating or drinking", R.string.symptom_not_eating_en, R.string.symptom_not_eating_hi, R.string.symptom_not_eating_hinglish)
+    SymptomItem("fever", Icons.Default.Whatshot, R.string.symptom_fever_en, R.string.symptom_fever_hi, R.string.symptom_fever_hinglish),
+    SymptomItem("cough_cold", Icons.Default.Air, R.string.symptom_cough_cold_en, R.string.symptom_cough_cold_hi, R.string.symptom_cough_cold_hinglish),
+    SymptomItem("headache", Icons.Default.SentimentVeryDissatisfied, R.string.symptom_headache_en, R.string.symptom_headache_hi, R.string.symptom_headache_hinglish),
+    SymptomItem("stomach_pain", Icons.Default.Sick, R.string.symptom_stomach_pain_en, R.string.symptom_stomach_pain_hi, R.string.symptom_stomach_pain_hinglish),
+    SymptomItem("vomiting", Icons.Default.WaterDrop, R.string.symptom_vomiting_en, R.string.symptom_vomiting_hi, R.string.symptom_vomiting_hinglish),
+    SymptomItem("body_pain", Icons.Default.FitnessCenter, R.string.symptom_body_pain_en, R.string.symptom_body_pain_hi, R.string.symptom_body_pain_hinglish),
+    SymptomItem("weakness", Icons.Default.BatteryAlert, R.string.symptom_weakness_en, R.string.symptom_weakness_hi, R.string.symptom_weakness_hinglish),
+    SymptomItem("wound_injury", Icons.Default.Healing, R.string.symptom_wound_injury_en, R.string.symptom_wound_injury_hi, R.string.symptom_wound_injury_hinglish),
+    SymptomItem("skin_problem", Icons.Default.Spa, R.string.symptom_skin_problem_en, R.string.symptom_skin_problem_hi, R.string.symptom_skin_problem_hinglish),
+    SymptomItem("not_eating", Icons.Default.NoFood, R.string.symptom_not_eating_en, R.string.symptom_not_eating_hi, R.string.symptom_not_eating_hinglish)
 )
 
 @Composable
@@ -116,9 +115,11 @@ fun HomeScreen(
                 inputText = partial
             },
             onFinalResult = { finalResult ->
+                // Fill the field so the user can review/correct the
+                // transcription, then press send themselves.
                 inputText = finalResult
                 if (finalResult.isNotBlank()) {
-                    viewModel.submitUserInput(finalResult)
+                    userMessage = "Transcription ready — check it, then press send."
                 }
             },
             onError = { errMsg ->
@@ -169,17 +170,24 @@ fun HomeScreen(
         return context.getString(resId)
     }
 
+    val submitTextInput = {
+        val trimmed = inputText.trim()
+        if (trimmed.isNotBlank()) {
+            viewModel.submitUserInput(trimmed)
+            inputText = ""
+        }
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(Color(0xFFF8F9FA))
-            .padding(16.dp)
-            .verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Top section: Language & Emergency Bar
+        // Top bar: app name + language toggle
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 10.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -195,295 +203,344 @@ fun HomeScreen(
             )
         }
 
-        Spacer(modifier = Modifier.height(14.dp))
-
-        if (showConsentBanner) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 12.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F0FE))
-            ) {
-                Column(modifier = Modifier.padding(14.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Place, contentDescription = null, tint = PrimaryBlue, modifier = Modifier.size(20.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
+        // Scrollable middle: consent banner, mic card, symptom grid
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp)
+        ) {
+            if (showConsentBanner) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 12.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F0FE))
+                ) {
+                    Column(modifier = Modifier.padding(14.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Place, contentDescription = null, tint = PrimaryBlue, modifier = Modifier.size(20.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Local Health & Weather Context",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 15.sp,
+                                color = PrimaryBlue
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Local Health & Weather Context",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 15.sp,
-                            color = PrimaryBlue
+                            text = "Use location and time to check weather, seasonal illnesses, and local clinic hours?",
+                            fontSize = 13.sp,
+                            color = Color(0xFF333333)
                         )
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Button(
+                                onClick = {
+                                    showConsentBanner = false
+                                    context.getSharedPreferences("care_compass_prefs", android.content.Context.MODE_PRIVATE)
+                                        .edit().putBoolean("show_consent_banner", false).putBoolean("context_consent", true).apply()
+                                    viewModel.setContextConsent(true)
+                                    locationPermissionLauncher.launch(
+                                        arrayOf(
+                                            Manifest.permission.ACCESS_COARSE_LOCATION,
+                                            Manifest.permission.ACCESS_FINE_LOCATION
+                                        )
+                                    )
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
+                                shape = RoundedCornerShape(8.dp),
+                                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
+                            ) {
+                                Text("Allow", fontSize = 13.sp)
+                            }
+
+                            OutlinedButton(
+                                onClick = {
+                                    showConsentBanner = false
+                                    context.getSharedPreferences("care_compass_prefs", android.content.Context.MODE_PRIVATE)
+                                        .edit().putBoolean("show_consent_banner", false).putBoolean("context_consent", false).apply()
+                                    viewModel.setContextConsent(false)
+                                },
+                                shape = RoundedCornerShape(8.dp),
+                                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
+                            ) {
+                                Text("Not now", fontSize = 13.sp, color = Color(0xFF555555))
+                            }
+                        }
+                    }
+                }
+            }
+
+            // MIC CARD: the first thing on the Home screen (large, centred)
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(18.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = stringResource(R.string.tap_and_speak),
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF212121)
+                    )
+                    val micHint = when (uiState.selectedLanguage) {
+                        "hi" -> stringResource(R.string.home_mic_hint_hi)
+                        "hinglish" -> stringResource(R.string.home_mic_hint_hinglish)
+                        else -> stringResource(R.string.home_mic_hint_en)
                     }
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Use location and time to check weather, seasonal illnesses, and local clinic hours?",
+                        text = micHint,
                         fontSize = 13.sp,
-                        color = Color(0xFF333333)
+                        color = Color(0xFF757575),
+                        textAlign = TextAlign.Center
                     )
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Button(
-                            onClick = {
-                                showConsentBanner = false
-                                context.getSharedPreferences("care_compass_prefs", android.content.Context.MODE_PRIVATE)
-                                    .edit().putBoolean("show_consent_banner", false).putBoolean("context_consent", true).apply()
-                                viewModel.setContextConsent(true)
-                                locationPermissionLauncher.launch(
-                                    arrayOf(
-                                        Manifest.permission.ACCESS_COARSE_LOCATION,
-                                        Manifest.permission.ACCESS_FINE_LOCATION
-                                    )
-                                )
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
-                            shape = RoundedCornerShape(8.dp),
-                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
-                        ) {
-                            Text("Allow", fontSize = 13.sp)
-                        }
 
-                        OutlinedButton(
-                            onClick = {
-                                showConsentBanner = false
-                                context.getSharedPreferences("care_compass_prefs", android.content.Context.MODE_PRIVATE)
-                                    .edit().putBoolean("show_consent_banner", false).putBoolean("context_consent", false).apply()
-                                viewModel.setContextConsent(false)
-                            },
-                            shape = RoundedCornerShape(8.dp),
-                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
-                        ) {
-                            Text("Not now", fontSize = 13.sp, color = Color(0xFF555555))
-                        }
-                    }
-                }
-            }
-        }
+                    Spacer(modifier = Modifier.height(14.dp))
 
-        // Red Emergency Call Button (Dials 112)
-        Button(
-            onClick = {
-                val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:112"))
-                context.startActivity(intent)
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(54.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = EmergencyRed, contentColor = Color.White)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Warning,
-                contentDescription = "Emergency",
-                tint = Color.White
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "Emergency: Call 112",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-        }
+                    MicButton(
+                        state = micState,
+                        onClick = { handleMicTap() }
+                    )
 
-        Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
 
-        // Blue Book Services Button
-        val bookServicesLabel = when (uiState.selectedLanguage) {
-            "hi" -> stringResource(R.string.book_services_hi)
-            "hinglish" -> stringResource(R.string.book_services_hinglish)
-            else -> stringResource(R.string.book_services_en)
-        }
-
-        Button(
-            onClick = {
-                onBookServices()
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(54.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue, contentColor = Color.White)
-        ) {
-            Icon(
-                imageVector = Icons.Default.CalendarMonth,
-                contentDescription = bookServicesLabel,
-                tint = Color.White
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = bookServicesLabel,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-        }
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        // Group 1: "What is wrong?" (Symptoms, min 72dp, 2 columns, multi-select)
-        Text(
-            text = stringResource(R.string.group_symptoms_heading),
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFF212121),
-            textAlign = TextAlign.Start,
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-
-        val symptomChunks = GENERAL_SYMPTOMS.chunked(2)
-        symptomChunks.forEach { rowItems ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                rowItems.forEach { item ->
-                    val isSelected = selectedSymptoms.contains(item.id)
-                    val bgColor = if (isSelected) PrimaryBlue else Color.White
-                    val contentColor = if (isSelected) Color.White else Color(0xFF212121)
-                    val borderColor = if (isSelected) PrimaryBlue else Color(0xFFD6D6D6)
-
-                    Card(
-                        modifier = Modifier
-                            .weight(1f)
-                            .heightIn(min = 72.dp)
-                            .clickable {
-                                if (isSelected) selectedSymptoms.remove(item.id) else selectedSymptoms.add(item.id)
-                            },
-                        shape = RoundedCornerShape(12.dp),
-                        border = BorderStroke(1.5.dp, borderColor),
-                        colors = CardDefaults.cardColors(containerColor = bgColor),
-                        elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 3.dp else 1.dp)
+                    // Text box directly under the mic, inside the same card
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column(
+                        OutlinedTextField(
+                            value = inputText,
+                            onValueChange = { inputText = it },
+                            placeholder = { Text(stringResource(R.string.describe_symptoms), fontSize = 16.sp) },
                             modifier = Modifier
-                                .fillMaxSize()
-                                .padding(8.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
+                                .weight(1f)
+                                .heightIn(min = 56.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = PrimaryBlue,
+                                unfocusedBorderColor = Color(0xFFBDBDBD)
+                            ),
+                            maxLines = 3,
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                            keyboardActions = KeyboardActions(onSend = { submitTextInput() })
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        IconButton(
+                            onClick = { submitTextInput() },
+                            modifier = Modifier
+                                .size(56.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(PrimaryBlue)
                         ) {
                             Icon(
-                                imageVector = item.icon,
-                                contentDescription = getLabel(item),
-                                tint = contentColor,
-                                modifier = Modifier.size(24.dp)
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = getLabel(item),
-                                fontSize = 14.sp,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                color = contentColor,
-                                textAlign = TextAlign.Center
+                                imageVector = Icons.Default.Send,
+                                contentDescription = "Send",
+                                tint = Color.White
                             )
                         }
                     }
+
+                    if (userMessage != null) {
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Surface(
+                            color = Color(0xFFFFF3E0),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = userMessage!!,
+                                color = Color(0xFFE65100),
+                                fontSize = 15.sp,
+                                modifier = Modifier.padding(10.dp)
+                            )
+                        }
+                    }
+
+                    // Visible failure + Retry: never fail silently
+                    if (uiState.errorMessage != null && !uiState.isLoading) {
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Surface(
+                            color = Color(0xFFFFEBEE),
+                            shape = RoundedCornerShape(8.dp),
+                            border = BorderStroke(1.dp, Color(0xFFEF9A9A)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Text(
+                                    text = uiState.errorMessage ?: "",
+                                    color = Color(0xFFB71C1C),
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Button(
+                                    onClick = { viewModel.retryLastInput() },
+                                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
+                                    shape = RoundedCornerShape(8.dp)
+                                ) {
+                                    val retryLabel = when (uiState.selectedLanguage) {
+                                        "hi" -> stringResource(R.string.btn_retry_hi)
+                                        "hinglish" -> stringResource(R.string.btn_retry_hinglish)
+                                        else -> stringResource(R.string.btn_retry_en)
+                                    }
+                                    Text(retryLabel, color = Color.White)
+                                }
+                            }
+                        }
+                    }
+
+                    if (uiState.isLoading) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        CircularProgressIndicator(color = PrimaryBlue)
+                    }
                 }
             }
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            // "What is wrong?" symptom grid
+            Text(
+                text = stringResource(R.string.group_symptoms_heading),
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF212121),
+                textAlign = TextAlign.Start,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            val symptomChunks = GENERAL_SYMPTOMS.chunked(2)
+            symptomChunks.forEach { rowItems ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    rowItems.forEach { item ->
+                        val isSelected = selectedSymptoms.contains(item.id)
+                        val bgColor = if (isSelected) PrimaryBlue else Color.White
+                        val contentColor = if (isSelected) Color.White else Color(0xFF212121)
+                        val borderColor = if (isSelected) PrimaryBlue else Color(0xFFD6D6D6)
+
+                        Card(
+                            modifier = Modifier
+                                .weight(1f)
+                                .heightIn(min = 72.dp)
+                                .clickable {
+                                    if (isSelected) selectedSymptoms.remove(item.id) else selectedSymptoms.add(item.id)
+                                },
+                            shape = RoundedCornerShape(12.dp),
+                            border = BorderStroke(1.5.dp, borderColor),
+                            colors = CardDefaults.cardColors(containerColor = bgColor),
+                            elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 3.dp else 1.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(8.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Icon(
+                                    imageVector = item.icon,
+                                    contentDescription = getLabel(item),
+                                    tint = contentColor,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = getLabel(item),
+                                    fontSize = 14.sp,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                    color = contentColor,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
             Spacer(modifier = Modifier.height(8.dp))
         }
 
-        Spacer(modifier = Modifier.height(18.dp))
-
-        // Continue Button (appears when at least one symptom is selected)
-        if (selectedSymptoms.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(16.dp))
-            BigButton(
-                text = "Continue (${selectedSymptoms.size} selected)",
-                onClick = {
-                    val parts = mutableListOf<String>()
-                    selectedSymptoms.forEach { sId ->
-                        GENERAL_SYMPTOMS.find { it.id == sId }?.let { parts.add(it.canonicalKeyword) }
-                    }
-                    val sentence = parts.joinToString(", ")
-                    if (sentence.isNotBlank()) {
-                        viewModel.submitUserInput(sentence)
+        // Sticky bottom bar: Continue (always visible) + emergency/book services
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            color = Color.White,
+            shadowElevation = 8.dp
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 10.dp)
+            ) {
+                val continueLabel = stringResource(R.string.btn_continue) +
+                        if (selectedSymptoms.isNotEmpty()) " (${selectedSymptoms.size} selected)" else ""
+                BigButton(
+                    text = continueLabel,
+                    enabled = selectedSymptoms.isNotEmpty() && !uiState.isLoading,
+                    onClick = {
+                        viewModel.submitSymptomTiles(selectedSymptoms.toList())
                         selectedSymptoms.clear()
                     }
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Button(
+                        onClick = {
+                            val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:112"))
+                            context.startActivity(intent)
+                        },
+                        modifier = Modifier.weight(1f).height(48.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = EmergencyRed,
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Icon(Icons.Default.Warning, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color.White)
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Emergency: 112", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    }
+
+                    val bookServicesLabel = when (uiState.selectedLanguage) {
+                        "hi" -> stringResource(R.string.book_services_hi)
+                        "hinglish" -> stringResource(R.string.book_services_hinglish)
+                        else -> stringResource(R.string.book_services_en)
+                    }
+                    Button(
+                        onClick = { onBookServices() },
+                        modifier = Modifier.weight(1f).height(48.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = PrimaryBlue,
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Icon(Icons.Default.CalendarMonth, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color.White)
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(bookServicesLabel, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    }
                 }
-            )
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-        HorizontalDivider(color = Color(0xFFE0E0E0))
-        Spacer(modifier = Modifier.height(18.dp))
-
-        // Voice Input & Mic
-        MicButton(
-            state = micState,
-            onClick = { handleMicTap() }
-        )
-
-        if (userMessage != null) {
-            Spacer(modifier = Modifier.height(10.dp))
-            Surface(
-                color = Color(0xFFFFF3E0),
-                shape = RoundedCornerShape(8.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = userMessage!!,
-                    color = Color(0xFFE65100),
-                    fontSize = 16.sp,
-                    modifier = Modifier.padding(10.dp)
-                )
             }
         }
-
-        if (uiState.isLoading) {
-            Spacer(modifier = Modifier.height(12.dp))
-            CircularProgressIndicator(color = PrimaryBlue)
-        }
-
-        Spacer(modifier = Modifier.height(18.dp))
-
-        // Text input with Send button (White bold Send icon)
-        val submitTextInput = {
-            val trimmed = inputText.trim()
-            if (trimmed.isNotBlank()) {
-                viewModel.submitUserInput(trimmed)
-                inputText = ""
-            }
-        }
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            OutlinedTextField(
-                value = inputText,
-                onValueChange = { inputText = it },
-                placeholder = { Text("Or type symptoms here...", fontSize = 17.sp) },
-                modifier = Modifier
-                    .weight(1f)
-                    .heightIn(min = 56.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = PrimaryBlue,
-                    unfocusedBorderColor = Color(0xFFBDBDBD)
-                ),
-                maxLines = 3,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-                keyboardActions = KeyboardActions(onSend = { submitTextInput() })
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            IconButton(
-                onClick = { submitTextInput() },
-                modifier = Modifier
-                    .size(56.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(PrimaryBlue)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Send,
-                    contentDescription = "Send",
-                    tint = Color.White
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
     }
 }

@@ -105,6 +105,25 @@ fun CaregiverCard(
                             )
                         }
                     }
+                    val venueLine = caregiver.venue?.let { venue ->
+                        val dept = caregiver.department
+                            ?.replace("_", " ")
+                            ?.replaceFirstChar { it.uppercase() }
+                        when (venue) {
+                            "home" -> listOfNotNull("Home consult", dept).joinToString(" · ")
+                            "virtual" -> listOfNotNull("Video consult", dept).joinToString(" · ")
+                            "hospital" -> listOfNotNull("Hospital OPD", dept, caregiver.facilityName).joinToString(" · ")
+                            else -> null
+                        }
+                    }
+                    if (!venueLine.isNullOrBlank()) {
+                        Text(
+                            text = venueLine,
+                            fontSize = 13.sp,
+                            color = PrimaryBlue,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
 
                 Surface(

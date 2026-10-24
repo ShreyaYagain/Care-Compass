@@ -74,6 +74,7 @@ def build_reasoning(
     modifiers: list[str],
     language: str = "en",
     context_reason: str | None = None,
+    context_summary: str | None = None,
     top_terms: list[dict] | None = None,
     include_disclaimer: bool = True,
 ) -> str:
@@ -173,6 +174,10 @@ def build_reasoning(
 
     if context_reason:
         res = f"{res} {context_reason}".strip()
+
+    # Weather/time/location line accompanies every non-emergency result.
+    if context_summary:
+        res = f"{res} {context_summary}".strip()
 
     # 3. Mandatory escalation line on non-emergency answers
     escalation = get_escalation_line(lang)

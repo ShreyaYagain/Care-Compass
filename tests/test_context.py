@@ -5,6 +5,7 @@ from app.core.context import (
     get_north_india_season,
     parse_client_time,
     get_context,
+    local_time_str,
 )
 from app.schemas import TriageRequest, Location, PatientProfile
 from app.core.pipeline import run_triage_pipeline
@@ -90,6 +91,43 @@ class TestContextIntegration(unittest.TestCase):
         self.assertIsNotNone(resp.context_used)
         self.assertIn("night", resp.context_used.get("reason", "").lower())
         self.assertIn("112", resp.reasoning)
+
+    @patch("app.core.pipeline.get_context")
+    def test_result_includes_weather_time_and_location(self, mock_ctx):
+        mock_ctx.return_value = {
+            "season": "post_monsoon",
+            "local_hour": 22,
+            "is_night": False,
+            "local_time_str": "10:30 PM",
+            "location_name": "Noida, Uttar Pradesh",
+            "temperature_c": 22.0,
+            "humidity": 50,
+            "precipitation_mm": 0.0,
+            "aqi": 190,
+            "tags": [],
+            "summary": "Noida, Uttar Pradesh · Post-monsoon · 22°C · AQI 190",
+        }
+        req = TriageRequest(
+            user_input="mujhe sir dard hai kal se",
+            client_time="2026-10-24T22:30:00+05:30",
+            location=Location(lat=28.54, lng=77.27),
+            context_consent=True,
+        )
+        resp = run_triage_pipeline(req)
+        # Weather/time/location always accompany a result, not only on escalation.
+        self.assertIsNotNone(resp.context_used)
+        self.assertEqual(resp.context_used.get("location"), "Noida, Uttar Pradesh")
+        self.assertEqual(resp.context_used.get("time"), "10:30 PM")
+        self.assertEqual(resp.context_used.get("weather"), "22°C")
+        self.assertEqual(resp.context_used.get("season"), "Post-monsoon")
+        self.assertEqual(resp.context_used.get("aqi"), 190)
+        self.assertIn("22°C", resp.reasoning)
+        self.assertIn("Noida", resp.reasoning)
+        self.assertIn("AQI 190", resp.reasoning)
+
+    def test_local_time_str_format(self):
+        self.assertEqual(local_time_str(datetime(2026, 10, 24, 22, 30)), "10:30 PM")
+        self.assertEqual(local_time_str(datetime(2026, 10, 24, 9, 5)), "9:05 AM")
 
 
 if __name__ == "__main__":

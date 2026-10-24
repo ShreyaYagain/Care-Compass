@@ -8,7 +8,52 @@ logger = logging.getLogger(__name__)
 
 # 30-minute in-memory cache keyed by (round(lat, 2), round(lng, 2))
 _WEATHER_CACHE: dict[tuple[float, float], tuple[float, dict]] = {}
+_LOCATION_CACHE: dict[tuple[float, float], tuple[float, str]] = {}
 CACHE_TTL_SECONDS = 1800  # 30 mins
+
+
+def fetch_location_name(lat: float, lng: float, timeout_s: float = 1.5) -> str:
+    """
+    Reverse-geocodes lat/lng to a readable place name (e.g. "Noida, Uttar Pradesh")
+    using Nominatim (OpenStreetMap, no key). Returns "" on failure. Cached 30 min.
+    """
+    key = (round(lat, 2), round(lng, 2))
+    now = time.time()
+    if key in _LOCATION_CACHE:
+        cached_time, cached_val = _LOCATION_CACHE[key]
+        if now - cached_time < CACHE_TTL_SECONDS:
+            return cached_val
+
+    name = ""
+    try:
+        url = (
+            f"https://nominatim.openstreetmap.org/reverse"
+            f"?lat={lat}&lon={lng}&format=jsonv2&zoom=12"
+        )
+        headers = {"User-Agent": "CareCompass/1.0 (demo health navigation app)"}
+        with httpx.Client(timeout=timeout_s) as client:
+            res = client.get(url, headers=headers)
+            if res.status_code == 200:
+                data = res.json()
+                addr = data.get("address") or {}
+                raw_parts = [p for p in (addr.get("city") or addr.get("town"), addr.get("state")) if p]
+                if not raw_parts:
+                    raw_parts = [p for p in (data.get("name"), addr.get("state")) if p]
+                parts = []
+                for p in raw_parts:
+                    if p not in parts:
+                        parts.append(p)
+                name = ", ".join(parts)
+    except Exception as e:
+        logger.debug(f"Nominatim reverse geocoding failed: {e}")
+
+    _LOCATION_CACHE[key] = (now, name)
+    return name
+
+
+def local_time_str(dt: datetime) -> str:
+    """'10:30 PM' style display of the resolved local time."""
+    return dt.strftime("%I:%M %p").lstrip("0")
 
 
 def parse_client_time(client_time_str: str | None) -> datetime:
@@ -145,6 +190,8 @@ def get_context(
         "season": season,
         "local_hour": local_hour,
         "is_night": is_night,
+        "local_time_str": local_time_str(dt),
+        "location_name": "",
         "temperature_c": None,
         "humidity": None,
         "precipitation_mm": None,
@@ -160,8 +207,9 @@ def get_context(
     if is_night:
         tags.append("night_time")
 
-    # Fetch weather if lat/lng available
+    # Fetch weather + place name if lat/lng available
     if lat is not None and lng is not None:
+        context["location_name"] = fetch_location_name(lat, lng)
         weather_data = fetch_open_meteo_data(lat, lng)
         context.update(weather_data)
 
@@ -194,7 +242,10 @@ def get_context(
     context["tags"] = sorted(list(set(tags)))
 
     # Human-readable summary
-    summary_parts = [season_display(season)]
+    summary_parts = []
+    if context["location_name"]:
+        summary_parts.append(context["location_name"])
+    summary_parts.append(season_display(season))
     if context["temperature_c"] is not None:
         summary_parts.append(f"{round(context['temperature_c'])}°C")
     if "hot_humid" in tags:

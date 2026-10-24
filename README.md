@@ -1,6 +1,6 @@
 # CareCompass: AI-Powered Care Navigation and Caregiver Matching
 
-CareCompass understands patient requests in English, Hindi, and Hinglish (text or voice), asks targeted follow-up questions, classifies care type and urgency, flags red-flag symptoms, and matches the best available caregiver.
+CareCompass understands patient requests in English, Hindi, and Hinglish (text or voice), asks targeted follow-up questions, classifies care type and urgency, flags red-flag symptoms, incorporates real-time environmental & seasonal context, and matches the best available caregiver.
 
 ### Dataset Citation
 Trained and evaluated using:
@@ -13,12 +13,13 @@ Trained and evaluated using:
 - **Deterministic Urgency**: Urgency is mapped directly from care type via `CARE_TO_URGENCY`.
 
 ## Tech Stack
-- **Language**: Python 3.11
+- **Language**: Python 3.11 / 3.14
 - **API**: FastAPI, Uvicorn, Pydantic v2
 - **ML**: scikit-learn, LightGBM, sentence-transformers, PyTorch
-- **LLM**: Gemini API via `google-genai` (with deterministic rule/regex fallback)
+- **LLM & Speech**: Groq Cloud SDK (`openai/gpt-oss-120b`, `llama-3.3-70b-versatile`, `whisper-large-v3-turbo`), Gemini API fallback, rule/regex deterministic safety fallback
+- **Context & Weather**: Open-Meteo real-time weather & air quality API, North India seasonal modeling
 - **Database**: SQLite via SQLAlchemy
-- **Frontend**: Android Native (Kotlin, Jetpack Compose, Material 3, MVVM, Retrofit)
+- **Frontend**: Android Native (Kotlin, Jetpack Compose, Material 3, MVVM, Retrofit, Location API)
 
 ---
 
@@ -37,15 +38,7 @@ docker compose up --build
 # Install dependencies
 pip install -r requirements.txt
 
-# Run ML data preparation & training
-python -m ml.prepare_data
-python -m ml.train_triage
-python -m ml.evaluate
-python -m ml.predict_test
-
 # Run tests
-pytest tests/
-# or
 python -m unittest discover tests
 
 # Start API server
@@ -59,13 +52,14 @@ With the server running on `http://localhost:8000`:
 ```bash
 ./scripts/smoke_test.sh
 ```
-Runs 5 automated curl cases:
+Runs automated test cases:
 1. `GET /health`
 2. `POST /triage` - Vague fever (triggers follow-up question)
 3. `POST /triage` - Chest pain Hinglish (High-severity Red Flag -> Emergency immediate)
 4. `POST /triage` - Negation handling ("saans me koi dikkat nahi" -> Paramedic home visit, same-day)
 5. `POST /match` - Standalone Caregiver ranking
 6. `POST /book` - Appointment booking
+7. `POST /transcribe` - Groq Whisper speech transcription
 
 ---
 
@@ -78,3 +72,12 @@ Runs 5 automated curl cases:
 5. Note: The app connects to the local backend using Android emulator loopback:
    `http://10.0.2.2:8000/` (pre-configured with `usesCleartextTraffic="true"` for development).
 6. Click **Run 'app'** (`Shift + F10`) to build and launch the app.
+
+### 5. Voice & Context Features
+1. **Groq Whisper Voice Transcription**:
+   - High-accuracy multilingual Hindi/Hinglish/English voice input via `/transcribe`.
+   - On-device speech recognition via Android `SpeechRecognizer` (`hi-IN`, `en-IN`) with real-time partial results and pulsing microphone indicator.
+2. **Environmental & Seasonal Context**:
+   - Location-aware weather & air quality (Open-Meteo) and season derivation.
+   - Clinical escalation rules for extreme heat waves and severe air quality (AQI $\ge 200$) in vulnerable patients.
+   - User privacy consent controls: context lookups are strictly opt-in and can be bypassed anytime.

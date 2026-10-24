@@ -28,7 +28,9 @@ data class TriageUiState(
     val emergencySteps: List<String> = emptyList(),
     val bookingResponse: BookingResponse? = null,
     val errorMessage: String? = null,
-    val destination: ScreenDestination = ScreenDestination.Home
+    val destination: ScreenDestination = ScreenDestination.Home,
+    val contextConsent: Boolean = true,
+    val userLocation: Location? = Location(lat = 28.54, lng = 77.27)
 )
 
 class TriageViewModel(
@@ -40,6 +42,67 @@ class TriageViewModel(
 
     fun setLanguage(lang: String) {
         _uiState.value = _uiState.value.copy(selectedLanguage = lang)
+    }
+
+    fun setContextConsent(consent: Boolean) {
+        _uiState.value = _uiState.value.copy(contextConsent = consent)
+    }
+
+    fun setLocation(lat: Double, lng: Double) {
+        _uiState.value = _uiState.value.copy(userLocation = Location(lat = lat, lng = lng))
+    }
+
+    private fun getCurrentClientTime(): String? {
+        return try {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                java.time.OffsetDateTime.now().toString()
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    fun triggerEmergencyImmediately(symptomText: String) {
+        val trimmed = symptomText.trim()
+        val defaultSteps = listOf(
+            "Call 112 (National Emergency) immediately.",
+            "Keep the patient calm, resting, and sitting or lying down comfortably.",
+            "Do not give food or drink if patient is breathless, drowsy, or having chest pain.",
+            "If unconscious or breathing with difficulty, keep airway clear and turn onto side (recovery position)."
+        )
+
+        val updatedHistory = _uiState.value.conversationHistory + ChatMessage(role = "user", text = trimmed, content = trimmed)
+
+        _uiState.value = _uiState.value.copy(
+            destination = ScreenDestination.Emergency,
+            emergencySteps = defaultSteps,
+            conversationHistory = updatedHistory,
+            isLoading = false
+        )
+
+        // Background call to /triage without delaying UI
+        viewModelScope.launch {
+            try {
+                val state = _uiState.value
+                val req = TriageRequest(
+                    userInput = trimmed,
+                    language = state.selectedLanguage,
+                    location = if (state.contextConsent) state.userLocation else null,
+                    conversationHistory = updatedHistory,
+                    clientTime = getCurrentClientTime(),
+                    contextConsent = state.contextConsent
+                )
+                repository.triage(req).onSuccess { resp ->
+                    if (resp.emergencySteps.isNotEmpty()) {
+                        _uiState.value = _uiState.value.copy(emergencySteps = resp.emergencySteps)
+                    }
+                }
+            } catch (e: Exception) {
+                // Background error ignored
+            }
+        }
     }
 
     fun submitUserInput(text: String) {
@@ -62,8 +125,10 @@ class TriageViewModel(
             val req = TriageRequest(
                 userInput = trimmed,
                 language = state.selectedLanguage,
-                location = Location(lat = 28.54, lng = 77.27), // Hardcoded Delhi location
-                conversationHistory = updatedHistory
+                location = if (state.contextConsent) state.userLocation else null,
+                conversationHistory = updatedHistory,
+                clientTime = getCurrentClientTime(),
+                contextConsent = state.contextConsent
             )
 
             repository.triage(req).fold(

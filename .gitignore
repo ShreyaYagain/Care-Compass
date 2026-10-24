@@ -9,3 +9,16 @@ android/.gradle/
 android/build/
 android/app/build/
 android/local.properties
+
+# Large model artifacts (>25 MB)
+*.bin
+*.pt
+*.pth
+*.onnx
+*.safetensors
+ml/artifacts/*.bin
+ml/artifacts/*.pt
+ml/artifacts/*.safetensors
+ml/artifacts/large_*
+
+ml/guardrail_eval/data/*_prompts.jsonl

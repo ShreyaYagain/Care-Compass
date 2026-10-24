@@ -48,8 +48,11 @@ def create_booking(request: BookingRequest, db: Session = Depends(get_db)):
         except Exception:
             pass
 
+    import uuid
+    booking_id = booking.id or f"BK_{uuid.uuid4().hex[:8].upper()}"
+
     return BookingResponse(
-        booking_id=booking.id,
+        booking_id=booking_id,
         status=booking.status,
         eta=booking.eta,
         caregiver_id=booking.caregiver_id,
@@ -67,8 +70,11 @@ def get_booking(booking_id: str, db: Session = Depends(get_db)):
     if not booking:
         raise HTTPException(status_code=404, detail="Booking not found")
 
+    import uuid
+    booking_id = booking.id or f"BK_{uuid.uuid4().hex[:8].upper()}"
+
     return BookingResponse(
-        booking_id=booking.id,
+        booking_id=booking_id,
         status=booking.status,
         eta=booking.eta,
         caregiver_id=booking.caregiver_id,

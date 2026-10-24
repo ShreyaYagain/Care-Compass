@@ -1,0 +1,104 @@
+{
+  "Model A: TF-IDF Char (2-5) + LR": {
+    "f1_mean": 0.3642639460476273,
+    "f1_std": 0.1899832723159701,
+    "unseen_f1": 0.8628571428571428,
+    "accuracy": 0.3680582527822579,
+    "latency_ms": 0.006185727220411053,
+    "size_mb": 1.2,
+    "needs_gpu": "No",
+    "rf_recall_with_rules": 1.0,
+    "rf_recall_alone": 0.8888888888888888,
+    "em_recall_cv_alone": 0.6071428571428571,
+    "lang_f1_summary": "English: 0.37 / Hindi: 0.34 / Hinglish: 0.38"
+  },
+  "Model B: multilingual-e5-small + LR": {
+    "f1_mean": 0.20313146019558354,
+    "f1_std": 0.11927135413081713,
+    "unseen_f1": 0.7227705627705627,
+    "accuracy": 0.2653293646875161,
+    "latency_ms": 12.003057572899795,
+    "size_mb": 471.0,
+    "needs_gpu": "No",
+    "rf_recall_with_rules": 1.0,
+    "rf_recall_alone": 0.7777777777777778,
+    "em_recall_cv_alone": 0.30357142857142855,
+    "lang_f1_summary": "English: 0.23 / Hindi: 0.28 / Hinglish: 0.23"
+  },
+  "Model C: Ensemble (A + B) Calibrated": {
+    "f1_mean": 0.178026761542551,
+    "f1_std": 0.14161952763851374,
+    "unseen_f1": 0.827948717948718,
+    "accuracy": 0.19878777619470814,
+    "latency_ms": 12.06491206700241,
+    "size_mb": 472.2,
+    "needs_gpu": "No",
+    "rf_recall_with_rules": 1.0,
+    "rf_recall_alone": 0.8888888888888888,
+    "em_recall_cv_alone": 0.30357142857142855,
+    "lang_f1_summary": "English: 0.18 / Hindi: 0.22 / Hinglish: 0.17"
+  },
+  "Model C_stack: Feature Concatenation (TF-IDF + E5)": {
+    "f1_mean": 0.3356686165644732,
+    "f1_std": 0.16218613591900197,
+    "unseen_f1": 0.8978621378621379,
+    "accuracy": 0.3746769728156121,
+    "latency_ms": 12.007303639383643,
+    "size_mb": 472.5,
+    "needs_gpu": "No",
+    "rf_recall_with_rules": 1.0,
+    "rf_recall_alone": 0.8888888888888888,
+    "em_recall_cv_alone": 0.5535714285714286,
+    "lang_f1_summary": "English: 0.37 / Hindi: 0.35 / Hinglish: 0.40"
+  },
+  "Model D: LightGBM on e5": {
+    "f1_mean": 0.15232467532467533,
+    "f1_std": 0.1300976344965668,
+    "unseen_f1": 0.47849624060150375,
+    "accuracy": 0.17574705995758627,
+    "latency_ms": 12.030160531765077,
+    "size_mb": 474.5,
+    "needs_gpu": "No",
+    "rf_recall_with_rules": 1.0,
+    "rf_recall_alone": 0.6666666666666666,
+    "em_recall_cv_alone": 0.32142857142857145,
+    "lang_f1_summary": "English: 0.16 / Hindi: 0.13 / Hinglish: 0.16"
+  },
+  "Model E: Fine-tuned MuRIL (BERT)": {
+    "status": "NOT RUN (Skipped on CPU; no CUDA GPU available)",
+    "needs_gpu": "Yes (CUDA GPU required)",
+    "size_mb": 950.0
+  },
+  "Model F: Zero-shot Groq LLM (API Model)": {
+    "f1_mean": 0.8614985014985015,
+    "f1_std": 0.0,
+    "unseen_f1": 0.8614985014985015,
+    "accuracy": 0.8666666666666667,
+    "latency_ms": 1668.630051612854,
+    "size_mb": 0.0,
+    "needs_gpu": "Cloud API (External)",
+    "rf_recall_with_rules": 1.0,
+    "rf_recall_alone": 0.0,
+    "em_recall_cv_alone": 0.6666666666666666,
+    "lang_f1_summary": "Evaluated on unseen"
+  },
+  "Model G: Rule/Keyword Baseline": {
+    "f1_mean": 0.5964043757260262,
+    "f1_std": 0.0,
+    "unseen_f1": 0.4909090909090909,
+    "accuracy": 0.6312292358803987,
+    "latency_ms": 0.4,
+    "size_mb": 0.05,
+    "needs_gpu": "No",
+    "rf_recall_with_rules": 1.0,
+    "rf_recall_alone": 0.1111111111111111,
+    "em_recall_cv_alone": 0.16071428571428573,
+    "lang_f1_summary": "English: 0.77 / Hindi: 0.25 / Hinglish: 0.63"
+  },
+  "_selection": {
+    "winning_model": "Model A: TF-IDF Char (2-5) + LR",
+    "selection_rule": "emergency_recall >= 0.98 on redflag tests, highest grouped CV macro-F1 (tie breaker <= 0.02: unseen_tests F1, then size/latency)",
+    "model_c_qualified": false,
+    "artifacts_saved": "Production artifacts trained on 100% of official dataset"
+  }
+}

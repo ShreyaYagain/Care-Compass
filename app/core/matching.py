@@ -212,6 +212,14 @@ def rank_caregivers(
             "caregiver_id": cg["caregiver_id"],
             "score": final_score,
             "reason": reason,
+            "name": cg.get("name", ""),
+            "role": cg.get("role", ""),
+            "qualification": cg.get("qualification", ""),
+            "languages": cg.get("languages", []),
+            "rating": float(cg.get("rating", 4.0)),
+            "free_from": free_from,
+            "free_until": free_until,
+            "distance_km": None if care_type == "teleconsultation" else round(dist_km, 1),
         })
 
     candidates.sort(key=lambda x: x["score"], reverse=True)
@@ -221,6 +229,14 @@ def rank_caregivers(
             caregiver_id=c["caregiver_id"],
             score=c["score"],
             reason=c["reason"],
+            name=c.get("name"),
+            role=c.get("role"),
+            qualification=c.get("qualification"),
+            languages=c.get("languages", []),
+            rating=c.get("rating"),
+            free_from=c.get("free_from"),
+            free_until=c.get("free_until"),
+            distance_km=c.get("distance_km"),
         )
         for c in candidates[:limit]
     ]

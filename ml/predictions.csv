@@ -1,10 +1,10 @@
 id,care_type,urgency,red_flags
 VIG_001,paramedic_home_visit,same_day,
 VIG_005,paramedic_home_visit,same_day,
-VIG_009,nurse_home_visit,immediate,
-VIG_014,gp_teleconsult,same_day,
+VIG_009,home_nursing,same_day,
+VIG_014,teleconsultation,same_day,
 VIG_019,paramedic_home_visit,same_day,
-VIG_022,emergency_referral,immediate,chest_pain
-VIG_023,emergency_referral,immediate,chest_pain;severe_breathlessness
-VIG_026,emergency_referral,immediate,unconsciousness;vomiting_blood
-VIG_028,emergency_referral,immediate,poisoning_overdose
+VIG_022,emergency_112,emergency,chest_pain
+VIG_023,emergency_112,emergency,chest_pain;breathlessness
+VIG_026,emergency_112,emergency,unconsciousness;severe_bleeding
+VIG_028,emergency_112,emergency,unconsciousness

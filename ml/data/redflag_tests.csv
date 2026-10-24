@@ -1,10 +1,10 @@
 id,user_input,language,age,sex,conditions,care_type,urgency,red_flags,source
-VIG_022,Severe crushing chest pain radiating to left arm with cold sweat,en,55,male,hypertension,emergency_referral,immediate,chest_pain,handwritten_gold
-VIG_023,Papa ko seene me tez dard hai aur paseena aa raha hai saans nahi le pa rahe,hinglish,60,male,diabetes,emergency_referral,immediate,chest_pain;severe_breathlessness,handwritten_gold
-VIG_024,मरीज अचानक बेहोश होकर गिर पड़ा और कोई जवाब नहीं दे रहा है,hi,50,male,,emergency_referral,immediate,unconsciousness,synthetic
-VIG_025,Face drooping on right side and suddenly unable to speak or move right arm,en,72,female,hypertension,emergency_referral,immediate,stroke_signs,synthetic
-VIG_026,Khoon ki ulti ho rahi hai aur behoshi jaisi halat hai,hinglish,45,male,,emergency_referral,immediate,vomiting_blood,handwritten_gold
-VIG_027,Pregnant woman in 8th month with heavy vaginal bleeding and severe pain,en,27,female,pregnant,emergency_referral,immediate,pregnancy_emergency,synthetic
-VIG_028,Bachhe ne galti se floor cleaner ya poison pi liya hai,hinglish,4,male,,emergency_referral,immediate,poisoning_overdose,handwritten_gold
-VIG_029,"Heavy bleeding from leg wound after bike accident, not stopping with pressure",en,24,male,,emergency_referral,immediate,uncontrolled_bleeding,synthetic
-VIG_030,Patient is having continuous epileptic seizures and shaking violently,en,19,male,epilepsy,emergency_referral,immediate,seizure,synthetic
+VIG_022,Severe crushing chest pain radiating to left arm with cold sweat,en,55,male,hypertension,emergency_112,emergency,chest_pain,handwritten_gold
+VIG_023,Papa ko seene me tez dard hai aur paseena aa raha hai saans nahi le pa rahe,hinglish,60,male,diabetes,emergency_112,emergency,chest_pain;breathlessness,handwritten_gold
+VIG_024,मरीज अचानक बेहोश होकर गिर पड़ा और कोई जवाब नहीं दे रहा है,hi,50,male,,emergency_112,emergency,unconsciousness,synthetic
+VIG_025,Face drooping on right side and suddenly unable to speak or move right arm,en,72,female,hypertension,emergency_112,emergency,stroke_symptoms,synthetic
+VIG_026,Khoon ki ulti ho rahi hai aur behoshi jaisi halat hai,hinglish,45,male,,emergency_112,emergency,severe_bleeding,handwritten_gold
+VIG_027,Pregnant woman in 8th month with heavy vaginal bleeding and severe pain,en,27,female,pregnant,emergency_112,emergency,severe_bleeding,synthetic
+VIG_028,Bachhe ne galti se floor cleaner ya poison pi liya hai,hinglish,4,male,,emergency_112,emergency,unconsciousness,handwritten_gold
+VIG_029,"Heavy bleeding from leg wound after bike accident, not stopping with pressure",en,24,male,,emergency_112,emergency,severe_bleeding,synthetic
+VIG_030,Patient is having continuous epileptic seizures and shaking violently,en,19,male,epilepsy,emergency_112,emergency,seizure,synthetic

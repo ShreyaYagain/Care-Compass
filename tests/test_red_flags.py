@@ -161,7 +161,7 @@ class TestRedFlags(unittest.TestCase):
         self.assertNotIn("breathlessness", flags)
         self.assertFalse(is_emergency)
 
-    def test_routine_fever_no_red_flag(self):
+    def test_mild_fever_no_red_flag(self):
         flags, severity, is_emergency = check_red_flags("halka bukhar hai kal se")
         self.assertEqual(len(flags), 0)
         self.assertFalse(is_emergency)

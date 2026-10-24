@@ -1,0 +1,31 @@
+id,user_input,language,care_type,urgency,description
+UNS_001,Severe sudden pressure in middle of chest and left arm is numb,en,emergency_112,emergency,Cardiac chest pain radiating
+UNS_002,meri dadi behosh ho gayi hain aur bilkul uth nahi rahi hain,hinglish,emergency_112,emergency,Unconsciousness in elderly
+UNS_003,मरीज को लगातार दौरे पड़ रहे हैं और मुंह से झाग आ रहा है,hi,emergency_112,emergency,Active continuous seizures
+UNS_004,Heavy bleeding from wrist cut not stopping with bandage,en,emergency_112,emergency,Uncontrolled arterial bleeding
+UNS_005,pita ji ka muh tedha ho gaya hai aur bol nahi pa rahe hain,hinglish,emergency_112,emergency,Acute stroke symptoms
+UNS_006,सांस बिल्कुल नहीं आ रही है और होंठ नीले पड़ रहे हैं,hi,emergency_112,emergency,Cyanosis and acute respiratory distress
+UNS_007,dada ji ko subah se halka bukhar hai aur chalne me kamzori hai ghar aake checkup chahiye,hinglish,paramedic_home_visit,same_day,Elderly fever and mobility assessment
+UNS_008,I fell on the stairs and badly twisted my ankle cannot put weight on foot,en,paramedic_home_visit,same_day,Acute sprain requiring in-person assessment
+UNS_009,बुजुर्ग माताजी बिस्तर से उठ नहीं पा रही हैं घर आकर बीपी और शुगर चेक कर लीजिए,hi,paramedic_home_visit,same_day,Bedridden vitals and general physical check
+UNS_010,papa ko 2 din se tez bukhar aur khansi hai ghar par doctor checkup chahiye,hinglish,paramedic_home_visit,same_day,Persistent fever home visit
+UNS_011,My 78 year old grandfather feels extremely dizzy and unsteady need a home visit medic,en,paramedic_home_visit,same_day,Senior dizziness in-person evaluation
+UNS_012,घुटने में अचानक भयानक मोच आ गई है और सूजन बढ़ रही है घर पर देखने आइए,hi,paramedic_home_visit,same_day,Knee injury with severe swelling
+UNS_013,Need a nurse to come home and give daily intramuscular antibiotic injection,en,home_nursing,same_day,IM injection administration
+UNS_014,surgery ke baad tanke katwane hain aur dressing change karni hai ghar par,hinglish,home_nursing,same_day,Surgical stitch removal and dressing
+UNS_015,मरीज का यूरिनरी कैथेटर बदलना है घर पर ट्रेंड नर्स भेज दीजिए,hi,home_nursing,same_day,Urinary catheter replacement
+UNS_016,Grandmother has stage 2 bedsore on lower back need sterile wound dressing at home,en,home_nursing,same_day,Bedsore wound care
+UNS_017,doctor ne IV saline drip lagane ko bola hai ghar par drip lagwani hai,hinglish,home_nursing,same_day,IV drip insertion at home
+UNS_018,ऑपरेशन के बाद घाव की सफाई और नई पट्टी बंधवाने के लिए सिस्टर चाहिए,hi,home_nursing,same_day,Post-op wound cleaning and bandage
+UNS_019,Want to book complete annual lipid profile and HbA1c blood test home collection,en,lab_test_home,scheduled,Preventive lipid & sugar blood panel
+UNS_020,subah fasting me thyroid aur CBC ka blood sample collect karwana hai ghar se,hinglish,lab_test_home,scheduled,Fasting thyroid and CBC home phlebotomy
+UNS_021,घर पर आकर पूरे परिवार का रूटीन ब्लड टेस्ट और लिवर फंक्शन टेस्ट करना है,hi,lab_test_home,scheduled,Routine family LFT and blood sample
+UNS_022,Need phlebotomist for senior citizen kidney function and creatinine sample at home,en,lab_test_home,scheduled,KFT creatinine home collection
+UNS_023,full body health package blood test home collection book karna hai kal subah,hinglish,lab_test_home,scheduled,Full body package sample collection
+UNS_024,डॉक्टर ने विटामिन डी और बी12 का टेस्ट लिखा है घर से ब्लड सैंपल ले जाइए,hi,lab_test_home,scheduled,Vitamin D and B12 blood test
+UNS_025,I have had a mild throbbing headache since yesterday morning need online consult,en,teleconsultation,same_day,Mild tension headache video consult
+UNS_026,bachhe ko pet me halki gas aur dard hai dawai ke liye online doctor consult chahiye,hinglish,teleconsultation,same_day,Pediatric abdominal discomfort prescription
+UNS_027,त्वचा पर लाल चकत्ते और खुजली हो रही है डॉक्टर से ऑनलाइन सलाह लेनी है,hi,teleconsultation,same_day,Skin rash dermatological video consult
+UNS_028,Need a second opinion from a physician on my recent medical prescription,en,teleconsultation,same_day,Prescription second opinion
+UNS_029,gale me kharash aur halki sardi hai dawa likhwane ke liye call par baat karni hai,hinglish,teleconsultation,same_day,Cold and sore throat teleconsultation
+UNS_030,कल रात से एसिडिटी और खट्टी डकारें आ रही हैं ऑनलाइन डॉक्टर परामर्श चाहिए,hi,teleconsultation,same_day,Acidity and reflux teleconsultation

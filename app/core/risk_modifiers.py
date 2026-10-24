@@ -5,10 +5,9 @@ from app.schemas import PatientProfile
 def bump_urgency(current_urgency: str, levels: int = 1) -> str:
     """
     Safely raise urgency by at most 1 level.
-    Rule E: total bump from all modifiers is at most +1 level, and only up to same_day.
-    They can reach immediate only together with a high-severity red flag (rule A.1).
+    Total bump from all modifiers is at most +1 level, and only up to same_day.
     """
-    if current_urgency == "routine":
+    if current_urgency == "scheduled":
         return "same_day"
     return current_urgency
 
@@ -22,7 +21,7 @@ def apply_risk_modifiers(
     """
     Applies clinical risk modifiers.
     Rule E: Total bump is at most +1 level, capped at same_day.
-    Never produces immediate or emergency_referral.
+    Never produces emergency or emergency_112.
     """
     applied = []
     final_urgency = urgency

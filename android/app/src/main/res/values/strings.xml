@@ -10,60 +10,81 @@
     <string name="processing_voice">Processing voice…</string>
     <string name="tap_to_speak">Tap &amp; Speak</string>
 
-    <!-- Symptom Labels English -->
+    <!-- Headings -->
+    <string name="group_serious_heading">Serious Problem (Immediate Help)</string>
+    <string name="group_symptoms_heading">What is wrong?</string>
+    <string name="group_services_heading">I need a service</string>
+
+    <!-- Group 2: Serious Problems -->
+    <string name="serious_chest_pain_en">Chest pain</string>
+    <string name="serious_chest_pain_hi">सीने में दर्द</string>
+    <string name="serious_chest_pain_hinglish">Seene mein dard</string>
+
+    <string name="serious_breathing_en">Trouble breathing</string>
+    <string name="serious_breathing_hi">सांस लेने में दिक्कत</string>
+    <string name="serious_breathing_hinglish">Saans ki dikkat</string>
+
+    <string name="serious_fainted_en">Fainted / Not responding</string>
+    <string name="serious_fainted_hi">बेहोश / कोई जवाब नहीं</string>
+    <string name="serious_fainted_hinglish">Behosh / Not responding</string>
+
+    <string name="serious_bleeding_en">Heavy bleeding</string>
+    <string name="serious_bleeding_hi">ज्यादा खून बहना</string>
+    <string name="serious_bleeding_hinglish">Heavy bleeding / Khoon</string>
+
+    <!-- Group 1: Symptoms -->
     <string name="symptom_fever_en">Fever</string>
-    <string name="symptom_cough_en">Cough</string>
-    <string name="symptom_pain_en">Body Pain</string>
-    <string name="symptom_injury_en">Injury / Wound</string>
-    <string name="symptom_breathing_en">Breathing Trouble</string>
-    <string name="symptom_stomach_en">Stomach / Vomiting</string>
-    <string name="symptom_headache_en">Headache</string>
-    <string name="symptom_other_en">Other Issue</string>
-
-    <!-- Symptom Labels Hindi -->
     <string name="symptom_fever_hi">बुखार</string>
-    <string name="symptom_cough_hi">खांसी</string>
-    <string name="symptom_pain_hi">बदन दर्द</string>
-    <string name="symptom_injury_hi">चोट / घाव</string>
-    <string name="symptom_breathing_hi">सांस में तकलीफ</string>
-    <string name="symptom_stomach_hi">पेट दर्द / उल्टी</string>
-    <string name="symptom_headache_hi">सिरदर्द</string>
-    <string name="symptom_other_hi">अन्य समस्या</string>
-
-    <!-- Symptom Labels Hinglish -->
     <string name="symptom_fever_hinglish">Bukhar</string>
-    <string name="symptom_cough_hinglish">Khansi</string>
-    <string name="symptom_pain_hinglish">Dard / Pain</string>
-    <string name="symptom_injury_hinglish">Chot / Wound</string>
-    <string name="symptom_breathing_hinglish">Saans ki dikkat</string>
-    <string name="symptom_stomach_hinglish">Pet dard / Ulti</string>
+
+    <string name="symptom_cough_cold_en">Cough / Cold</string>
+    <string name="symptom_cough_cold_hi">खांसी / जुकाम</string>
+    <string name="symptom_cough_cold_hinglish">Khansi / Zukam</string>
+
+    <string name="symptom_headache_en">Headache</string>
+    <string name="symptom_headache_hi">सिर दर्द</string>
     <string name="symptom_headache_hinglish">Sir dard</string>
-    <string name="symptom_other_hinglish">Kuch aur</string>
 
-    <!-- Symptom & Service Buttons -->
-    <string name="symptom_service_fever_cough_en">Fever / Cough</string>
-    <string name="symptom_service_fever_cough_hi">बुखार / खांसी</string>
-    <string name="symptom_service_fever_cough_hinglish">Bukhar / Khansi</string>
+    <string name="symptom_stomach_pain_en">Stomach pain</string>
+    <string name="symptom_stomach_pain_hi">पेट दर्द</string>
+    <string name="symptom_stomach_pain_hinglish">Pet dard</string>
 
-    <string name="symptom_service_pain_injury_en">Pain / Injury</string>
-    <string name="symptom_service_pain_injury_hi">दर्द / चोट</string>
-    <string name="symptom_service_pain_injury_hinglish">Dard / Injury</string>
+    <string name="symptom_vomiting_en">Vomiting / Loose motion</string>
+    <string name="symptom_vomiting_hi">उल्टी / दस्त</string>
+    <string name="symptom_vomiting_hinglish">Ulti / Dast</string>
 
-    <string name="symptom_service_nursing_en">Nursing (Injection/Dressing)</string>
-    <string name="symptom_service_nursing_hi">नर्सिंग (इंजेक्शन / ड्रेसिंग)</string>
-    <string name="symptom_service_nursing_hinglish">Nursing (Injection / Dressing)</string>
+    <string name="symptom_body_pain_en">Body pain</string>
+    <string name="symptom_body_pain_hi">बदन दर्द</string>
+    <string name="symptom_body_pain_hinglish">Badan dard</string>
 
-    <string name="symptom_service_lab_test_en">Lab Test at Home</string>
-    <string name="symptom_service_lab_test_hi">लैब टेस्ट (ब्लड सैंपल)</string>
-    <string name="symptom_service_lab_test_hinglish">Lab Test (Blood test)</string>
+    <string name="symptom_weakness_en">Weakness</string>
+    <string name="symptom_weakness_hi">कमजोरी</string>
+    <string name="symptom_weakness_hinglish">Kamzori</string>
 
-    <string name="symptom_service_doctor_consult_en">Doctor Consult</string>
-    <string name="symptom_service_doctor_consult_hi">डॉक्टर परामर्श</string>
-    <string name="symptom_service_doctor_consult_hinglish">Doctor Consult</string>
+    <string name="symptom_wound_injury_en">Wound / Injury</string>
+    <string name="symptom_wound_injury_hi">घाव / चोट</string>
+    <string name="symptom_wound_injury_hinglish">Chot / Injury</string>
 
-    <string name="symptom_service_elderly_weak_en">Elderly / Weakness</string>
-    <string name="symptom_service_elderly_weak_hi">बुजुर्ग / कमजोरी</string>
-    <string name="symptom_service_elderly_weak_hinglish">Elderly / Kamzori</string>
+    <string name="symptom_skin_problem_en">Skin problem</string>
+    <string name="symptom_skin_problem_hi">त्वचा की समस्या / खुजली</string>
+    <string name="symptom_skin_problem_hinglish">Rash / Khujli</string>
+
+    <string name="symptom_not_eating_en">Not eating / drinking</string>
+    <string name="symptom_not_eating_hi">खाना-पीना बंद</string>
+    <string name="symptom_not_eating_hinglish">Kha pee nahi pa rahe</string>
+
+    <!-- Group 3: Services -->
+    <string name="service_home_nursing_en">Home nursing (injection, dressing)</string>
+    <string name="service_home_nursing_hi">होम नर्सिंग (इंजेक्शन, ड्रेसिंग)</string>
+    <string name="service_home_nursing_hinglish">Home nursing (injection, dressing)</string>
+
+    <string name="service_lab_test_en">Lab test at home</string>
+    <string name="service_lab_test_hi">घर पर लैब टेस्ट (ब्लड सैंपल)</string>
+    <string name="service_lab_test_hinglish">Lab test at home (blood test)</string>
+
+    <string name="service_talk_doctor_en">Talk to a doctor</string>
+    <string name="service_talk_doctor_hi">डॉक्टर से बात करें</string>
+    <string name="service_talk_doctor_hinglish">Talk to a doctor</string>
 
     <string name="btn_continue">Continue</string>
 </resources>

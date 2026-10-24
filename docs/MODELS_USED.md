@@ -13,7 +13,35 @@ This system is trained and benchmarked on the official dataset:
 
 ---
 
-## 2. Machine Learning Architecture & Classification
+## 2. Groq LLM & Speech AI (Cloud Acceleration)
+- **Groq Llama / GPT-OSS Inference (`openai/gpt-oss-120b`, `openai/gpt-oss-20b`, `llama-3.3-70b-versatile`)**:
+  - Used strictly for structured intake slot extraction (symptoms, service requested, relation, duration, age group).
+  - Out-of-dataset mapping: canonicalizes unfamiliar medical queries (physiotherapy, dental, vaccinations, certificates) to the 5 official care types without inventing labels.
+  - Follow-up question generation: enforces zero severity questioning ("never ask how severe it is"), eliminates duplicate questions, and prioritizes screening of ambiguous red flags.
+  - Fallback order: Groq $\rightarrow$ Gemini $\rightarrow$ deterministic rule/regex layer (never crashes).
+- **Groq Whisper Audio Transcription (`whisper-large-v3-turbo`)**:
+  - Cloud STT endpoint at `/transcribe` accepting `.m4a`, `.wav`, `.mp3`, `.ogg`, `.webm`, `.flac`.
+  - Tuned with Hindi/English medical vocabulary prompt hints (`bukhar, khansi, dard, saans, ulti, injection, dressing, checkup, fever, cough`).
+  - Timeout bounded (5s) with clean 503 fallback.
+
+---
+
+## 3. Real-Time Environmental Context & Weather API
+- **Open-Meteo Forecast & Air Quality APIs (`api.open-meteo.com`)**:
+  - Current temperature, relative humidity, precipitation, weather code, and US AQI / PM2.5.
+  - Free and open API requiring no credential storage; cached in-memory for 30 minutes keyed by coordinate grid.
+  - Deterministic North India seasonal derivation (`winter`, `summer`, `monsoon`, `post_monsoon`) from client ISO timestamp.
+  - **Safety Invariants**:
+    - Context **never** lowers urgency.
+    - Context only escalates urgency under two clinical emergencies:
+      1. `heat_wave` ($\ge 40^\circ\text{C}$) + senior ($\ge 65$) + fever/dizziness $\rightarrow$ `emergency_112`.
+      2. `poor_air` ($\text{AQI} \ge 200$) + asthma patient + respiratory symptoms $\rightarrow$ `emergency_112`.
+    - Soft adjustment within `same_day`: night-time / heavy rain shifts `paramedic_home_visit` to immediate `teleconsultation` with home visit scheduled for morning.
+    - Full privacy control: if `context_consent` is false, all context lookups are skipped (`context_used = null`).
+
+---
+
+## 4. Machine Learning Architecture & Classification
 - **Feature Extraction**: `scikit-learn` Char N-Gram (2–5 grams) and Word N-Gram (1–2 grams) TF-IDF Vectorizer. Accurately handles Hindi-English code-mixing, phonetic vernacular variations (`bukhar`, `bukhaar`, `buhar`, `khasi`, `khansi`), and typographical errors without out-of-vocabulary penalties.
 - **Classifier**: Logistic Regression with `CalibratedClassifierCV` (sigmoid calibration) predicting canonical `care_type` labels:
   - `paramedic_home_visit`
@@ -33,7 +61,7 @@ This system is trained and benchmarked on the official dataset:
 
 ---
 
-## 3. Safety Layer & Red Flag Engine
+## 5. Safety Layer & Red Flag Engine
 - **Deterministic 9-Flag Safety Layer**: Evaluates incoming queries for all 9 official red flag symptoms:
   1. `chest_pain`
   2. `breathlessness`
@@ -49,7 +77,7 @@ This system is trained and benchmarked on the official dataset:
 
 ---
 
-## 4. Caregiver Matching Engine
+## 6. Caregiver Matching Engine
 - **Formula**:
   $$\text{Score} = 0.35 \times \text{Language} + 0.30 \times \text{Proximity} + 0.20 \times \text{Skill} + 0.15 \times \text{RatingNorm}$$
 - **Role Routing**:
@@ -62,6 +90,26 @@ This system is trained and benchmarked on the official dataset:
 
 ---
 
-## 5. Speech, Transliteration, and UI
+## 7. Speech, Transliteration, and UI
 - **Android On-Device `SpeechRecognizer`**: Native speech-to-text supporting `hi-IN` and `en-IN` live speech input with pulsing microphone state and partial transcription.
 - **Transliteration & Normalization**: Custom medical Hinglish normalizer maps colloquial terms (`sar dard`, `pet dard`, `ulti`) to standardized clinical concepts.
+
+---
+
+## 8. Guardrails and References
+
+### Clinical Triage Citations
+The emergency red-flag taxonomy and escalation triggers are grounded in peer-reviewed clinical triage standards:
+1. **WHO IMCI**: World Health Organization. *Integrated Management of Childhood Illness (IMCI).* WHO Guidelines Approved by the Guidelines Review Committee (2014).
+2. **WHO ETAT**: World Health Organization. *Updated Guideline: Paediatric Emergency Triage, Assessment and Treatment.* WHO Guidelines (2016).
+3. **Emergency Severity Index (ESI) v4**: Agency for Healthcare Research and Quality (AHRQ). *ESI Implementation Handbook.* AHRQ Pub. 12-0014 (2011).
+4. **Manchester Triage System (MTS)**: Mackway-Jones K. et al. *Emergency Triage (3rd Edition).* Wiley-Blackwell (2014).
+
+### Public Datasets Used for Guardrails & Vocabulary Benchmarking
+All public datasets are cited below. In accordance with competition rules, they are utilized strictly as **unlabelled evaluation test prompts and linguistic vocabulary benchmarking**, never as training labels:
+1. **TriageBench**: Wong et al., *TriageBench: Benchmarking LLMs for Clinical Triage Decision-Making*, [Hugging Face](https://huggingface.co/datasets/wongqihan/triagebench), Licence: Apache-2.0 / Research Use. (Unlabelled clinical scenario evaluation).
+2. **HiMed**: FreedomIntelligence, *HiMed: A Large-scale Hindi Medical Question-Answering Dataset*, [Hugging Face](https://huggingface.co/datasets/FreedomIntelligence/HiMed), Licence: MIT / CC-BY-NC 4.0. (Hindi patient inquiry evaluation).
+3. **MedMCQA-Indic**: Eka Care, *MedMCQA-Indic: Multi-language Indic Medical MCQs*, [Hugging Face](https://huggingface.co/datasets/ekacare/MedMCQA-Indic), Licence: Apache-2.0. (Multilingual clinical vocabulary testing).
+4. **health_hindi_200**: OdiaGenAI, *Health Hindi 200 Question-Answer Dataset*, [Hugging Face](https://huggingface.co/datasets/OdiaGenAI/health_hindi_200), Licence: CC-BY-4.0. (Hindi health question prompts).
+5. **MMCQS (MedSumm)**: Joshi et al., *Multi-lingual Medical Code-mixed Question Set*, [arXiv:2401.01596](https://arxiv.org/pdf/2401.01596), Licence: Research Use Only. (Code-mixed Hinglish phrasing patterns).
+

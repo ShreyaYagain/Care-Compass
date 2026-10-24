@@ -4,11 +4,11 @@ from app.schemas import TriageRequest, Location, ChatMessage
 from app.core.pipeline import run_triage_pipeline
 
 DATA_DIR = Path(__file__).resolve().parent / "data"
-URGENCY_LEVELS = {"routine": 0, "same_day": 1, "immediate": 2}
+URGENCY_LEVELS = {"scheduled": 0, "same_day": 1, "emergency": 2}
 
 
 def evaluate():
-    test_file = DATA_DIR / "gold.csv"
+    test_file = DATA_DIR / "val.csv"
     if not test_file.exists():
         test_file = DATA_DIR / "train.csv"
 
@@ -82,9 +82,9 @@ def evaluate():
             under_triage_count += 1
 
         # Emergency recall check
-        if true_urgency == "immediate":
+        if true_urgency == "emergency":
             emergency_true_count += 1
-            if pred_urgency == "immediate":
+            if pred_urgency == "emergency":
                 emergency_recalled += 1
 
         # Language tracking

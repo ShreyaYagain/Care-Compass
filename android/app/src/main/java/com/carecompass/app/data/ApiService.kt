@@ -1,13 +1,12 @@
 package com.carecompass.app.data
 
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import retrofit2.http.Body
-import retrofit2.http.GET
-import retrofit2.http.POST
-import retrofit2.http.Path
+import retrofit2.http.*
 import java.util.concurrent.TimeUnit
 
 interface ApiService {
@@ -23,6 +22,13 @@ interface ApiService {
 
     @GET("bookings/{id}")
     suspend fun getBooking(@Path("id") id: String): BookingResponse
+
+    @Multipart
+    @POST("transcribe")
+    suspend fun transcribeAudio(
+        @Part audio: MultipartBody.Part,
+        @Part("language") language: RequestBody? = null
+    ): TranscribeResponse
 
     companion object {
         private const val BASE_URL = "http://10.0.2.2:8000/"

@@ -5,8 +5,8 @@
 Patients in India frequently encounter barriers in navigating healthcare settings. Faced with acute or evolving symptoms, families either delay care until illness becomes critical or overwhelm hospital emergency departments with conditions that could be effectively assessed at home. Multilingual and code-mixed expressions (Hindi, English, and Hinglish such as *"Papa ko do din se bukhar hai aur khansi bhi"*) cause conventional triage systems to fail, leading to dangerous under-triage.
 
 CareCompass solves this challenge via an intelligent, multilingual triage and caregiver matching system that:
-1. Accurately determines **care type** (`paramedic_home_visit`, `nurse_home_visit`, `gp_teleconsult`, `specialist`, `emergency_referral`).
-2. Determines **urgency** (`routine`, `same_day`, `immediate`).
+1. Accurately determines **care type** (`paramedic_home_visit`, `home_nursing`, `lab_test_home`, `teleconsultation`, `emergency_112`).
+2. Determines **urgency** (`emergency`, `same_day`, `scheduled`).
 3. Dispatches the optimal **caregiver** based on clinical skill, proximity, availability, and language fluency.
 
 ## 2. System Architecture & Technical Innovation
@@ -20,7 +20,7 @@ CareCompass implements a three-module architecture wrapped in a production-ready
 
 - **Module 2: Calibrated Triage with Asymmetric Cost Optimization**
   - **Deterministic Safety Net (Tier 0)**: High-recall rule-based red flag detection overriding ML models for emergencies (chest pain, stroke signs, seizures, anaphylaxis, severe head injuries).
-  - **Cost-Sensitive Decision Matrix**: Since under-triage is catastrophic while over-triage is benign, predictions are chosen by minimizing expected Bayesian risk where misclassifying an `immediate` emergency as `routine` carries an asymmetric cost of 10x.
+  - **Deterministic Urgency & Safety Gate**: Urgency is deterministically derived from care type, with emergency status triggered strictly by high-severity red flags, confirmed red-flag symptoms, or model P(emergency_112) >= 0.50.
   - **Clinical Risk Modifiers**: Automatic escalation for vulnerable demographics (infants, seniors >75, pregnancy, chronic diabetes/COPD).
 
 - **Module 3: Urgency-Aware Multi-Factor Caregiver Matching**
@@ -36,3 +36,23 @@ CareCompass implements a three-module architecture wrapped in a production-ready
 ## 4. Known Limitations & Future Work
 1. Regional dialects (Bhojpuri, Maithili, Haryanvi) can be expanded into the transliteration lexicon.
 2. Integration with live ABHA (Ayushman Bharat Health Account) profiles for verified EHR retrieval.
+
+---
+
+## 5. Guardrails and References
+
+### Clinical Triage References
+The red-flag protocol, emergency escalation ladder, and triage categorization are motivated by established international emergency triage systems (cited as references only; no proprietary text copied):
+1. **World Health Organization (WHO) IMCI**: *Integrated Management of Childhood Illness: Chart Booklet.* World Health Organization, Geneva (2014).
+2. **World Health Organization (WHO) ETAT**: *Emergency Triage Assessment and Treatment (ETAT) guidelines.* World Health Organization, Geneva (2016).
+3. **Emergency Severity Index (ESI)**: Gilboy N, Tanabe T, Travers D, Rosenau AM. *Emergency Severity Index (ESI): A Triage Tool for Emergency Department Care, Version 4.* AHRQ Publication No. 12-0014 (2011).
+4. **Manchester Triage System (MTS)**: Mackway-Jones K, Marsden J, Windle J. *Emergency Triage: Manchester Triage Group (3rd Edition).* BMJ Publishing Group / Wiley-Blackwell (2014).
+
+### Public Datasets Used
+In strict compliance with evaluation rules, all public datasets are used exclusively for **unlabelled guardrail evaluation prompts and multilingual vocabulary benchmarking**; none were used as training labels:
+1. **TriageBench**: Wong et al., *TriageBench: Benchmarking LLMs for Clinical Triage Decision-Making*, [Link](https://huggingface.co/datasets/wongqihan/triagebench), Licence: Apache-2.0 / Research Use. (Used for unlabelled clinical triage scenario evaluation).
+2. **HiMed**: FreedomIntelligence, *HiMed: A Large-scale Hindi Medical Question-Answering Dataset*, [Link](https://huggingface.co/datasets/FreedomIntelligence/HiMed), Licence: MIT / CC-BY-NC 4.0. (Used for Hindi vernacular health vocabulary stress-testing).
+3. **MedMCQA-Indic**: Eka Care, *MedMCQA-Indic: Multi-language Indic Medical Multiple Choice Questions*, [Link](https://huggingface.co/datasets/ekacare/MedMCQA-Indic), Licence: Apache-2.0. (Used for clinical concept vocabulary verification).
+4. **health_hindi_200**: OdiaGenAI, *Health Hindi 200 Question-Answer Dataset*, [Link](https://huggingface.co/datasets/OdiaGenAI/health_hindi_200), Licence: CC-BY-4.0. (Used for patient inquiry prompts in Hindi).
+5. **MMCQS (MedSumm)**: Joshi et al., *Multi-lingual Medical Code-mixed Question Set*, [Link](https://arxiv.org/pdf/2401.01596), Licence: Research Use Only. (Used for Hinglish code-mixed phrasing patterns).
+

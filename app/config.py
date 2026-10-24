@@ -12,13 +12,20 @@ try:
 
     class Settings(BaseSettings):
         APP_NAME: str = "CareCompass"
-        MODEL_VERSION: str = "2.0.0"
+        MODEL_VERSION: str = "2.2.0-tfidf-a"
+        MODEL_NAME: str = "Model A: TF-IDF Char (2-5) + Calibrated Logistic Regression"
         DEBUG: bool = False
         HOST: str = "0.0.0.0"
         PORT: int = 8000
         DATABASE_URL: str = f"sqlite:///{BASE_DIR}/carecompass.db"
 
         # LLM Settings
+        GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
+        GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+        GROQ_FAST_MODEL: str = os.getenv("GROQ_FAST_MODEL", "llama-3.1-8b-instant")
+        GROQ_STT_MODEL: str = os.getenv("GROQ_STT_MODEL", "whisper-large-v3-turbo")
+        LLM_TIMEOUT_S: float = float(os.getenv("LLM_TIMEOUT_S", "3.0"))
+
         GEMINI_API_KEY: str = ""
         GEMINI_MODEL: str = "gemini-1.5-flash"
         LLM_TIMEOUT_SECONDS: float = 3.0
@@ -60,7 +67,7 @@ try:
 
         # Safety & Triage Tunables
         CONF_THRESHOLD: float = 0.55
-        MAX_FOLLOWUPS: int = 4
+        MAX_FOLLOWUPS: int = 2
         MAX_KM: float = 35.0
 
         EMERGENCY_NUMBERS: list[str] = ["112", "102"]
@@ -71,7 +78,6 @@ try:
         HINGLISH_NORM_FILE: Path = DATA_DIR / "hinglish_norm.json"
         OFFICIAL_DATA_DIR: Path = ML_DIR / "data" / "official"
         CAREGIVERS_CSV_FILE: Path = OFFICIAL_DATA_DIR / "caregivers.csv"
-        CAREGIVERS_FILE: Path = DATA_DIR / "caregivers.json"
         EMERGENCY_STEPS_FILE: Path = DATA_DIR / "emergency_steps.yaml"
         ARTIFACTS_DIR: Path = ARTIFACTS_DIR
 
@@ -84,11 +90,18 @@ try:
 except ImportError:
     class Settings:
         APP_NAME: str = "CareCompass"
-        MODEL_VERSION: str = "2.0.0"
+        MODEL_VERSION: str = "2.2.0-tfidf-a"
+        MODEL_NAME: str = "Model A: TF-IDF Char (2-5) + Calibrated Logistic Regression"
         DEBUG: bool = False
         HOST: str = "0.0.0.0"
         PORT: int = 8000
         DATABASE_URL: str = f"sqlite:///{BASE_DIR}/carecompass.db"
+
+        GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
+        GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+        GROQ_FAST_MODEL: str = os.getenv("GROQ_FAST_MODEL", "llama-3.1-8b-instant")
+        GROQ_STT_MODEL: str = os.getenv("GROQ_STT_MODEL", "whisper-large-v3-turbo")
+        LLM_TIMEOUT_S: float = float(os.getenv("LLM_TIMEOUT_S", "3.0"))
 
         GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
         GEMINI_MODEL: str = "gemini-1.5-flash"
@@ -129,7 +142,7 @@ except ImportError:
         }
 
         CONF_THRESHOLD: float = 0.55
-        MAX_FOLLOWUPS: int = 4
+        MAX_FOLLOWUPS: int = 2
         MAX_KM: float = 35.0
 
         EMERGENCY_NUMBERS: list[str] = ["112", "102"]
@@ -140,7 +153,6 @@ except ImportError:
         HINGLISH_NORM_FILE: Path = DATA_DIR / "hinglish_norm.json"
         OFFICIAL_DATA_DIR: Path = ML_DIR / "data" / "official"
         CAREGIVERS_CSV_FILE: Path = OFFICIAL_DATA_DIR / "caregivers.csv"
-        CAREGIVERS_FILE: Path = DATA_DIR / "caregivers.json"
         EMERGENCY_STEPS_FILE: Path = DATA_DIR / "emergency_steps.yaml"
         ARTIFACTS_DIR: Path = ARTIFACTS_DIR
 

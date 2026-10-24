@@ -112,7 +112,8 @@ def normalise_text(text: str) -> str:
 def is_phrase_negated(phrase: str, full_text: str, window_size: int = 4) -> bool:
     """
     Window rule: negation words within window_size tokens before or after the phrase.
-    Handles 'saans lene mein dikkat nahi' -> True (negated).
+    Handles 'saans lene mein dikkat nahi' -> True (negated), 'no chest pain' -> True.
+    Exempts emergency clauses like 'not stopping', 'not breathing', 'not responding'.
     """
     norm_text = normalise_text(full_text)
     norm_phrase = normalise_text(phrase)
@@ -124,14 +125,37 @@ def is_phrase_negated(phrase: str, full_text: str, window_size: int = 4) -> bool
     if n_p == 0:
         return False
 
+    emergency_negation_combos = {
+        ("not", "stopping"), ("not", "breathing"), ("not", "responsive"),
+        ("not", "responding"), ("nahi", "ruk"), ("nahi", "aa")
+    }
+
     for i in range(len(tokens) - n_p + 1):
         if tokens[i:i + n_p] == phrase_tokens:
             start_window = max(0, i - window_size)
             end_window = min(len(tokens), i + n_p + window_size)
 
-            surrounding = tokens[start_window:i] + tokens[i + n_p:end_window]
-            if any(nw in surrounding for nw in NEGATION_WORDS):
-                return True
+            # Check preceding tokens
+            preceding = tokens[start_window:i]
+            for idx, nw in enumerate(preceding):
+                if nw in NEGATION_WORDS:
+                    # Verify it's not part of an emergency phrase like 'not stopping'
+                    abs_idx = start_window + idx
+                    if abs_idx + 1 < len(tokens) and (nw, tokens[abs_idx + 1]) in emergency_negation_combos:
+                        continue
+                    return True
+
+            # Check succeeding tokens
+            succeeding = tokens[i + n_p:end_window]
+            for idx, nw in enumerate(succeeding):
+                if nw in NEGATION_WORDS:
+                    abs_idx = (i + n_p) + idx
+                    if abs_idx + 1 < len(tokens) and (nw, tokens[abs_idx + 1]) in emergency_negation_combos:
+                        continue
+                    # If preceded by 'and' / 'aur' (e.g. 'unconscious and not breathing'), don't negate the first symptom
+                    if idx > 0 and succeeding[idx - 1] in {"and", "aur", "plus", "also"}:
+                        continue
+                    return True
 
     return False
 

@@ -25,7 +25,15 @@ data class MatchedCaregiver(
     @SerializedName("caregiver_id") val caregiverId: String,
     @SerializedName("score") val score: Double,
     @SerializedName("reason") val reason: String,
-    @SerializedName("factors") val factors: Map<String, Double>? = null
+    @SerializedName("factors") val factors: Map<String, Double>? = null,
+    @SerializedName("name") val name: String? = null,
+    @SerializedName("role") val role: String? = null,
+    @SerializedName("qualification") val qualification: String? = null,
+    @SerializedName("languages") val languages: List<String> = emptyList(),
+    @SerializedName("rating") val rating: Double? = null,
+    @SerializedName("free_from") val freeFrom: String? = null,
+    @SerializedName("free_until") val freeUntil: String? = null,
+    @SerializedName("distance_km") val distanceKm: Double? = null
 )
 
 data class EmergencyInfo(
@@ -33,12 +41,22 @@ data class EmergencyInfo(
     @SerializedName("steps") val steps: List<String> = emptyList()
 )
 
+data class ContextUsedInfo(
+    @SerializedName("season") val season: String? = null,
+    @SerializedName("weather") val weather: String? = null,
+    @SerializedName("aqi") val aqi: Double? = null,
+    @SerializedName("tags") val tags: List<String> = emptyList(),
+    @SerializedName("reason") val reason: String? = null
+)
+
 data class TriageRequest(
     @SerializedName("user_input") val userInput: String,
     @SerializedName("language") val language: String = "auto",
     @SerializedName("location") val location: Location? = null,
     @SerializedName("conversation_history") val conversationHistory: List<ChatMessage> = emptyList(),
-    @SerializedName("patient") val patient: PatientProfile? = null
+    @SerializedName("patient") val patient: PatientProfile? = null,
+    @SerializedName("client_time") val clientTime: String? = null,
+    @SerializedName("context_consent") val contextConsent: Boolean = true
 )
 
 data class TriageResponse(
@@ -51,7 +69,8 @@ data class TriageResponse(
     @SerializedName("confidence") val confidence: Double? = null,
     @SerializedName("matched_caregivers") val matchedCaregivers: List<MatchedCaregiver> = emptyList(),
     @SerializedName("emergency_steps") val emergencySteps: List<String> = emptyList(),
-    @SerializedName("emergency") val emergency: EmergencyInfo? = null
+    @SerializedName("emergency") val emergency: EmergencyInfo? = null,
+    @SerializedName("context_used") val contextUsed: ContextUsedInfo? = null
 )
 
 data class CaregiverProfile(
@@ -85,4 +104,9 @@ data class BookingResponse(
     @SerializedName("slot") val slot: String,
     @SerializedName("user_name") val userName: String,
     @SerializedName("phone") val phone: String
+)
+
+data class TranscribeResponse(
+    @SerializedName("text") val text: String = "",
+    @SerializedName("language") val language: String = "en"
 )

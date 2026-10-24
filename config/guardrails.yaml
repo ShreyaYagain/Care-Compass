@@ -1,0 +1,39 @@
+version: "1.0"
+policy_name: "CareCompass Clinical Safety & Guardrails Policy"
+
+disclaimer:
+  en: "This app helps you find the right care. It is not a doctor."
+  hi: "यह ऐप आपको सही देखभाल खोजने में मदद करता है। यह डॉक्टर नहीं है।"
+  hinglish: "Yeh app aapko sahi dekhbhal khojne mein madad karta hai. Yeh doctor nahi hai."
+
+escalation_line:
+  en: "If it gets worse or you notice breathing trouble, chest pain, confusion, or bleeding, call 112 or tell us right away."
+  hi: "यदि स्थिति बिगड़ती है या सांस लेने में तकलीफ, सीने में दर्द, बेहोशी या रक्तस्राव महसूस हो, तो तुरंत 112 पर कॉल करें।"
+  hinglish: "Agar tabiyat bigadti hai ya saans lene mein dikkat, seene mein dard, behoshi ya bleeding ho, toh turant 112 par call karein."
+
+scope_refusal:
+  en: "I can only assist with healthcare navigation. We can arrange a doctor home check, home nursing, a home lab test, or an online doctor consultation."
+  hi: "मैं केवल स्वास्थ्य सेवाओं में सहायता कर सकता हूँ। हम डॉक्टर होम विजिट, होम नर्सिंग, घर पर लैब टेस्ट या ऑनलाइन डॉक्टर परामर्श की सुविधा प्रदान कर सकते हैं।"
+  hinglish: "Main sirf healthcare navigation mein help kar sakta hoon. Hum doctor home visit, home nursing, home lab test ya online doctor consult arrange kar sakte hain."
+
+deterministic_templates:
+  paramedic_home_visit:
+    en: "Medic home visit recommended for in-person assessment and vitals."
+    hi: "व्यक्तिगत मूल्यांकन और स्वास्थ्य जांच के लिए पैरामेडिक होम विजिट की सिफारिश की जाती है।"
+    hinglish: "In-person assessment aur vitals check ke liye paramedic home visit recommend kiya jata hai."
+  home_nursing:
+    en: "Home nursing visit recommended for required nursing care and procedures."
+    hi: "आवश्यक नर्सिंग देखभाल और प्रक्रियाओं के लिए होम नर्सिंग विजिट की सिफारिश की जाती है।"
+    hinglish: "Nursing dekhbhal aur procedures ke liye home nursing visit recommend kiya jata hai."
+  lab_test_home:
+    en: "Home diagnostic sample collection recommended for laboratory testing."
+    hi: "प्रयोगशाला परीक्षण के लिए घर पर सैंपल संग्रह की सिफारिश की जाती है।"
+    hinglish: "Diagnostic tests ke liye ghar par sample collection recommend kiya jata hai."
+  teleconsultation:
+    en: "Online doctor consultation recommended for clinical evaluation and guidance."
+    hi: "डॉक्टरी मूल्यांकन और उचित मार्गदर्शन के लिए ऑनलाइन डॉक्टर परामर्श की सिफारिश की जाती है।"
+    hinglish: "Doctor evaluation aur guidance ke liye online doctor consult recommend kiya jata hai."
+  emergency_112:
+    en: "Critical symptoms detected. Routed to emergency services (112), not home care."
+    hi: "गंभीर आपातकालीन लक्षण पाए गए। आपातकालीन सेवाओं (112) को रेफर किया गया है।"
+    hinglish: "Critical emergency symptoms detect hue hain. Turant 112 emergency services ko refer kiya gaya hai."

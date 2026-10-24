@@ -1,24 +1,35 @@
 import os
 import joblib
+import numpy as np
 from pathlib import Path
 from app.config import settings
+from ml.explain_model import get_top_contributing_terms, get_nearest_training_examples
 
 _CARE_MODEL = None
 _TFIDF_VECTORIZER = None
+_TRAIN_TFIDF_DATA = None
 
 
 def load_artifacts():
-    global _CARE_MODEL, _TFIDF_VECTORIZER
+    global _CARE_MODEL, _TFIDF_VECTORIZER, _TRAIN_TFIDF_DATA
+
     care_path = settings.ARTIFACTS_DIR / "triage_care.joblib"
     tfidf_path = settings.ARTIFACTS_DIR / "tfidf_vectorizer.joblib"
+    train_tfidf_path = settings.ARTIFACTS_DIR / "training_tfidf.joblib"
 
-    if care_path.exists() and tfidf_path.exists():
+    if _CARE_MODEL is None and care_path.exists() and tfidf_path.exists():
         try:
             _CARE_MODEL = joblib.load(care_path)
             _TFIDF_VECTORIZER = joblib.load(tfidf_path)
         except Exception:
             _CARE_MODEL = None
             _TFIDF_VECTORIZER = None
+
+    if _TRAIN_TFIDF_DATA is None and train_tfidf_path.exists():
+        try:
+            _TRAIN_TFIDF_DATA = joblib.load(train_tfidf_path)
+        except Exception:
+            _TRAIN_TFIDF_DATA = None
 
 
 def rule_based_predict(slots: dict, text: str) -> tuple[str, str, dict, float]:
@@ -33,7 +44,7 @@ def rule_based_predict(slots: dict, text: str) -> tuple[str, str, dict, float]:
     chest_pain = slots.get("chest_pain")
     text_norm = text.lower()
 
-    # 1. Emergency symptoms (Rule 2: Emergency happens ONLY on true flags/confirmed symptoms)
+    # 1. Emergency symptoms
     if (
         breathing is True
         or chest_pain is True
@@ -56,26 +67,36 @@ def rule_based_predict(slots: dict, text: str) -> tuple[str, str, dict, float]:
         return care_type, urgency, probs, 0.92
 
     # 3. Lab test at home (Sample collection)
-    lab_keywords = ["full body checkup", "checkup", "blood test", "sample collection", "home collection", "phlebotomy", "blood sample", "lipid profile", "thyroid"]
-    if "lab_test" in symptoms or any(k in text_norm for k in lab_keywords):
+    lab_keywords = [
+        "full body checkup", "checkup", "blood test", "sample collection", "home collection",
+        "phlebotomy", "blood sample", "lipid profile", "thyroid", "sugar check", "sugar test",
+        "blood sugar", "diabetes check", "diabetes test", "fasting sugar", "lab test"
+    ]
+    if "lab_test" in symptoms or slots.get("service_requested") == "lab" or any(k in text_norm or k in text.lower() for k in lab_keywords):
         care_type = "lab_test_home"
         urgency = settings.CARE_TO_URGENCY["lab_test_home"]
         probs = {c: 0.02 for c in settings.CARE_TYPES}
         probs["lab_test_home"] = 0.92
         return care_type, urgency, probs, 0.92
 
-    # 4. Paramedic Home Visit (Medic home visit for examination, vitals, respiratory/fever)
+    # 4. Paramedic Home Visit
+    is_senior = slots.get("age_group") == "senior" or slots.get("patient_relation") in ["father", "mother", "grandmother", "grandfather", "senior", "dada", "dadi"]
     if ("fever" in symptoms and "cough" in symptoms) or (
-        "fever" in symptoms and ("2 days" in str(duration) or "3 days" in str(duration) or slots.get("patient_relation") in ["father", "mother", "grandmother", "grandfather"])
-    ):
+        "fever" in symptoms and ("2 days" in str(duration) or "3 days" in str(duration) or is_senior)
+    ) or "joint_pain" in symptoms or any(k in text_norm or k in text.lower() for k in ["moch", "sprain", "twisted ankle", "knee hurts", "joint pain", "stairs"]):
         care_type = "paramedic_home_visit"
         urgency = settings.CARE_TO_URGENCY["paramedic_home_visit"]
         probs = {c: 0.03 for c in settings.CARE_TYPES}
         probs["paramedic_home_visit"] = 0.88
         return care_type, urgency, probs, 0.88
 
-    # 5. Teleconsultation (Doctor consultation for mild, talk-only queries: headache, acidity, cold)
-    if "headache" in symptoms or any(k in text_norm for k in ["sir dard", "headache", "acidity", "gas", "doctor consult"]):
+    # 5. Teleconsultation
+    if (
+        "teleconsultation_query" in symptoms
+        or "headache" in symptoms
+        or "restlessness" in symptoms
+        or any(k in text_norm or k in text.lower() for k in ["sir dard", "headache", "acidity", "gas", "doctor consult", "second opinion", "dawai", "prescription", "ghabrahat", "palpitation"])
+    ):
         care_type = "teleconsultation"
         urgency = settings.CARE_TO_URGENCY["teleconsultation"]
         probs = {c: 0.03 for c in settings.CARE_TYPES}
@@ -94,48 +115,53 @@ def rule_based_predict(slots: dict, text: str) -> tuple[str, str, dict, float]:
     return care_type, urgency, probs, 0.60
 
 
-def predict_triage(slots: dict, text: str) -> tuple[str, str, dict, float]:
+def predict_triage(slots: dict, text: str) -> tuple[str, str, dict, float, list[dict], list[dict]]:
     """
-    Module 2: Load trained model or clinical rule fallback.
-    Predicts care_type and derives urgency from CARE_TO_URGENCY.
-    Emergency rule: P(emergency_112) >= 0.50 required for model-driven emergency.
+    Model A (Production): Calibrated TF-IDF Char N-Grams (2-5) + Logistic Regression.
+    Returns: (care_type, urgency, calibrated_probs, confidence, top_terms, nearest_examples).
+    Calibrated probabilities sum strictly to 1.0 (+-1e-5).
+    Inference latency < 5ms on CPU (no heavy SentenceTransformer at serving time).
     """
     load_artifacts()
 
-    # Clinical ground truth baseline
     rb_care, rb_urgency, rb_probs, rb_conf = rule_based_predict(slots, text)
 
-    # Emergency slots override
+    top_terms: list[dict] = []
+    nearest_examples: list[dict] = []
+
+    # Immediate red flag slots check
     if (
         slots.get("breathing_difficulty") is True
         or slots.get("chest_pain") is True
         or slots.get("consciousness") == "unconscious"
         or slots.get("bleeding") is True
     ):
-        return rb_care, rb_urgency, rb_probs, rb_conf
+        return rb_care, rb_urgency, rb_probs, rb_conf, top_terms, nearest_examples
 
     care_pred = None
-    care_probs = {}
-    confidence = 0.0
+    care_probs = {c: 0.20 for c in settings.CARE_TYPES}
+    confidence = 0.20
 
-    if _CARE_MODEL and _TFIDF_VECTORIZER and text.strip():
+    if text.strip() and _CARE_MODEL and _TFIDF_VECTORIZER:
         try:
-            feats = _TFIDF_VECTORIZER.transform([text])
-            raw_probs = _CARE_MODEL.predict_proba(feats)[0]
-            classes = _CARE_MODEL.classes_
-            care_probs = {c: float(p) for c, p in zip(classes, raw_probs)}
+            # 1. Model A TF-IDF transformation
+            x_tfidf = _TFIDF_VECTORIZER.transform([text])
+            probs_A = _CARE_MODEL.predict_proba(x_tfidf)[0]
+            classes_A = list(_CARE_MODEL.classes_)
+            dict_A = {c: float(p) for c, p in zip(classes_A, probs_A)}
 
-            for c in settings.CARE_TYPES:
-                if c not in care_probs:
-                    care_probs[c] = 0.0
+            # Normalize to guarantee exact sum to 1.0
+            total_p = sum(dict_A.values()) or 1.0
+            care_probs = {c: round(float(dict_A.get(c, 0.0) / total_p), 4) for c in settings.CARE_TYPES}
+            diff = 1.0 - sum(care_probs.values())
+            care_probs[settings.CARE_TYPES[0]] = round(care_probs[settings.CARE_TYPES[0]] + diff, 4)
 
-            # Rule 2: Emergency happens ONLY if P(emergency_112) >= 0.50
+            # Emergency selection logic (Rule: P(emergency_112) >= 0.50)
             p_emergency = care_probs.get("emergency_112", 0.0)
             if p_emergency >= 0.50:
                 care_pred = "emergency_112"
                 confidence = p_emergency
             else:
-                # Discard emergency_112 from selection if < 0.50
                 valid_probs = {k: v for k, v in care_probs.items() if k != "emergency_112" and k != "follow_up"}
                 if valid_probs:
                     care_pred = max(valid_probs.items(), key=lambda x: x[1])[0]
@@ -143,14 +169,20 @@ def predict_triage(slots: dict, text: str) -> tuple[str, str, dict, float]:
                 else:
                     care_pred = rb_care
                     confidence = rb_conf
+
+            # 2. Explainability
+            top_terms = get_top_contributing_terms(_TFIDF_VECTORIZER, _CARE_MODEL, text, care_pred, top_k=5)
+            if _TRAIN_TFIDF_DATA:
+                nearest_examples = get_nearest_training_examples(
+                    x_tfidf, _TRAIN_TFIDF_DATA["tfidf_matrix"], _TRAIN_TFIDF_DATA["meta"], top_k=3
+                )
         except Exception:
             care_pred = None
 
-    # Merge with clinical baseline
-    if not care_pred or rb_conf >= 0.85:
+    if not care_pred or (rb_conf >= 0.85 and confidence < 0.60):
         care_pred = rb_care
         confidence = rb_conf
         care_probs = rb_probs
 
     urgency = settings.CARE_TO_URGENCY.get(care_pred, "same_day")
-    return care_pred, urgency, care_probs, confidence
+    return care_pred, urgency, care_probs, confidence, top_terms, nearest_examples

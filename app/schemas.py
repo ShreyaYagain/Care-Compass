@@ -112,6 +112,14 @@ class MatchedCaregiver(BaseModel):
     score: float = 0.0
     reason: str = ""
     factors: Optional[dict[str, float]] = None
+    name: Optional[str] = None
+    role: Optional[str] = None
+    qualification: Optional[str] = None
+    languages: list[str] = []
+    rating: Optional[float] = None
+    free_from: Optional[str] = None
+    free_until: Optional[str] = None
+    distance_km: Optional[float] = None
 
 
 # --- /triage ---
@@ -122,6 +130,8 @@ class TriageRequest(BaseModel):
     location: Optional[Location] = None
     conversation_history: list[ChatMessage] = []
     patient: Optional[PatientProfile] = None
+    client_time: Optional[str] = None
+    context_consent: Optional[bool] = False
 
 
 class TriageResponse(BaseModel):
@@ -134,6 +144,7 @@ class TriageResponse(BaseModel):
     confidence: Optional[float] = None
     matched_caregivers: list[MatchedCaregiver] = []
     emergency_steps: list[str] = []
+    context_used: Optional[dict[str, Any]] = None
     debug: Optional[dict[str, Any]] = None
 
 
@@ -154,18 +165,23 @@ class MatchResponse(BaseModel):
 # --- Caregiver entity ---
 
 class CaregiverProfile(BaseModel):
-    id: str = ""
+    caregiver_id: str = ""
     name: str = ""
     role: str = ""
-    specialty: Optional[str] = None
-    skills: list[str] = []
-    lat: float = 0.0
-    lng: float = 0.0
+    qualification: Optional[str] = ""
+    gender: Optional[str] = ""
     languages: list[str] = []
-    availability_slots: list[str] = []
-    rating: float = 4.5
-    review_count: int = 10
-    home_visit: bool = True
+    skills: list[str] = []
+    base_area: Optional[str] = ""
+    base_lat: float = 0.0
+    base_lng: float = 0.0
+    max_radius_km: float = 0.0
+    tier: Optional[str] = "base"
+    rating: float = 4.0
+    experience_years: int = 1
+    free_from: str = "09:00"
+    free_until: str = "18:00"
+    active: bool = True
 
 
 # --- /book ---

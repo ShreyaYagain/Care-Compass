@@ -45,10 +45,10 @@ def check_red_flags(
     # Create combined representations for maximum recall
     combined_roman = (
         (normalised_text or normalise_text(original_text))
-        + " "
+        + " . "
         + normalise_text(transliterate_devanagari_to_roman(original_text))
     )
-    combined_raw = original_text + " " + (translated_en or "")
+    combined_raw = original_text + " . " + (translated_en or "")
 
     for flag in _RED_FLAGS:
         flag_id = flag.get("id", "")

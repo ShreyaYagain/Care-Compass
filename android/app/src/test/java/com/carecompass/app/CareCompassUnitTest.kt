@@ -6,6 +6,9 @@ import com.carecompass.app.viewmodel.BookingViewModel
 import com.carecompass.app.viewmodel.BookingsViewModel
 import com.carecompass.app.viewmodel.CareService
 import com.carecompass.app.viewmodel.HistoryViewModel
+import com.carecompass.app.viewmodel.ScreenDestination
+import com.carecompass.app.viewmodel.SymptomTilePhrases
+import com.carecompass.app.viewmodel.TriageViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -193,5 +196,96 @@ class CareCompassUnitTest {
     fun testBuildBookingIso_producesIsoFormat() {
         val iso = DateTimeFormatterHelper.buildBookingIso(1, 10, 0)
         assertTrue(iso.matches(Regex("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z")))
+    }
+
+    @Test
+    fun testSymptomTilesBuildNaturalTextInLanguage() {
+        // Example from the spec: ["Khansi / Zukam", "Bukhar"] -> "mujhe khansi aur bukhar hai"
+        assertEquals(
+            "mujhe khansi aur bukhar hai",
+            SymptomTilePhrases.buildMessage(listOf("cough_cold", "fever"), "hinglish")
+        )
+        assertEquals(
+            "I have fever and cough",
+            SymptomTilePhrases.buildMessage(listOf("fever", "cough_cold"), "en")
+        )
+        assertEquals(
+            "मुझे बुखार और खांसी है",
+            SymptomTilePhrases.buildMessage(listOf("fever", "cough_cold"), "hi")
+        )
+        // "Kha pee nahi pa rahe" -> "can't eat or drink" (no wrapper)
+        assertEquals("kha pee nahi pa rahe", SymptomTilePhrases.buildMessage(listOf("not_eating"), "hinglish"))
+        assertEquals("can't eat or drink", SymptomTilePhrases.buildMessage(listOf("not_eating"), "en"))
+        // Zero selected -> empty message
+        assertEquals("", SymptomTilePhrases.buildMessage(emptyList(), "hinglish"))
+    }
+
+    @Test
+    fun testSubmitSymptomTilesSendsExpectedTextAndNavigates() = runTest {
+        val repo = FakeTriageRepository()
+        val viewModel = TriageViewModel(repo)
+
+        viewModel.submitSymptomTiles(listOf("cough_cold", "fever"))
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        // Expected request text in the user's language (default hinglish)
+        assertEquals("mujhe khansi aur bukhar hai", repo.lastRequest?.userInput)
+        assertEquals("hinglish", repo.lastRequest?.language)
+        // Navigation fires: a decision goes to the Result screen
+        assertEquals(ScreenDestination.Result, viewModel.uiState.value.destination)
+        assertFalse(viewModel.uiState.value.isLoading)
+    }
+
+    @Test
+    fun testTriageFailureSetsVisibleErrorAndRetryResubmits() = runTest {
+        val repo = FailingTriageRepository()
+        val viewModel = TriageViewModel(repo)
+
+        viewModel.submitSymptomTiles(listOf("fever"))
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        // Visible error, never silent
+        assertNotNull(viewModel.uiState.value.errorMessage)
+        assertEquals("mujhe bukhar hai", viewModel.uiState.value.lastSubmittedInput)
+
+        // Retry re-sends the same text
+        repo.shouldFail = false
+        viewModel.retryLastInput()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertNull(viewModel.uiState.value.errorMessage)
+        assertEquals(ScreenDestination.Result, viewModel.uiState.value.destination)
+    }
+
+    private class FakeTriageRepository : Repository(ApiService.create()) {
+        var lastRequest: TriageRequest? = null
+        override suspend fun triage(request: TriageRequest): Result<TriageResponse> {
+            lastRequest = request
+            return Result.success(
+                TriageResponse(
+                    careType = "paramedic_home_visit",
+                    urgency = "same_day",
+                    reasoning = "Test reasoning",
+                    matchedCaregivers = emptyList()
+                )
+            )
+        }
+    }
+
+    private class FailingTriageRepository : Repository(ApiService.create()) {
+        var shouldFail: Boolean = true
+        override suspend fun triage(request: TriageRequest): Result<TriageResponse> {
+            if (shouldFail) {
+                return Result.failure(RuntimeException("Backend unreachable"))
+            }
+            return Result.success(
+                TriageResponse(
+                    careType = "paramedic_home_visit",
+                    urgency = "same_day",
+                    reasoning = "Test reasoning",
+                    matchedCaregivers = emptyList()
+                )
+            )
+        }
     }
 }

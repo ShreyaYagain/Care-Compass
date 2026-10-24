@@ -31,7 +31,6 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
-
         buildConfigField("String", "SUPABASE_URL", "\"$supabaseUrl\"")
         buildConfigField("String", "SUPABASE_ANON_KEY", "\"$supabaseAnonKey\"")
         buildConfigField("boolean", "USE_MOCK_REPO", "$useMockRepo")
@@ -45,6 +44,9 @@ android {
                 "proguard-rules.pro"
             )
         }
+    }
+    testOptions {
+        unitTests.isReturnDefaultValues = true
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

@@ -39,7 +39,7 @@ fun readableErrorMessage(err: Throwable): String {
     }
 }
 
-class Repository(
+open class Repository(
     private val apiService: ApiService,
     private val historyCache: HistoryCache? = null,
     private val useMockRepo: Boolean = BuildConfig.USE_MOCK_REPO
@@ -369,7 +369,7 @@ class Repository(
         }
     }
 
-    suspend fun triage(request: TriageRequest): Result<TriageResponse> {
+    open suspend fun triage(request: TriageRequest): Result<TriageResponse> {
         return runCatching { apiService.triage(request) }
     }
 

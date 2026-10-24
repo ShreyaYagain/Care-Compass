@@ -29,6 +29,13 @@ try:
         DEEPSEEK_BASE_URL: str = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
         LLM_TIMEOUT_SECONDS: float = 3.0
 
+        # LLM role in the decision pipeline (ML-first architecture).
+        #   second_opinion (default): the LLM runs in parallel AFTER the ML
+        #     models and can only raise severity (ask a confirmation question),
+        #     never lower a decision.
+        #   off: the LLM is disabled for triage decisions (rules + ML only).
+        LLM_ROLE: str = os.getenv("LLM_ROLE", "second_opinion")
+
         # Supabase (Postgres + Auth). Empty -> SQLite fallback (no-key demo/tests).
         SUPABASE_URL: str = os.getenv("SUPABASE_URL", "")
         SUPABASE_SERVICE_ROLE_KEY: str = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
@@ -116,6 +123,13 @@ except ImportError:
         DEEPSEEK_MODEL: str = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
         DEEPSEEK_BASE_URL: str = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
         LLM_TIMEOUT_SECONDS: float = 3.0
+
+        # LLM role in the decision pipeline (ML-first architecture).
+        #   second_opinion (default): the LLM runs in parallel AFTER the ML
+        #     models and can only raise severity (ask a confirmation question),
+        #     never lower a decision.
+        #   off: the LLM is disabled for triage decisions (rules + ML only).
+        LLM_ROLE: str = os.getenv("LLM_ROLE", "second_opinion")
 
         # Supabase (Postgres + Auth). Empty -> SQLite fallback (no-key demo/tests).
         SUPABASE_URL: str = os.getenv("SUPABASE_URL", "")

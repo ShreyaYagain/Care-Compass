@@ -111,6 +111,7 @@ def default_slots() -> dict:
         "chronic_conditions": [],
         "unfamiliar_care_type_mapped": None,
         "unfamiliar_reason": None,
+        "extraction_source": "lexicon",
     }
 
 
@@ -710,12 +711,19 @@ def rule_based_extract(text: str, history: list[dict] = None) -> dict:
 def extract_slots(text: str, history: list[dict] = None) -> dict:
     """
     Extracts structured slots.
-    Order of preference: DeepSeek (via llm_json) -> Rule-based fallback.
+    Order of preference: lexicon/regex FIRST; the LLM (via llm_json) is a
+    fallback used only when the lexicon finds no symptom and no service request.
+    The returned dict carries `extraction_source` = "lexicon" | "llm".
     Never crashes.
     """
     rule_slots = rule_based_extract(text, history)
 
-    # Attempt LLM intake extraction
+    # The LLM is a fallback ONLY when the lexicon found nothing.
+    lexicon_found = bool(rule_slots["symptoms"]) or rule_slots.get("service_requested") != "none"
+    if lexicon_found:
+        return rule_slots
+
+    # Attempt LLM intake extraction (fallback)
     system_prompt = (
         "You are an expert clinical intake parser for CareCompass India.\n"
         "Your role is to extract factual patient slots from colloquial inputs in English, Hindi, and Hinglish.\n"
@@ -765,6 +773,8 @@ def extract_slots(text: str, history: list[dict] = None) -> dict:
             llm_symptoms = canonicalise_symptom_list(llm_result.symptoms)
             merged_symptoms = list(set(rule_slots["symptoms"] + llm_symptoms))
             rule_slots["symptoms"] = merged_symptoms
+            if llm_symptoms:
+                rule_slots["extraction_source"] = "llm"
 
             if llm_result.service_requested != "none":
                 rule_slots["service_requested"] = llm_result.service_requested

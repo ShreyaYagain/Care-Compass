@@ -47,8 +47,9 @@ class TestGeminiLLMAndIntake(unittest.TestCase):
             unfamiliar_care_type_mapped="paramedic_home_visit",
             unfamiliar_reason="Physiotherapy / mobility assistance is served by in-person paramedic / physiotherapist visit.",
         )
-        slots = extract_slots("I need physiotherapy at home for my knee", history=[])
+        slots = extract_slots("I need physiotherapy at home", history=[])
         self.assertEqual(slots.get("unfamiliar_care_type_mapped"), "paramedic_home_visit")
+        self.assertEqual(slots.get("extraction_source"), "llm")
 
 
 if __name__ == "__main__":

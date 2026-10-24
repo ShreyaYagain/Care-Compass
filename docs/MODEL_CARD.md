@@ -51,7 +51,8 @@ Selected strictly per the project model selection rules documented in [MODEL_COM
    - **Unseen Tests Macro-F1**: Model A **0.866**, Model C **0.828**.
    - Model C **failed to qualify**, establishing Model A as the winning classifier.
 2. **Deterministic Safety Invariant**:
-   - With the 9-flag clinical safety rule layer, Model A delivers **1.000 (100%) recall** across all gold emergency benchmark tests (`ml/data/redflag_tests.csv`).
+   - With the 9-flag clinical safety rule layer, Model A delivers **1.000 (100%) recall** across the 137 emergency rows of our own test set (`ml/data/redflag_tests.csv`), with a **0.000 false-alarm rate** on 80 negated/near-miss rows.
+   - **Honest generalization caveat**: on a separate, freshly-drafted holdout (`ml/data/redflag_holdout.csv`, 35 new phrasings) the same rules catch only **~6% (2/35)**. The rule layer memorizes known phrasings; genuinely new paraphrases need the Groq intake layer and ongoing rule strengthening. The safety claim is therefore *"the rules catch 98% of our own test set; we are validating on human-written cases"* (see `docs/DATA_AUDIT.md`).
 3. **Ultra-Low Latency & Serving Efficiency**:
    - Removing the ~471 MB `multilingual-e5-small` SentenceTransformer embedding model from the runtime serving path reduces inference latency from ~12 ms to **< 0.5 ms** per query on commodity CPU.
    - The production artifact footprint is **1.2 MB**, allowing immediate zero-warmup container starts and minimal memory consumption.
@@ -70,7 +71,8 @@ Extracted from `ml/results/comparison.json`:
 - **Strict Loose-Cluster Holdout (Stress Test, n=31)**: Macro-F1 = 0.694, Macro-Recall = 0.659
 - **Unseen Tests Macro-F1 (Model A alone, All n=30)**: 0.866
 - **Unseen Tests Macro-F1 (Reviewed-only, n=0)**: `n/a (0 reviewed)`
-- **Emergency Benchmark Recall (with Rules)**: 1.000 (100%)
+- **Emergency Benchmark Recall (with Rules, own 217-row test set)**: 0.985 (135/137), false-alarm 0.000 (0/80) — see `docs/DATA_AUDIT.md`
+- **Emergency Recall (fresh holdout, never tuned)**: 0.057 (2/35) — the rule layer memorizes known phrasings; human-written validation is pending
 - **Emergency Recall (Classifier alone on validation folds)**: 0.929
 - **Leave-One-Cluster-Out (Small Clusters, n=118, Leaky)**: Mean Recall = 1.000 (Mean max cosine sim to train = 0.970, 95.8% exact duplicates in train)
 - **Per-Language F1 (Grouped CV)**:

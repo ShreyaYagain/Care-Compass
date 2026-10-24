@@ -1,7 +1,7 @@
 import re
 import yaml
-from typing import Optional, Literal
-from pydantic import BaseModel, Field
+from typing import Optional
+from pydantic import BaseModel, Field, field_validator
 from pathlib import Path
 from app.config import settings
 from app.core.language import normalise_text, is_phrase_negated
@@ -12,7 +12,7 @@ _SYMPTOMS_CONFIG: dict = {}
 
 class GroqSlotExtraction(BaseModel):
     symptoms: list[str] = Field(default_factory=list)
-    service_requested: Literal["nursing", "lab", "doctor", "home_check", "none"] = "none"
+    service_requested: str = "none"
     who_for: Optional[str] = None
     age_group: Optional[str] = None
     duration: Optional[str] = None
@@ -21,6 +21,15 @@ class GroqSlotExtraction(BaseModel):
     confidence: float = 0.8
     unfamiliar_care_type_mapped: Optional[str] = None
     unfamiliar_reason: Optional[str] = None
+
+    @field_validator("service_requested", mode="before")
+    @classmethod
+    def _coerce_service(cls, v):
+        if v in ("nursing", "lab", "doctor", "home_check", "none"):
+            return v
+        # The LLM sometimes returns a care_type (e.g. emergency_112) here; map it
+        # to a service intent or leave "none" so the rule layer decides.
+        return "none"
 
 
 def _load_symptoms_config():

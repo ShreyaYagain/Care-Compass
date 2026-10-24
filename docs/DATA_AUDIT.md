@@ -61,6 +61,24 @@ expanded patterns incl. matra/nukta variants):
 | **overall** | **0.985** | 135/137 | — |
 | **false-alarm rate** | **0.000** | 0/80 | — |
 
+**⚠ Overfitting caveat — fresh-holdout generalization.** `ml/data/redflag_holdout.csv`
+(53 rows: 35 positives in fresh, unseen phrasings + 18 non-emergency) was drafted
+separately and the rules were run ONCE, unchanged:
+
+| metric | own test set (tuned) | fresh holdout (never tuned) |
+|---|---|---|
+| emergency recall | 0.985 | **0.057** (2/35) |
+| false-alarm rate | 0.000 | 0.000 (0/18) |
+
+The 0.985 is largely memorization of the tuning set's phrasings; genuinely new
+paraphrases ("my chest feels like someone is sitting on it", "blood soaking
+through three towels") are mostly missed. **The safety claim for the demo and
+write-up is therefore: "the rule layer catches 98% of our own test set; on
+freshly-written cases it currently catches ~6% — we are validating on
+human-written cases and strengthening the rules."** This holdout set is also
+AI-drafted (`reviewed_by_human=false`) — the definitive figure is the
+human-written set, still pending.
+
 **Known remaining gaps (documented, not hidden):**
 1. Intentional typos (`cheest` for chest, `shorness` for shortness) — 2 rows.
 2. `bache ko ... bukhar ... jhatke` with **no age stated** — the `high_fever_infant`
@@ -74,25 +92,32 @@ non-emergency rows. This is the point of the two-layer design: the deterministic
 rule layer (0.985 recall, 0 false alarms) is the safety floor, and the classifier
 handles care-type routing for non-emergency inputs.
 
-## 6. Groq paraphrase augmentation (training only)
+## 6. Groq paraphrase augmentation (training only, PRELIMINARY)
 
 `ml/augment_synthetic.py` generates 40+ distinct Groq paraphrases per care type
 per language from the official seeds (607 rows total, `ml/data/augment_paraphrases.csv`,
 `source=synthetic_llm`). A 10% random sample (60 rows) is written to
 `ml/data/augment_review.csv` for human spot-check (`reviewed_by_human=false`).
 
-**Before vs after** (evaluated by `ml/eval_augmentation.py`; augmented rows are
-added to training only, and any paraphrase within char-TF-IDF cosine 0.50 of the
-held-out cluster is excluded from that fold's training to limit leakage):
+**Leakage answer**: the paraphrases were generated from the **WHOLE official
+dataset** (not per-fold training texts), so the loose-cluster "after" figure is
+contaminated by meaning-level leakage — the 0.50 wording filter catches surface
+overlap, not meaning overlap. The loose-cluster after number must NOT be quoted.
+
+**Clean comparison** (`ml/eval_augmentation.py`, on the independent handwritten
+`unseen_tests.csv`, which has no overlap with the augmentation seeds):
 
 | metric | before | after | delta |
 |---|---|---|---|
-| Loose-cluster holdout macro-F1 | 0.724 | 0.961 | +0.236 |
-| Classifier-only emergency recall (redflag_tests, independent set) | 0.620 | 0.759 | +0.139 |
+| Unseen_tests macro-F1 (independent) | 0.863 | 0.869 | +0.006 |
+| Classifier-only emergency recall (redflag_tests, AI-drafted) | 0.613 | 0.745 | +0.131 |
+| Loose-cluster holdout macro-F1 (leaky, do not quote) | 0.724 | 0.961 | — |
 
-**Keep rule**: macro-F1 did not drop and emergency recall improved → **augmentation
-kept for training**. Emergency recall is measured on `redflag_tests.csv`, which is
-independent of the augmentation seeds, so that improvement is leakage-free.
+**Keep rule**: unseen macro-F1 does not drop and emergency recall improves →
+**provisionally kept**. The emergency-recall gain is itself measured on an
+AI-drafted set, so the augmentation result is **preliminary** until
+`augment_review.csv` and the red-flag sets are human-reviewed. The main
+validation figure remains **0.879 (exact-text grouped CV)**.
 
 Augmented rows are **training-only**: they never enter `unseen_tests.csv`,
 `redflag_tests.csv`, or any validation fold. Production artifacts are retrained

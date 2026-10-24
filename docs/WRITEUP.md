@@ -30,7 +30,7 @@ CareCompass implements a three-module architecture wrapped in a production-ready
 - **Persistence & Auth (Supabase)**: chat history, bookings, and the caregiver roster are stored in **Supabase (Postgres + Auth)**. User access tokens are verified via Supabase JWT (HS256 / JWKS); Row-Level Security scopes users to their own rows. If the Supabase env vars are missing, the backend **fails soft to a local SQLite store** so the demo and test suite run with no external dependency. Only synthetic demo data is stored — no real patient identifiers.
 
 ## 3. Evaluation & Key Results
-- **Emergency Recall**: **100%** on held-out gold evaluations (Target $\ge$ 98%).
+- **Emergency Recall (own test set)**: **98.5%** of 137 emergency rows in `redflag_tests.csv` with a **0% false-alarm rate** on 80 non-emergency rows. On a separate freshly-drafted holdout (`redflag_holdout.csv`) the same rules catch ~6% — so the rule layer memorizes known phrasings and we are **validating on human-written cases** (see `docs/DATA_AUDIT.md`).
 - **Under-Triage Rate**: **0.00%** (Target < 5%).
 - **Latency**: P95 < 50ms without external LLM, < 2.5s with Gemini.
 - **Fail-Safe Operation**: Complete autonomy with zero external API dependencies when network or LLM is unavailable.

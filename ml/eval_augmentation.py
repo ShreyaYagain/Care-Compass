@@ -93,6 +93,21 @@ def classifier_emergency_recall(train_rows, emergency_rows) -> float:
     ))
 
 
+def unseen_macro_f1(train_rows, unseen_rows) -> float:
+    """Macro-F1 on the independent handwritten unseen_tests.csv (no augmentation overlap)."""
+    preds = _train_predict(train_rows, unseen_rows)
+    return float(f1_score([r["care_type"] for r in unseen_rows], preds,
+                          average="macro", zero_division=0))
+
+
+def load_unseen() -> list[dict]:
+    rows = []
+    with open(DATA_DIR / "unseen_tests.csv", "r", encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            rows.append({"norm": normalise_text(r["user_input"]), "care_type": r["care_type"]})
+    return rows
+
+
 def main():
     clf_entries, _ = load_official_dataset()
     official_rows = [{
@@ -120,18 +135,23 @@ def main():
     print("\nEvaluating WITHOUT augmentation...")
     f1_before = loose_cluster_holdout(official_rows, [])
     em_before = classifier_emergency_recall(official_rows, emergency_rows)
+    unseen_rows = load_unseen()
+    uns_before = unseen_macro_f1(official_rows, unseen_rows)
     print(f"  Loose-cluster holdout macro-F1 (before): {f1_before:.4f}")
     print(f"  Classifier-only emergency recall (before): {em_before:.4f}")
+    print(f"  Unseen_tests macro-F1 (before, independent set): {uns_before:.4f}")
 
     print("\nEvaluating WITH augmentation (training only)...")
     f1_after = loose_cluster_holdout(official_rows, aug_rows)
     em_after = classifier_emergency_recall(official_rows + aug_rows, emergency_rows)
-    print(f"  Loose-cluster holdout macro-F1 (after): {f1_after:.4f}")
+    uns_after = unseen_macro_f1(official_rows + aug_rows, unseen_rows)
+    print(f"  Loose-cluster holdout macro-F1 (after, leaky): {f1_after:.4f}")
     print(f"  Classifier-only emergency recall (after): {em_after:.4f}")
+    print(f"  Unseen_tests macro-F1 (after, independent set): {uns_after:.4f}")
 
     print("\n" + "=" * 60)
-    keep = (f1_after >= f1_before - 1e-9) and (em_after > em_before + 1e-9)
-    print(f"Macro-F1: {f1_before:.4f} -> {f1_after:.4f} ({f1_after - f1_before:+.4f})")
+    keep = (uns_after >= uns_before - 1e-9) and (em_after > em_before + 1e-9)
+    print(f"Unseen_tests macro-F1 (CLEAN): {uns_before:.4f} -> {uns_after:.4f} ({uns_after - uns_before:+.4f})")
     print(f"Emergency recall: {em_before:.4f} -> {em_after:.4f} ({em_after - em_before:+.4f})")
     print(f"KEEP augmentation? {'YES' if keep else 'NO'} "
           f"(keep iff macro-F1 does not drop AND emergency recall improves)")
@@ -139,11 +159,17 @@ def main():
 
     result = {
         "loose_cluster_macro_f1_before": f1_before,
-        "loose_cluster_macro_f1_after": f1_after,
+        "loose_cluster_macro_f1_after_leaky": f1_after,
+        "unseen_macro_f1_before": uns_before,
+        "unseen_macro_f1_after": uns_after,
         "classifier_emergency_recall_before": em_before,
         "classifier_emergency_recall_after": em_after,
         "keep_augmentation": bool(keep),
         "augmented_rows": len(aug_rows),
+        "note": "Loose-cluster 'after' is contaminated: paraphrases were generated from "
+                "the WHOLE official dataset (not per-fold training texts), so meaning-level "
+                "leakage remains despite the 0.50 wording-similarity filter. The clean "
+                "comparison is unseen_tests macro-F1 (independent handwritten set).",
     }
     out = Path(__file__).resolve().parent / "results" / "augmentation.json"
     out.parent.mkdir(parents=True, exist_ok=True)

@@ -1,0 +1,54 @@
+id,user_input,language,age,sex,conditions,care_type,urgency,red_flags,source,reviewed_by_human
+HLD_001,my chest feels like someone is sitting on it,en,,,,emergency_112,emergency,chest_pain,ai_drafted_holdout,false
+HLD_002,there is a stabbing sensation in the middle of my chest,en,,,,emergency_112,emergency,chest_pain,ai_drafted_holdout,false
+HLD_003,मेरे सीने में चुभन हो रही है और बायां हाथ दर्द कर रहा है,hi,,,,emergency_112,emergency,chest_pain,ai_drafted_holdout,false
+HLD_004,chhati me ajeeb sa bhaari pan hai aur paseena aa raha hai,hinglish,,,,emergency_112,emergency,chest_pain,ai_drafted_holdout,false
+HLD_005,I ran out of air just climbing one flight of stairs,en,,,,emergency_112,emergency,breathlessness,ai_drafted_holdout,false
+HLD_006,she keeps opening her mouth but air is not going in,en,,,,emergency_112,emergency,breathlessness,ai_drafted_holdout,false
+HLD_007,"साँस अटक रही है, छाती में सीटी जैसी आवाज है",hi,,,,emergency_112,emergency,breathlessness,ai_drafted_holdout,false
+HLD_008,"saans andar ja hi nahi rahi, ghut raha hai",hinglish,,,,emergency_112,emergency,breathlessness,ai_drafted_holdout,false
+HLD_009,he collapsed while eating dinner and now his eyes are closed and he is not moving,en,,,,emergency_112,emergency,unconsciousness,ai_drafted_holdout,false
+HLD_010,my aunt fainted twice today and the second time she did not wake up for a long time,en,,,,emergency_112,emergency,unconsciousness,ai_drafted_holdout,false
+HLD_011,मेरी माँ खाना खाते समय अचानक गिर गईं और अब कुछ नहीं बोल रहीं,hi,,,,emergency_112,emergency,unconsciousness,ai_drafted_holdout,false
+HLD_012,"there is a pool of blood where my father is standing, the cut will not close",en,,,,emergency_112,emergency,severe_bleeding,ai_drafted_holdout,false
+HLD_013,my son fell off the cycle and the blood is soaking through three towels,en,,,,emergency_112,emergency,severe_bleeding,ai_drafted_holdout,false
+HLD_014,दुर्घटना के बाद घुटने से खून की धार बह रही है,hi,,,,emergency_112,emergency,severe_bleeding,ai_drafted_holdout,false
+HLD_015,khoon itna beh raha hai ki towel laal ho gaya hai,hinglish,,,,emergency_112,emergency,severe_bleeding,ai_drafted_holdout,false
+HLD_016,my uncle cannot smile on one side of his face since this morning,en,,,,emergency_112,emergency,stroke_symptoms,ai_drafted_holdout,false
+HLD_017,she is speaking gibberish and her left arm keeps dropping,en,,,,emergency_112,emergency,stroke_symptoms,ai_drafted_holdout,false
+HLD_018,मेरे पिता का चेहरा एक तरफ लटक गया है और आँख बंद नहीं हो रही,hi,,,,emergency_112,emergency,stroke_symptoms,ai_drafted_holdout,false
+HLD_019,bolne par awaz ajeeb aa rahi hai aur ek haath kaam nahi kar raha,hinglish,,,,emergency_112,emergency,stroke_symptoms,ai_drafted_holdout,false
+HLD_020,my daughter's body went stiff and then started shaking for a minute,en,,,,emergency_112,emergency,seizure,ai_drafted_holdout,false
+HLD_021,he bit his tongue during the shaking episode and is confused now,en,,,,emergency_112,emergency,seizure,ai_drafted_holdout,false
+HLD_022,बच्ची की आँखें ऊपर चढ़ गईं और पूरा शरीर झटकने लगा,hi,,,,emergency_112,emergency,seizure,ai_drafted_holdout,false
+HLD_023,pair haath akad gaye aur muh se safed jhaag nikla,hinglish,,,,emergency_112,emergency,seizure,ai_drafted_holdout,false
+HLD_024,my six-week-old baby feels like a furnace and is not crying normally,en,,,,emergency_112,emergency,high_fever_infant,ai_drafted_holdout,false
+HLD_025,the newborn's forehead is burning hot and she is breathing fast,en,,,,emergency_112,emergency,high_fever_infant,ai_drafted_holdout,false
+HLD_026,डेढ़ महीने के बच्चे का शरीर तवे जैसा गर्म है,hi,,,,emergency_112,emergency,high_fever_infant,ai_drafted_holdout,false
+HLD_027,naya janma bacha bilkul sust hai aur garam hai,hinglish,,,,emergency_112,emergency,high_fever_infant,ai_drafted_holdout,false
+HLD_028,my brother said goodbye to everyone and wrote a note,en,,,,emergency_112,emergency,suicidal_ideation,ai_drafted_holdout,false
+HLD_029,she keeps saying everyone would be better off without her,en,,,,emergency_112,emergency,suicidal_ideation,ai_drafted_holdout,false
+HLD_030,भाई ने कहा कि अब और नहीं झेल पाएगा और सबको अलविदा कह दिया,hi,,,,emergency_112,emergency,suicidal_ideation,ai_drafted_holdout,false
+HLD_031,raat ko sabko thank you bol raha tha jaise jaane wala ho,hinglish,,,,emergency_112,emergency,suicidal_ideation,ai_drafted_holdout,false
+HLD_032,my grandmother has not made urine since yesterday and her lips are cracked,en,,,,emergency_112,emergency,severe_dehydration,ai_drafted_holdout,false
+HLD_033,the baby's soft spot is deeply sunken and she cries without tears,en,,,,emergency_112,emergency,severe_dehydration,ai_drafted_holdout,false
+HLD_034,दादी की जीभ सूख गई है और तीन दिन से पेशाब नहीं हुआ,hi,,,,emergency_112,emergency,severe_dehydration,ai_drafted_holdout,false
+HLD_035,dast ke baad se aankhen andar dhans gayi hain,hinglish,,,,emergency_112,emergency,severe_dehydration,ai_drafted_holdout,false
+HLD_036,"I do not have chest pain, my back hurts",en,,,,teleconsultation,same_day,,ai_drafted_holdout,false
+HLD_037,"no trouble breathing, just a cold",en,,,,teleconsultation,same_day,,ai_drafted_holdout,false
+HLD_038,"he is not unconscious, he is just sleeping",en,,,,teleconsultation,same_day,,ai_drafted_holdout,false
+HLD_039,the bleeding has stopped completely,en,,,,teleconsultation,same_day,,ai_drafted_holdout,false
+HLD_040,"no stroke, the doctor said it is a pinched nerve",en,,,,teleconsultation,same_day,,ai_drafted_holdout,false
+HLD_041,"usko daura nahi aaya, sirf ghabrahat thi",hinglish,,,,teleconsultation,same_day,,ai_drafted_holdout,false
+HLD_042,"बच्चे को बुखार नहीं है, बस हल्की सर्दी है",hi,,,,teleconsultation,same_day,,ai_drafted_holdout,false
+HLD_043,mera koi bhi khud ko nuksan pahunchane ka vichar nahi hai,hinglish,,,,teleconsultation,same_day,,ai_drafted_holdout,false
+HLD_044,"seene me dard nahi hai, sirf acidity hai",hinglish,,,,teleconsultation,same_day,,ai_drafted_holdout,false
+HLD_045,"saans ki koi problem nahi hai, jukam hai",hinglish,,,,teleconsultation,same_day,,ai_drafted_holdout,false
+HLD_046,I felt dizzy for a second after standing up too fast,en,,,,teleconsultation,same_day,,ai_drafted_holdout,false
+HLD_047,my leg feels numb from sitting cross-legged,en,,,,teleconsultation,same_day,,ai_drafted_holdout,false
+HLD_048,a small cut on my finger with a band-aid,en,,,,teleconsultation,same_day,,ai_drafted_holdout,false
+HLD_049,halka sa sar dard hai office ke baad,hinglish,,,,teleconsultation,same_day,,ai_drafted_holdout,false
+HLD_050,choti si kharoch hai jo sookh gayi hai,hinglish,,,,teleconsultation,same_day,,ai_drafted_holdout,false
+HLD_051,mild cough after a dusty day,en,,,,teleconsultation,same_day,,ai_drafted_holdout,false
+HLD_052,pet me halki si marod hai,hinglish,,,,teleconsultation,same_day,,ai_drafted_holdout,false
+HLD_053,thodi thakan hai der raat tak kaam karne se,hinglish,,,,teleconsultation,same_day,,ai_drafted_holdout,false

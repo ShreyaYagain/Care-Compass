@@ -551,7 +551,7 @@ def create_booking(booking: dict) -> dict:
                 Booking.status.in_(["confirmed", "pending"]),
             ).first())
             if existing:
-                day = start_dt.date() if start_dt else datetime.utcnow().date()
+                day = start_dt.date() if start_dt else datetime.now(timezone.utc).date()
                 raise BookingConflict(get_caregiver_slots(booking["caregiver_id"], str(day)))
             b = Booking()
             for k, v in booking.items():
@@ -621,7 +621,7 @@ def list_bookings(user_id: str, status: str = "all") -> list[dict]:
         db = SessionLocal()
         try:
             q = db.query(Booking).filter(Booking.user_id == user_id)
-            now = datetime.utcnow()
+            now = datetime.now(timezone.utc).replace(tzinfo=None)
             if status == "upcoming":
                 q = q.filter(Booking.status.in_(["confirmed", "pending"]), Booking.start_time >= now)
             elif status == "past":

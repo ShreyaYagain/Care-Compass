@@ -332,6 +332,9 @@ private fun Step1ReasonView(
     }
 
     val suggestions = when (uiState.service) {
+        CareService.DOCTOR_HOME_VISIT -> listOf(
+            "Fever / cough", "Weakness / dizziness", "Post-surgery check", "Mobility problem", "Senior health check"
+        )
         CareService.HOME_NURSING -> listOf(
             "Injection", "Dressing change", "Post-surgery care", "IV drip", "Vitals check"
         )

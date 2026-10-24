@@ -400,6 +400,7 @@ class BookingViewModel(
                 patientName = effectivePatientName,
                 relation = effectiveRelation,
                 service = when (state.service) {
+                    CareService.DOCTOR_HOME_VISIT -> "Doctor home visit"
                     CareService.HOME_NURSING -> "Home nursing"
                     CareService.LAB_TEST_HOME -> "Lab test at home"
                     CareService.TELECONSULTATION -> "Teleconsultation"

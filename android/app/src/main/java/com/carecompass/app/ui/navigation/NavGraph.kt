@@ -81,7 +81,7 @@ fun CareCompassNavGraph(
             }
             is ScreenDestination.Home -> {
                 // If on sub-screens of home, return to home
-                if (currentRoute in listOf("chat", "emergency", "result", "booking/{caregiverId}", "booking_flow")) {
+                if (currentRoute in listOf("chat", "emergency", "result", "booking/{caregiverId}", "booking_flow", "book_services")) {
                     navController.navigate("home") {
                         popUpTo("home") { inclusive = false }
                     }
@@ -282,9 +282,9 @@ fun CareCompassNavGraph(
                         selectedLanguage = selectedLanguage,
                         onLanguageSelected = { triageViewModel.setLanguage(it) },
                         onBookServiceClick = {
-                            // Start a new AI-decided booking (no service selection)
+                            // Start a new booking with explicit service selection first
                             bookingViewModel.startNewBooking()
-                            triageViewModel.navigateToBookingFlow()
+                            triageViewModel.navigateToBookServices()
                         },
                         onRescheduleBooking = { booking ->
                             val service = when {

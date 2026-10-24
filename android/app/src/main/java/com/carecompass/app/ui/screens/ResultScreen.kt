@@ -155,7 +155,13 @@ fun ResultScreen(
                                 color = Color(0xFFE8F0FE)
                             ) {
                                 Text(
-                                    text = contextInfo.season.replaceFirstChar { it.uppercase() },
+                                    // "post_monsoon" -> "Post-monsoon"; never show raw ids/underscores.
+                                    text = contextInfo.season
+                                        .replace("_", "-")
+                                        .split("-")
+                                        .joinToString("-") { part ->
+                                            part.replaceFirstChar { it.uppercase() }
+                                        },
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Medium,
                                     color = PrimaryBlue,

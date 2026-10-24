@@ -144,14 +144,15 @@ class TestInjuryModule(unittest.TestCase):
         self.assertEqual(resp.urgency, "emergency")
 
     def test_pipeline_pain8_classifier_gate(self):
-        # Pain 8+ -> decide after 2 questions; calibrated classifier
-        # P(emergency_112) >= 0.50 escalates to emergency_112.
+        # Pain 8+ -> decide after 2 questions. Pain alone never escalates to
+        # emergency_112; it routes to a same-day medic home visit (the
+        # calibrated classifier may only escalate high-risk limb findings).
         answers = {"head_hit": "No", "pain_level": 8}
         resp = _triage("I fell down and my leg hurts", history=_card_labels(2),
                        module_id="injury", module_answers=answers)
         self.assertIsNone(resp.module_card)
-        self.assertEqual(resp.care_type, "emergency_112")
-        self.assertEqual(resp.urgency, "emergency")
+        self.assertEqual(resp.care_type, "paramedic_home_visit")
+        self.assertEqual(resp.urgency, "same_day")
 
     def test_early_exit_cannot_bear_weight_paramedic(self):
         answers = {"head_hit": "No", "pain_level": 6, "weight_bearing": "Not at all"}

@@ -182,6 +182,35 @@ def _load_fallback() -> Optional[dict]:
     return _fallback
 
 
+_LOC_INDICATORS = [
+    "faint", "behosh", "unconscious", "hosh kho", "hosh me nahi", "passed out",
+    "black out", "blackout", "seizure", "jhatke", "fit aaya", "fit aa",
+    "limp", "no response", "not responding", "murmur", "not waking", "nahi uth",
+]
+
+
+def _filter_unconsciousness_for_plain_headaches(text: str, flags: list[str]) -> list[str]:
+    """Guardrail: 'unconsciousness' is never flagged for a plain headache or
+    dizziness complaint — there must be a real loss-of-consciousness
+    indicator in the message (faint, passed out, seizure, not responding...).
+    This stops 'I have a headache' from ever becoming a consciousness
+    screening question or a 112 route."""
+    if "unconsciousness" not in flags:
+        return flags
+    norm = normalise_text(text)
+    if any(ind in norm for ind in _LOC_INDICATORS):
+        return flags
+    # Headache / dizziness words alone do not support the flag.
+    plain_complaint = any(
+        re.search(rf"\b{re.escape(normalise_text(w))}\b", norm)
+        for w in ["headache", "sir dard", "sar dard", "migraine", "dizziness",
+                  "dizzy", "chakkar", "vertigo", "ghoomta"]
+    )
+    if plain_complaint:
+        return [f for f in flags if f != "unconsciousness"]
+    return flags
+
+
 def _local_screen(text: str) -> list[str]:
     fb = _load_fallback()
     if not fb:
@@ -199,7 +228,7 @@ def _local_screen(text: str) -> list[str]:
             p = float(clf.predict_proba(x)[0][1])
             if p >= thr:
                 flags.append(flag)
-        return flags
+        return _filter_unconsciousness_for_plain_headaches(text, flags)
     except Exception as e:
         logger.warning(f"Local semantic fallback failed: {e}")
         return []
@@ -262,6 +291,7 @@ def screen_red_flags(text: str, lang: str = "en") -> dict:
     if is_llm_available():
         flags = _llm_screen(text)
         if flags is not None:
+            flags = _filter_unconsciousness_for_plain_headaches(text, flags)
             result = {"status": "llm_ok", "flags": flags, "combined": False}
         else:
             # LLM failed (after the single retry): local TF-IDF fallback.

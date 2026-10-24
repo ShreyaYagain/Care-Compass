@@ -594,7 +594,7 @@ def rule_based_extract(text: str, history: list[dict] = None) -> dict:
             detected_symptoms.append("joint_pain")
 
     # Fall / injury: "I fell down and my leg hurts" -> injury (injury module)
-    if any(re.search(rf"\b{re.escape(w)}\b", norm) for w in ["fell", "fell down", "fall", "gir gaya", "gir ke", "gira hai", "giri hai", "gir", "leg hurts", "ankle", "foot", "knee", "hurt", "sprain", "twisted ankle", "swollen", "soojan", "sujan", "swelling", "bruise", "neel"]):
+    if any(re.search(rf"\b{re.escape(w)}\b", norm) for w in ["fell", "fell down", "fall", "gir gaya", "gir ke", "gira hai", "giri hai", "gir", "leg hurts", "ankle", "foot", "knee", "hurt", "sprain", "twisted ankle", "swollen", "soojan", "sujan", "swelling", "bruise", "neel", "wrist", "shoulder", "kandha", "kandhe", "elbow", "kohni", "back pain", "back me dard", "back dard", "kamar", "kamar dard", "neck", "gardan", "muscle pain", "bone", "haddi"]):
         if "injury" not in detected_symptoms:
             detected_symptoms.append("injury")
 
@@ -858,10 +858,13 @@ def _select_question_id(slots: dict, history: list[dict] | None, context: dict |
 
     # (c) At most ONE red-flag screening question, only for symptoms that could
     # be serious. Everything else is decided by the model directly.
+    # A plain headache is NOT an emergency candidate: no consciousness
+    # screening question for it (loss-of-consciousness indicators are caught
+    # by the red-flag layer / semantic screen instead).
     if has_symptom and not has_context:
         if "stomach_pain" in symptoms and "who_for_age_group" not in asked:
             return "who_for_age_group"
-        if any(s in symptoms for s in ("headache", "restlessness")) and "consciousness_check" not in asked:
+        if "restlessness" in symptoms and "consciousness_check" not in asked:
             return "consciousness_check"
         return None
 

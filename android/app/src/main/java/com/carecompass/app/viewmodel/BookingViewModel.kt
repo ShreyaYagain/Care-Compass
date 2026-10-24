@@ -24,6 +24,16 @@ enum class CareService(
     val descHinglishRes: Int,
     val isHomeVisit: Boolean
 ) {
+    DOCTOR_HOME_VISIT(
+        careType = "paramedic_home_visit",
+        titleEnRes = R.string.service_doctor_visit_title_en,
+        titleHiRes = R.string.service_doctor_visit_title_hi,
+        titleHinglishRes = R.string.service_doctor_visit_title_hinglish,
+        descEnRes = R.string.service_doctor_visit_desc_en,
+        descHiRes = R.string.service_doctor_visit_desc_hi,
+        descHinglishRes = R.string.service_doctor_visit_desc_hinglish,
+        isHomeVisit = true
+    ),
     HOME_NURSING(
         careType = "home_nursing",
         titleEnRes = R.string.service_nursing_title_en,
@@ -69,9 +79,10 @@ enum class CareService(
 
     companion object {
         fun fromCareType(careType: String?): CareService = when (careType) {
+            "paramedic_home_visit" -> DOCTOR_HOME_VISIT
             "lab_test_home" -> LAB_TEST_HOME
             "teleconsultation" -> TELECONSULTATION
-            else -> HOME_NURSING // home_nursing, paramedic_home_visit, null fallback
+            else -> HOME_NURSING // home_nursing, null fallback
         }
     }
 }
@@ -247,7 +258,7 @@ class BookingViewModel(
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         triageResponse = resp,
-                        service = CareService.fromCareType(resp.careType),
+                        service = _uiState.value.service ?: CareService.fromCareType(resp.careType),
                         currentStep = 2
                     )
                     loadCaregivers(lang, location)
@@ -285,7 +296,7 @@ class BookingViewModel(
 
         viewModelScope.launch {
             val matchReq = MatchRequest(
-                careType = triageResp?.careType ?: service?.careType ?: "home_nursing",
+                careType = service?.careType ?: triageResp?.careType ?: "home_nursing",
                 urgency = triageResp?.urgency ?: "scheduled",
                 location = location,
                 language = lang

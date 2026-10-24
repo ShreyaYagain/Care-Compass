@@ -81,6 +81,8 @@ def llm_select_module(text: str, slots: dict) -> Optional[str]:
     if not slots.get("symptoms"):
         return None
     deterministic = detect_module(slots)
+    symptoms = set(slots.get("symptoms", []) or [])
+    modules = (load_modules().get("modules") or {})
     try:
         from app.core.llm import llm_json, is_llm_available
         from pydantic import BaseModel
@@ -98,7 +100,13 @@ def llm_select_module(text: str, slots: dict) -> Optional[str]:
             )
             out = llm_json(system=sys, user=f"Message: \"{text}\"", schema=ModuleSelection)
             if out and out.module_id in module_ids():
-                return out.module_id
+                # Guardrail: a module is only acceptable when its trigger
+                # symptoms are actually present in the extracted symptoms
+                # (a plain headache must never open the injury module).
+                m = modules.get(out.module_id) or {}
+                triggers = set(m.get("trigger_symptoms") or [])
+                if triggers & symptoms or out.module_id == deterministic:
+                    return out.module_id
     except Exception:
         pass
     return deterministic
@@ -255,7 +263,8 @@ def injury_decision(answers: dict, slots: dict, classifier_fn=None) -> dict:
     (care_type, urgency, probs, confidence) tuple; its calibrated
     P(emergency_112) is the ONLY thing that may escalate a high-risk limb
     injury from paramedic_home_visit to emergency_112 (per policy:
-    P >= 0.50). Field 7 (meds_used) is never part of the decision.
+    P >= 0.75). Pain alone is never escalated. Field 7 (meds_used) is never
+    part of the decision.
 
     Returns {"care_type", "urgency", "red_flags", "reason"}.
     """
@@ -301,35 +310,35 @@ def injury_decision(answers: dict, slots: dict, classifier_fn=None) -> dict:
 
     fall_high = fall_type in _FALL_HIGH
 
-    # 3. High-risk limb injury: fall from height / road accident, numb/cold/pale
-    # limb, pain 8+, or deformity / no weight bearing -> paramedic_home_visit
-    # (same_day), with emergency_112 ONLY when the calibrated classifier says
-    # P(emergency_112) >= 0.50 or a red flag is present.
+    # 3. High-risk limb injury -> paramedic_home_visit (same_day) + hospital
+    # line. Pain alone (even 8-10) is NEVER escalated to emergency_112; only a
+    # serious combined finding (deformity, cannot bear weight, numb/cold limb,
+    # fall from height) may escalate, and only when the calibrated classifier
+    # is highly confident (P(emergency_112) >= 0.75).
     high_risk_limb = (
         fall_high
         or neuro
-        or pain >= 8
         or (pain >= 4 and (deformity or weight in _WEIGHT_NOT_AT_ALL))
     )
-    if high_risk_limb:
-        if classifier_fn is not None:
-            try:
-                out = classifier_fn(answers, slots)
-                if out and len(out) >= 3:
-                    probs = out[2] or {}
-                    p_emerg = float(probs.get("emergency_112", 0.0) or 0.0)
-                    if p_emerg >= 0.50:
-                        return {
-                            "care_type": "emergency_112",
-                            "urgency": "emergency",
-                            "red_flags": [],
-                            "reason": (
-                                f"{summary} and the triage model flags high risk, so emergency "
-                                f"services (112) are recommended. {hospital_line}"
-                            ),
-                        }
-            except Exception:
-                pass
+    if high_risk_limb and classifier_fn is not None:
+        try:
+            out = classifier_fn(answers, slots)
+            if out and len(out) >= 3:
+                probs = out[2] or {}
+                p_emerg = float(probs.get("emergency_112", 0.0) or 0.0)
+                if p_emerg >= 0.75:
+                    return {
+                        "care_type": "emergency_112",
+                        "urgency": "emergency",
+                        "red_flags": [],
+                        "reason": (
+                            f"{summary} and the triage model flags high risk, so emergency "
+                            f"services (112) are recommended. {hospital_line}"
+                        ),
+                    }
+        except Exception:
+            pass
+    if pain >= 8 or high_risk_limb:
         return {
             "care_type": "paramedic_home_visit",
             "urgency": "same_day",

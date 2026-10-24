@@ -19,6 +19,7 @@ sealed class ScreenDestination {
     data class Booking(val caregiverId: String) : ScreenDestination()
     object BookingConfirmed : ScreenDestination()
     object BookingFlow : ScreenDestination()
+    object BookServices : ScreenDestination()
 }
 
 data class TriageUiState(
@@ -215,6 +216,12 @@ class TriageViewModel(
     fun navigateToBookingFlow() {
         _uiState.value = _uiState.value.copy(
             destination = ScreenDestination.BookingFlow
+        )
+    }
+
+    fun navigateToBookServices() {
+        _uiState.value = _uiState.value.copy(
+            destination = ScreenDestination.BookServices
         )
     }
 

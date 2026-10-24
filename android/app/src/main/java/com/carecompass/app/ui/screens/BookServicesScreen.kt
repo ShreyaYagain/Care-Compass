@@ -10,6 +10,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MedicalServices
 import androidx.compose.material.icons.filled.Science
 import androidx.compose.material.icons.filled.VideoCall
@@ -28,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.carecompass.app.R
 import com.carecompass.app.ui.components.LanguageToggle
+import com.carecompass.app.ui.theme.EmergencyRed
 import com.carecompass.app.ui.theme.PrimaryBlue
 import com.carecompass.app.ui.theme.SurfaceBackground
 import com.carecompass.app.ui.theme.TextDark
@@ -122,6 +124,16 @@ fun BookServicesScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        // Card 0: Doctor home visit
+        ServiceCard(
+            title = stringResource(CareService.DOCTOR_HOME_VISIT.getTitle(selectedLanguage)),
+            description = stringResource(CareService.DOCTOR_HOME_VISIT.getDesc(selectedLanguage)),
+            icon = Icons.Default.Home,
+            onClick = { onSelectService(CareService.DOCTOR_HOME_VISIT) }
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         // Card 1: Home Nursing
         ServiceCard(
             title = stringResource(CareService.HOME_NURSING.getTitle(selectedLanguage)),
@@ -152,28 +164,26 @@ fun BookServicesScreen(
 
         Spacer(modifier = Modifier.height(28.dp))
 
-        // Small Text Link: "Feeling very unwell right now? Call 112"
-        Row(
+        // Emergency Call 112 Button (full red with white text)
+        Button(
+            onClick = { onEmergencyClick() },
             modifier = Modifier
-                .clip(RoundedCornerShape(8.dp))
-                .clickable { onEmergencyClick() }
-                .padding(horizontal = 12.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
+                .fillMaxWidth()
+                .height(54.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = EmergencyRed, contentColor = Color.White)
         ) {
             Icon(
                 imageVector = Icons.Default.Call,
                 contentDescription = null,
-                tint = PrimaryBlue,
-                modifier = Modifier.size(18.dp)
+                tint = Color.White
             )
-            Spacer(modifier = Modifier.width(6.dp))
+            Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = emergencyLinkText,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = PrimaryBlue,
-                textDecoration = TextDecoration.Underline
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
             )
         }
 
@@ -207,8 +217,7 @@ private fun ServiceCard(
             .heightIn(min = 96.dp)
             .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+        colors = CardDefaults.cardColors(containerColor = PrimaryBlue),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
@@ -219,14 +228,14 @@ private fun ServiceCard(
         ) {
             Surface(
                 shape = RoundedCornerShape(12.dp),
-                color = PrimaryBlue.copy(alpha = 0.1f),
+                color = Color.White.copy(alpha = 0.18f),
                 modifier = Modifier.size(54.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         imageVector = icon,
                         contentDescription = title,
-                        tint = PrimaryBlue,
+                        tint = Color.White,
                         modifier = Modifier.size(30.dp)
                     )
                 }
@@ -239,13 +248,13 @@ private fun ServiceCard(
                     text = title,
                     fontSize = 19.sp,
                     fontWeight = FontWeight.Bold,
-                    color = TextDark
+                    color = Color.White
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = description,
                     fontSize = 15.sp,
-                    color = TextGray,
+                    color = Color.White.copy(alpha = 0.9f),
                     lineHeight = 20.sp
                 )
             }

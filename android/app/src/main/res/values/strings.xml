@@ -127,6 +127,14 @@
     <string name="service_tele_desc_hi">वीडियो या कॉल पर डॉक्टर से बात करें</string>
     <string name="service_tele_desc_hinglish">Video ya call par doctor se baat karein</string>
 
+    <string name="service_doctor_visit_title_en">Doctor home visit</string>
+    <string name="service_doctor_visit_title_hi">डॉक्टर घर पर आएंगे</string>
+    <string name="service_doctor_visit_title_hinglish">Doctor ghar par aayenge</string>
+
+    <string name="service_doctor_visit_desc_en">A doctor comes home for a check-up</string>
+    <string name="service_doctor_visit_desc_hi">डॉक्टर घर आकर जांच करेंगे</string>
+    <string name="service_doctor_visit_desc_hinglish">Doctor ghar aakar check-up karenge</string>
+
     <!-- Emergency Link on Booking Screens -->
     <string name="call_112_link_en">Feeling very unwell right now? Call 112</string>
     <string name="call_112_link_hi">अभी बहुत ज्यादा तबियत खराब है? 112 पर कॉल करें</string>

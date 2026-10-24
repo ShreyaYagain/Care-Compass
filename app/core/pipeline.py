@@ -176,6 +176,34 @@ def _injury_classifier(answers: dict, slots: dict):
     return predict_triage(merged, build_classifier_text(merged))
 
 
+def _apply_injury_sanity(care_type: str, urgency: str, slots: dict, patient) -> tuple[str, str]:
+    """Sane routing for routine injury/joint pain outside the injury module.
+
+    - home_nursing / lab_test misroutes for injuries -> teleconsultation
+      (or paramedic_home_visit when severe).
+    - paramedic_home_visit for mild-moderate, non-vulnerable pain -> 
+      teleconsultation (a doctor video consult can decide if an X-ray is
+      needed; a hospital does X-rays, not a home medic).
+    Vulnerable patients (child/senior/pregnant/chronic/other-person) and
+    severe pain keep the medic home visit."""
+    symptoms = set(slots.get("symptoms") or [])
+    if not (symptoms & {"injury", "joint_pain"}):
+        return care_type, urgency
+    vulnerable = (
+        slots.get("age_group") in ("child", "senior")
+        or slots.get("patient_relation") not in (None, "self", "")
+        or slots.get("pregnancy")
+        or slots.get("chronic_conditions")
+        or (patient and patient.age and patient.age >= 60)
+    )
+    severe = slots.get("severity") == "severe"
+    if care_type in ("home_nursing", "lab_test_home"):
+        return ("paramedic_home_visit" if severe else "teleconsultation"), "same_day"
+    if care_type == "paramedic_home_visit" and not vulnerable and not severe:
+        return "teleconsultation", "same_day"
+    return care_type, urgency
+
+
 def _ask_next_module_question(module_id: str, answers: dict, slots: dict, lang: str, text: str):
     """The single next module question as a one-field card, or (None, None).
 
@@ -909,7 +937,7 @@ def run_triage_pipeline(
     # material — not a home visit.
     _AMBULATORY_SYMPTOMS = {"fever", "cough", "cold", "runny_nose", "headache", "weakness", "vomiting"}
     if (
-        care_type in ("paramedic_home_visit", "home_nursing")
+        care_type in ("paramedic_home_visit", "home_nursing", "lab_test_home")
         and urgency_after_risk_modifiers in ("same_day", "scheduled")
         and slots.get("symptoms")
         and set(slots.get("symptoms", [])) <= _AMBULATORY_SYMPTOMS
@@ -926,6 +954,17 @@ def run_triage_pipeline(
         care_type = "teleconsultation"
         urgency_after_risk_modifiers = "same_day"
         reasons.append("Stage 6.5 (Ambulatory adjustment): routine fever/cough/cold routed to teleconsultation")
+
+    # 6.6 Injury sanity: routine pain/sprain/joint presentations are
+    # video-consult material (an X-ray needs a hospital anyway) unless severe
+    # or vulnerable. Misclassified home_nursing / lab routes for injuries are
+    # corrected too.
+    _prev_injury = care_type
+    care_type, urgency_after_risk_modifiers = _apply_injury_sanity(
+        care_type, urgency_after_risk_modifiers, slots, request.patient
+    )
+    if care_type != _prev_injury:
+        reasons.append(f"Stage 6.6 (Injury sanity): {_prev_injury} -> {care_type}")
 
     # 7. Confidence fallback & Max follow-ups decision rule
     urgency_after_confidence_fallback = urgency_after_risk_modifiers

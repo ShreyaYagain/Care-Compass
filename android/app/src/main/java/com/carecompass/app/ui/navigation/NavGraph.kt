@@ -74,6 +74,11 @@ fun CareCompassNavGraph(
                     navController.navigate("booking_flow")
                 }
             }
+            is ScreenDestination.BookServices -> {
+                if (currentRoute != "book_services") {
+                    navController.navigate("book_services")
+                }
+            }
             is ScreenDestination.Home -> {
                 // If on sub-screens of home, return to home
                 if (currentRoute in listOf("chat", "emergency", "result", "booking/{caregiverId}", "booking_flow")) {
@@ -124,7 +129,24 @@ fun CareCompassNavGraph(
                         uiState = triageUiState,
                         onBookServices = {
                             bookingViewModel.startNewBooking()
+                            triageViewModel.navigateToBookServices()
+                        }
+                    )
+                }
+
+                composable("book_services") {
+                    BookServicesScreen(
+                        selectedLanguage = selectedLanguage,
+                        onLanguageSelected = { triageViewModel.setLanguage(it) },
+                        onSelectService = { service ->
+                            bookingViewModel.selectService(service)
                             triageViewModel.navigateToBookingFlow()
+                        },
+                        onEmergencyClick = {
+                            triageViewModel.navigateToEmergency()
+                        },
+                        onBack = {
+                            triageViewModel.navigateToHome()
                         }
                     )
                 }

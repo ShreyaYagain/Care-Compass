@@ -87,18 +87,6 @@ modules:
           - {en: "Painkiller", hi: "दर्द की दवा", hinglish: "Painkiller"}
           - {en: "Other", hi: "अन्य", hinglish: "Other"}
         evidence: []
-      - id: fall_type
-        type: choice
-        slot: fall_type
-        deferred: true
-        question_en: "How did you fall?"
-        question_hi: "आप कैसे गिरे?"
-        question_hinglish: "Aap kaise gire?"
-        options:
-          - {en: "Ground level", hi: "ज़मीन से", hinglish: "Ground level"}
-          - {en: "From height", hi: "ऊँचाई से", hinglish: "From height"}
-          - {en: "Road accident", hi: "सड़क दुर्घटना", hinglish: "Road accident"}
-        evidence: []
 
   fever:
     label_en: "Fever"
@@ -127,7 +115,7 @@ modules:
           - {en: "Below 100°F", hi: "100°F से कम", hinglish: "100F se kam"}
           - {en: "100-102°F", hi: "100-102°F", hinglish: "100-102F"}
           - {en: "Above 102°F", hi: "102°F से अधिक", hinglish: "102F se zyada"}
-        evidence: ["102", "103", "104", "101", "temperature", "taap"]
+        evidence: ["102", "103", "104", "101", "temperature"]
       - id: rash
         type: choice
         slot: rash

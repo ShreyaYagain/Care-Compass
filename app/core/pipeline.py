@@ -47,6 +47,8 @@ from app.core.modules import (
     render_module_card,
     injury_decision,
     merge_answers_into_slots,
+    module_next_question,
+    MODULE_MAX_QUESTIONS,
 )
 from app.core.synthetic import secondary_doctor_options
 from app.core.context import get_context, season_display
@@ -172,6 +174,24 @@ def _injury_classifier(answers: dict, slots: dict):
     merged = dict(slots)
     merge_answers_into_slots(merged, answers)
     return predict_triage(merged, build_classifier_text(merged))
+
+
+def _ask_next_module_question(module_id: str, answers: dict, slots: dict, lang: str, text: str):
+    """The single next module question as a one-field card, or (None, None).
+
+    Skips questions whose answer is already stated in the message (evidence)
+    or filled from slots, so every card contains exactly ONE unanswered
+    question and nothing is re-asked."""
+    local_answers = dict(answers)
+    while True:
+        field_id = module_next_question(module_id, local_answers, slots)
+        if not field_id:
+            return None, None
+        card = render_module_card(module_id, lang, slots, text, answered=local_answers, only_field=field_id)
+        if card is not None:
+            return field_id, card
+        # Already answered in the message: mark it and move to the next question.
+        local_answers[field_id] = "__stated__"
 
 
 def run_triage_pipeline(
@@ -676,33 +696,23 @@ def run_triage_pipeline(
             slots["pregnancy_reason"] = pregnancy_risk.reason
 
     # 3.5 Symptom-specific follow-up MODULE (injury/fall, fever, abdominal, cough).
+    # Follow-ups are asked ONE question per turn, at most MODULE_MAX_QUESTIONS;
+    # the flow stops as soon as the case is determined.
     module_id = request.module_id or llm_select_module(norm_text, slots)
 
-    if module_id and request.module_answers is not None and module_id == "injury":
+    if module_id and module_id == "injury" and request.module_answers is not None:
+        next_field, next_card = _ask_next_module_question(module_id, request.module_answers, slots, lang, norm_text)
+        if next_card is not None and history_turns < MODULE_MAX_QUESTIONS:
+            guard_q = output_guard(next_card["label"], lang=lang, is_emergency=False, care_type="teleconsultation", field_name="follow_up_question")
+            return TriageResponse(
+                follow_up_question=guard_q["safe_text"], follow_up_options=[],
+                care_type=None, urgency=None, red_flags=[], reasoning=None,
+                matched_caregivers=[], emergency_steps=[], context_used=None,
+                module_card=next_card,
+                debug={"module_id": module_id, "module_answers": request.module_answers, "asked": next_field} if debug else None,
+            )
+
         decision = injury_decision(request.module_answers, slots, classifier_fn=_injury_classifier)
-
-        # One targeted question at most ("how did you fall"), only when still
-        # undecided, within the absolute 2-turn cap.
-        if decision.get("ask_fall_type"):
-            if history_turns < settings.MAX_FOLLOWUPS:
-                fall_card = render_module_card(module_id, lang, slots, norm_text, deferred=True)
-                if fall_card:
-                    guard_q = output_guard(fall_card["label"], lang=lang, is_emergency=False, care_type="teleconsultation", field_name="follow_up_question")
-                    return TriageResponse(
-                        follow_up_question=guard_q["safe_text"], follow_up_options=[],
-                        care_type=None, urgency=None, red_flags=[], reasoning=None,
-                        matched_caregivers=[], emergency_steps=[], context_used=None,
-                        module_card=fall_card,
-                        debug={"module_id": module_id, "module_answers": request.module_answers} if debug else None,
-                    )
-            # Turn budget spent: decide directly with the safest first step.
-            decision = {
-                "care_type": "teleconsultation",
-                "urgency": "same_day",
-                "red_flags": [],
-                "reason": "We could not be sure about the fall, so a virtual doctor consultation is the safest first step to check whether an X-ray is needed.",
-            }
-
         dc, du, df = decision["care_type"], decision["urgency"], decision["red_flags"]
         meds = request.module_answers.get("meds_used")
         meds_line = f" You used: {meds}." if meds and str(meds) != "None" else ""
@@ -726,8 +736,19 @@ def run_triage_pipeline(
             debug={"module_id": module_id, "module_answers": request.module_answers} if debug else None,
         )
 
-    if module_id and request.module_answers is not None:
-        # Other modules: fold the answers into slots and continue the normal flow.
+    if module_id and request.module_answers is not None and module_id != "injury":
+        # Other modules: keep asking one question at a time (within the cap),
+        # then fold all answers into slots and continue the normal flow.
+        next_field, next_card = _ask_next_module_question(module_id, request.module_answers, slots, lang, norm_text)
+        if next_card is not None and history_turns < MODULE_MAX_QUESTIONS:
+            guard_q = output_guard(next_card["label"], lang=lang, is_emergency=False, care_type="teleconsultation", field_name="follow_up_question")
+            return TriageResponse(
+                follow_up_question=guard_q["safe_text"], follow_up_options=[],
+                care_type=None, urgency=None, red_flags=[], reasoning=None,
+                matched_caregivers=[], emergency_steps=[], context_used=None,
+                module_card=next_card,
+                debug={"module_id": module_id, "module_answers": request.module_answers, "asked": next_field} if debug else None,
+            )
         merge_answers_into_slots(slots, request.module_answers)
 
     has_context = bool(
@@ -747,14 +768,28 @@ def run_triage_pipeline(
         should_ask_module = False
 
     if should_ask_module and request.module_answers is None:
-        card = render_module_card(module_id, lang, slots, norm_text)
-        if card:
+        next_field, card = _ask_next_module_question(module_id, {}, slots, lang, norm_text)
+        if card is not None and history_turns < MODULE_MAX_QUESTIONS:
             guard_q = output_guard(card["label"], lang=lang, is_emergency=False, care_type="teleconsultation", field_name="follow_up_question")
             return TriageResponse(
                 follow_up_question=guard_q["safe_text"], follow_up_options=[],
                 care_type=None, urgency=None, red_flags=[], reasoning=None,
                 matched_caregivers=[], emergency_steps=[], context_used=None,
                 module_card=card,
+                debug={"module_id": module_id, "slots": slots, "asked": next_field} if debug else None,
+            )
+        if module_id == "injury" and request.module_answers is None:
+            # Nothing left to ask (all fields already stated): decide directly.
+            decision = injury_decision({}, slots, classifier_fn=_injury_classifier)
+            guard_res = output_guard(decision["reason"], lang=lang, is_emergency=decision["care_type"] == "emergency_112", care_type=decision["care_type"], field_name="reasoning")
+            return TriageResponse(
+                care_type=decision["care_type"], urgency=decision["urgency"], red_flags=decision["red_flags"],
+                reasoning=guard_res["safe_text"],
+                confidence=0.8 if decision["care_type"] != "emergency_112" else 1.0,
+                matched_caregivers=rank_caregivers(care_type=decision["care_type"], urgency=decision["urgency"], user_location=request.location, user_language=lang, user_text=cleaned_input, limit=3) if decision["care_type"] != "emergency_112" else [],
+                emergency_steps=_get_emergency_steps(lang) if decision["care_type"] == "emergency_112" else [],
+                context_used=context_used,
+                secondary_options=secondary_doctor_options(decision["care_type"], lang) if decision["care_type"] != "emergency_112" else [],
                 debug={"module_id": module_id, "slots": slots} if debug else None,
             )
 

@@ -1,10 +1,12 @@
-"""Follow-up MODULES: closed, symptom-selected multi-field question cards.
+"""Follow-up MODULES: closed, symptom-selected single-question follow-ups.
 
 A module is chosen by the extracted symptom (injury/fall, fever, abdominal
-pain, cough/breathing, ...). The card is a single turn with buttons/sliders in
-the user's language. Anything already stated in the message is prefilled and
-the corresponding field is hidden. The LLM may only select the module id and
-which fields are still unanswered; it never writes free-form questions.
+pain, cough/breathing, ...). Follow-ups are asked ONE question per turn
+(buttons/slider, in the user's language), at most MODULE_MAX_QUESTIONS, and
+the flow stops as soon as the case is determined. Anything already stated in
+the message is prefilled and the corresponding question is skipped. The LLM
+may only select the module id and which fields are still unanswered; it never
+writes free-form questions.
 """
 from __future__ import annotations
 
@@ -123,14 +125,13 @@ def render_module_card(
     slots: dict,
     text: str = "",
     answered: list[str] | None = None,
-    deferred: bool = False,
+    only_field: Optional[str] = None,
 ) -> Optional[dict]:
-    """Builds the card definition: only the still-unanswered fields, localised.
+    """Builds a card definition: only the still-unanswered fields, localised.
 
-    When `deferred=True` only the module's deferred fields (e.g. the single
-    targeted "how did you fall" question) are rendered, for the one extra
-    follow-up card allowed after the main card. Returns None when the module id
-    is unknown or every requested field is already answered.
+    Follow-ups are asked ONE at a time: pass `only_field` to render the single
+    next question. Returns None when the module id is unknown or the requested
+    field is already answered (prefilled from slots or stated in the message).
     """
     modules = (load_modules().get("modules") or {})
     m = modules.get(module_id)
@@ -144,8 +145,7 @@ def render_module_card(
     fields_out = []
     for field in m.get("fields", []) or []:
         fid = field.get("id")
-        is_deferred = bool(field.get("deferred", False))
-        if is_deferred != deferred:
+        if only_field and fid != only_field:
             continue
         already = _is_filled(slots, field, answered_set) or _answer_evidence_in_text(field, norm)
         if already:
@@ -179,6 +179,58 @@ def render_module_card(
 
 
 # ---------------------------------------------------------------------------
+# Sequential follow-up flow: ONE question per turn, at most MODULE_MAX_QUESTIONS.
+# ---------------------------------------------------------------------------
+
+MODULE_MAX_QUESTIONS = 4
+
+
+def _is_elderly(slots: dict) -> bool:
+    return (
+        slots.get("age_group") == "senior"
+        or slots.get("patient_relation") in {"grandmother", "grandfather", "senior", "dada", "dadi", "mother", "father"}
+    )
+
+
+def injury_next_question(answers: dict, slots: dict) -> Optional[str]:
+    """The single next question for the injury module, or None when the case
+    is already determined (decide immediately)."""
+    if not answers.get("head_hit"):
+        return "head_hit"
+    if _yes(answers.get("head_hit")):
+        return None  # emergency_112, no more questions
+    if answers.get("pain_level") is None:
+        return "pain_level"
+    pain = _as_int(answers.get("pain_level"))
+    if pain < 4 or pain >= 8:
+        return None  # mild -> teleconsultation; severe -> medic/112
+    if _is_elderly(slots):
+        return None  # elderly hip/thigh after fall -> same_day minimum
+    if not answers.get("weight_bearing"):
+        return "weight_bearing"
+    if str(answers.get("weight_bearing")) in _WEIGHT_NOT_AT_ALL:
+        return None  # cannot bear weight -> medic home visit
+    if not answers.get("swelling"):
+        return "swelling"
+    return None  # answered everything that matters -> decide
+
+
+def module_next_question(module_id: str, answers: dict, slots: dict) -> Optional[str]:
+    """Next unanswered question for any module (injury has its own adaptive
+    order; the other modules are asked in field order)."""
+    if module_id == "injury":
+        return injury_next_question(answers, slots)
+    modules = (load_modules().get("modules") or {})
+    m = modules.get(module_id)
+    if not m:
+        return None
+    for field in m.get("fields", []) or []:
+        if field.get("id") not in answers:
+            return field.get("id")
+    return None
+
+
+# ---------------------------------------------------------------------------
 # Injury / fall deterministic decision rules
 # ---------------------------------------------------------------------------
 
@@ -200,10 +252,7 @@ def injury_decision(answers: dict, slots: dict, classifier_fn=None) -> dict:
     injury from paramedic_home_visit to emergency_112 (per policy:
     P >= 0.50). Field 7 (meds_used) is never part of the decision.
 
-    Returns {"care_type", "urgency", "red_flags", "reason"} or, when the
-    case is still undecided and the fall type could change the route,
-    {"ask_fall_type": True, ...} (the caller may then ask the one allowed
-    targeted "how did you fall" question).
+    Returns {"care_type", "urgency", "red_flags", "reason"}.
     """
     pain = _as_int(answers.get("pain_level"))
     swelling = _yes(answers.get("swelling"))
@@ -213,11 +262,6 @@ def injury_decision(answers: dict, slots: dict, classifier_fn=None) -> dict:
     head_hit = _yes(answers.get("head_hit"))
     fall_type = str(answers.get("fall_type", "") or "")
     bleeding = slots.get("bleeding") is True or _yes(answers.get("bleeding"))
-
-    is_elderly = (
-        slots.get("age_group") == "senior"
-        or slots.get("patient_relation") in {"grandmother", "grandfather", "senior", "dada", "dadi", "mother", "father"}
-    )
 
     hospital_line = ("If it worsens, go to hospital or call 112. This could need an X-ray; a doctor should check it.")
     summary = f"Pain {pain}/10" if pain >= 0 else ""
@@ -252,15 +296,14 @@ def injury_decision(answers: dict, slots: dict, classifier_fn=None) -> dict:
 
     fall_high = fall_type in _FALL_HIGH
 
-    # 3. High-risk limb injury: from height / road accident, numbness/cold/pale
-    # limb, pain 8-10 with deformity or no weight bearing, or deformity / no
-    # weight bearing at any pain >= 4 -> paramedic_home_visit (same_day), with
-    # emergency_112 ONLY when the calibrated classifier says P(emergency_112)
-    # >= 0.50 or a red flag is present.
+    # 3. High-risk limb injury: fall from height / road accident, numb/cold/pale
+    # limb, pain 8+, or deformity / no weight bearing -> paramedic_home_visit
+    # (same_day), with emergency_112 ONLY when the calibrated classifier says
+    # P(emergency_112) >= 0.50 or a red flag is present.
     high_risk_limb = (
         fall_high
         or neuro
-        or (pain >= 8 and (deformity or weight in _WEIGHT_NOT_AT_ALL))
+        or pain >= 8
         or (pain >= 4 and (deformity or weight in _WEIGHT_NOT_AT_ALL))
     )
     if high_risk_limb:
@@ -290,7 +333,7 @@ def injury_decision(answers: dict, slots: dict, classifier_fn=None) -> dict:
         }
 
     # 4. Elderly hip/thigh after fall -> same_day minimum
-    if is_elderly and pain >= 4:
+    if _is_elderly(slots) and pain >= 4:
         return {
             "care_type": "paramedic_home_visit",
             "urgency": "same_day",
@@ -298,7 +341,7 @@ def injury_decision(answers: dict, slots: dict, classifier_fn=None) -> dict:
             "reason": f"Elderly patient with hip/thigh pain after a fall: a same-day medic home visit is recommended. {hospital_line}",
         }
 
-    # 5. Moderate pain + swelling, some weight bearing -> paramedic home visit
+    # 5. Moderate pain + swelling, some weight bearing -> medic home visit
     if 4 <= pain <= 7 and swelling:
         return {
             "care_type": "paramedic_home_visit",
@@ -307,19 +350,22 @@ def injury_decision(answers: dict, slots: dict, classifier_fn=None) -> dict:
             "reason": f"{summary} and some weight bearing, so a medic home visit is recommended; this could need an X-ray. {hospital_line}",
         }
 
-    # 6. Still undecided and the fall type could change the route (ground level
-    # -> teleconsultation, from height / road accident -> medic home visit):
-    # allow ONE targeted "how did you fall" question.
-    if not fall_type and pain >= 4:
-        return {"ask_fall_type": True, "care_type": None, "urgency": None, "red_flags": [], "reason": ""}
+    # 6. Insufficient information (should not normally happen; the questions
+    # always run first) -> safest first step.
+    if pain < 0:
+        return {
+            "care_type": "teleconsultation",
+            "urgency": "same_day",
+            "red_flags": [],
+            "reason": "We could not be sure about the injury, so a virtual doctor consultation is the safest first step to check whether an X-ray is needed.",
+        }
 
     # 7. Mild pain, no swelling, normal movement -> teleconsultation
-    reason = f"{summary}; normal movement, so a virtual doctor consultation is recommended to check whether an X-ray is needed."
     return {
         "care_type": "teleconsultation",
         "urgency": "same_day",
         "red_flags": [],
-        "reason": reason,
+        "reason": f"{summary}; normal movement, so a virtual doctor consultation is recommended to check whether an X-ray is needed.",
     }
 
 

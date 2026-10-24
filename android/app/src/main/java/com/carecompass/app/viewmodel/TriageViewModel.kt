@@ -17,7 +17,6 @@ sealed class ScreenDestination {
     object Result : ScreenDestination()
     data class Booking(val caregiverId: String) : ScreenDestination()
     object BookingConfirmed : ScreenDestination()
-    object BookServices : ScreenDestination()
     object BookingFlow : ScreenDestination()
 }
 
@@ -212,12 +211,6 @@ class TriageViewModel(
         )
     }
 
-    fun navigateToBookServices() {
-        _uiState.value = _uiState.value.copy(
-            destination = ScreenDestination.BookServices
-        )
-    }
-
     fun navigateToBookingFlow() {
         _uiState.value = _uiState.value.copy(
             destination = ScreenDestination.BookingFlow
@@ -249,7 +242,14 @@ class TriageViewModel(
         )
     }
 
-    fun confirmBooking(caregiverId: String, name: String, phone: String, slot: String) {
+    fun confirmBooking(
+        caregiverId: String,
+        name: String,
+        phone: String,
+        slot: String,
+        patientName: String? = null,
+        relation: String? = null
+    ) {
         _uiState.value = _uiState.value.copy(isLoading = true)
         viewModelScope.launch {
             val req = BookingRequest(
@@ -257,7 +257,10 @@ class TriageViewModel(
                 slot = slot,
                 userName = name,
                 phone = phone,
-                triageSummary = _uiState.value.latestResponse?.reasoning
+                triageSummary = _uiState.value.latestResponse?.reasoning,
+                patientName = patientName ?: name,
+                relation = relation,
+                careType = _uiState.value.latestResponse?.careType ?: "paramedic_home_visit"
             )
             repository.createBooking(req).fold(
                 onSuccess = { bResp ->

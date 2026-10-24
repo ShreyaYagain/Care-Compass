@@ -50,14 +50,6 @@ private data class SymptomItem(
     val labelHinglishRes: Int
 )
 
-// Group 2: Serious problems (Emergency triggers)
-private val SERIOUS_PROBLEMS = listOf(
-    SymptomItem("chest_pain", Icons.Default.Favorite, "severe chest pain", R.string.serious_chest_pain_en, R.string.serious_chest_pain_hi, R.string.serious_chest_pain_hinglish),
-    SymptomItem("breathing", Icons.Default.Warning, "severe difficulty breathing", R.string.serious_breathing_en, R.string.serious_breathing_hi, R.string.serious_breathing_hinglish),
-    SymptomItem("fainted", Icons.Default.Person, "unconscious patient fainted not responding", R.string.serious_fainted_en, R.string.serious_fainted_hi, R.string.serious_fainted_hinglish),
-    SymptomItem("heavy_bleeding", Icons.Default.Warning, "heavy bleeding not stopping", R.string.serious_bleeding_en, R.string.serious_bleeding_hi, R.string.serious_bleeding_hinglish)
-)
-
 // Group 1: General symptoms (Multi-select)
 private val GENERAL_SYMPTOMS = listOf(
     SymptomItem("fever", Icons.Default.Whatshot, "fever", R.string.symptom_fever_en, R.string.symptom_fever_hi, R.string.symptom_fever_hinglish),
@@ -72,17 +64,11 @@ private val GENERAL_SYMPTOMS = listOf(
     SymptomItem("not_eating", Icons.Default.Close, "patient not eating or drinking", R.string.symptom_not_eating_en, R.string.symptom_not_eating_hi, R.string.symptom_not_eating_hinglish)
 )
 
-// Group 3: Services (Selectable chips)
-private val SERVICES = listOf(
-    SymptomItem("home_nursing", Icons.Default.MedicalServices, "ghar pe IM injection lagwana hai dressing", R.string.service_home_nursing_en, R.string.service_home_nursing_hi, R.string.service_home_nursing_hinglish),
-    SymptomItem("lab_test", Icons.Default.Search, "full body checkup home collection", R.string.service_lab_test_en, R.string.service_lab_test_hi, R.string.service_lab_test_hinglish),
-    SymptomItem("talk_doctor", Icons.Default.Call, "second opinion chahiye bache ki dawai par doctor consult", R.string.service_talk_doctor_en, R.string.service_talk_doctor_hi, R.string.service_talk_doctor_hinglish)
-)
-
 @Composable
 fun HomeScreen(
     viewModel: TriageViewModel,
     uiState: TriageUiState,
+    onBookServices: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -91,7 +77,6 @@ fun HomeScreen(
     var userMessage by remember { mutableStateOf<String?>(null) }
 
     val selectedSymptoms = remember { mutableStateListOf<String>() }
-    val selectedServices = remember { mutableStateListOf<String>() }
 
     var showConsentBanner by remember {
         mutableStateOf(
@@ -299,81 +284,37 @@ fun HomeScreen(
             )
         }
 
-        Spacer(modifier = Modifier.height(18.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
-        // Group 2: "Serious problem" (PINNED FIRST WITH RED OUTLINE)
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(14.dp),
-            border = BorderStroke(2.dp, EmergencyRed),
-            colors = CardDefaults.cardColors(containerColor = EmergencyRed.copy(alpha = 0.04f))
+        // Blue Book Services Button
+        val bookServicesLabel = when (uiState.selectedLanguage) {
+            "hi" -> stringResource(R.string.book_services_hi)
+            "hinglish" -> stringResource(R.string.book_services_hinglish)
+            else -> stringResource(R.string.book_services_en)
+        }
+
+        Button(
+            onClick = {
+                onBookServices()
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(54.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue, contentColor = Color.White)
         ) {
-            Column(modifier = Modifier.padding(14.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.Warning,
-                        contentDescription = "Serious Problem",
-                        tint = EmergencyRed,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = stringResource(R.string.group_serious_heading),
-                        fontSize = 17.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = EmergencyRed
-                    )
-                }
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // 2x2 grid for serious problems (min 72dp per button)
-                val seriousChunks = SERIOUS_PROBLEMS.chunked(2)
-                seriousChunks.forEach { rowItems ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        rowItems.forEach { item ->
-                            Button(
-                                onClick = {
-                                    // Tapping opens Emergency screen immediately AND sends text in background
-                                    viewModel.triggerEmergencyImmediately(item.canonicalKeyword)
-                                },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .heightIn(min = 72.dp),
-                                shape = RoundedCornerShape(10.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color.White,
-                                    contentColor = EmergencyRed
-                                ),
-                                border = BorderStroke(1.5.dp, EmergencyRed)
-                            ) {
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.Center
-                                ) {
-                                    Icon(
-                                        imageVector = item.icon,
-                                        contentDescription = getLabel(item),
-                                        tint = EmergencyRed,
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Text(
-                                        text = getLabel(item),
-                                        fontSize = 14.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = EmergencyRed,
-                                        textAlign = TextAlign.Center
-                                    )
-                                }
-                            }
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
-            }
+            Icon(
+                imageVector = Icons.Default.CalendarMonth,
+                contentDescription = bookServicesLabel,
+                tint = Color.White
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = bookServicesLabel,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
         }
 
         Spacer(modifier = Modifier.height(20.dp))
@@ -443,72 +384,20 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(18.dp))
 
-        // Group 3: "I need a service" (Smaller chips row)
-        Text(
-            text = stringResource(R.string.group_services_heading),
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFF212121),
-            textAlign = TextAlign.Start,
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            SERVICES.forEach { item ->
-                val isSelected = selectedServices.contains(item.id)
-                FilterChip(
-                    selected = isSelected,
-                    onClick = {
-                        if (isSelected) selectedServices.remove(item.id) else selectedServices.add(item.id)
-                    },
-                    label = {
-                        Text(
-                            text = getLabel(item),
-                            fontSize = 14.sp,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                        )
-                    },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = item.icon,
-                            contentDescription = getLabel(item),
-                            modifier = Modifier.size(18.dp)
-                        )
-                    },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = PrimaryBlue,
-                        selectedLabelColor = Color.White,
-                        selectedLeadingIconColor = Color.White
-                    )
-                )
-            }
-        }
-
-        // Continue Button (appears when at least one symptom or service is selected)
-        val hasSelection = selectedSymptoms.isNotEmpty() || selectedServices.isNotEmpty()
-        if (hasSelection) {
+        // Continue Button (appears when at least one symptom is selected)
+        if (selectedSymptoms.isNotEmpty()) {
             Spacer(modifier = Modifier.height(16.dp))
             BigButton(
-                text = "Continue (${selectedSymptoms.size + selectedServices.size} selected)",
+                text = "Continue (${selectedSymptoms.size} selected)",
                 onClick = {
                     val parts = mutableListOf<String>()
                     selectedSymptoms.forEach { sId ->
                         GENERAL_SYMPTOMS.find { it.id == sId }?.let { parts.add(it.canonicalKeyword) }
                     }
-                    selectedServices.forEach { servId ->
-                        SERVICES.find { it.id == servId }?.let { parts.add(it.canonicalKeyword) }
-                    }
                     val sentence = parts.joinToString(", ")
                     if (sentence.isNotBlank()) {
                         viewModel.submitUserInput(sentence)
                         selectedSymptoms.clear()
-                        selectedServices.clear()
                     }
                 }
             )

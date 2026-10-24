@@ -114,13 +114,17 @@ fun BookingScreen(
         mutableStateOf(slots.firstOrNull()?.first ?: "today_afternoon")
     }
 
-    var name by remember { mutableStateOf("Rohan Gupta") }
+    var forWhom by remember { mutableStateOf("myself") } // "myself" or "someone_else"
+    var patientName by remember { mutableStateOf("") }
+    var selectedRelation by remember { mutableStateOf<String?>(null) }
+    var contactName by remember { mutableStateOf("Rohan Gupta") }
     var phone by remember { mutableStateOf("9876543210") }
     var attemptedSubmit by remember { mutableStateOf(false) }
 
     val phoneRegex = Regex("^[6-9]\\d{9}$")
     val isPhoneValid = phone.trim().matches(phoneRegex)
-    val isNameValid = name.trim().isNotBlank()
+    val isContactNameValid = contactName.trim().isNotBlank()
+    val isPatientNameValid = if (forWhom == "someone_else") patientName.trim().isNotBlank() else true
 
     Column(
         modifier = modifier
@@ -133,6 +137,13 @@ fun BookingScreen(
         if (uiState.bookingResponse != null) {
             // Confirmation card with full booking summary
             val chosenSlotLabel = slots.find { it.first == selectedSlot }?.second ?: selectedSlot
+            val forWhomDisplay = if (uiState.bookingResponse.relation != null && uiState.bookingResponse.relation.isNotBlank()) {
+                "${uiState.bookingResponse.patientName ?: "Someone else"} (${uiState.bookingResponse.relation})"
+            } else if (!uiState.bookingResponse.patientName.isNullOrBlank() && uiState.bookingResponse.patientName != "Myself") {
+                uiState.bookingResponse.patientName
+            } else {
+                "Myself"
+            }
 
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -181,6 +192,15 @@ fun BookingScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
+                        Text("For:", color = Color(0xFF757575), fontSize = 15.sp)
+                        Text(forWhomDisplay, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
                         Text("Assigned Caregiver:", color = Color(0xFF757575), fontSize = 15.sp)
                         Text("$caregiverName ($caregiverRole)", fontWeight = FontWeight.Bold, fontSize = 15.sp)
                     }
@@ -199,8 +219,8 @@ fun BookingScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("Patient Name:", color = Color(0xFF757575), fontSize = 15.sp)
-                        Text(name, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                        Text("Booked by:", color = Color(0xFF757575), fontSize = 15.sp)
+                        Text(contactName, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                     }
                     Spacer(modifier = Modifier.height(8.dp))
 
@@ -302,7 +322,7 @@ fun BookingScreen(
                 }
             }
 
-            // Patient Contact Info
+            // Step 3 Addition: "Who is this for?" selector
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(14.dp),
@@ -310,21 +330,99 @@ fun BookingScreen(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "Contact Details",
+                        text = "Who is this for?",
                         fontSize = 17.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF212121)
                     )
                     Spacer(modifier = Modifier.height(12.dp))
 
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        FilterChip(
+                            selected = forWhom == "myself",
+                            onClick = { forWhom = "myself" },
+                            label = { Text("Myself", fontSize = 15.sp, fontWeight = FontWeight.SemiBold) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = PrimaryBlue,
+                                selectedLabelColor = Color.White
+                            )
+                        )
+                        FilterChip(
+                            selected = forWhom == "someone_else",
+                            onClick = { forWhom = "someone_else" },
+                            label = { Text("Someone else", fontSize = 15.sp, fontWeight = FontWeight.SemiBold) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = PrimaryBlue,
+                                selectedLabelColor = Color.White
+                            )
+                        )
+                    }
+
+                    if (forWhom == "someone_else") {
+                        Spacer(modifier = Modifier.height(14.dp))
+                        OutlinedTextField(
+                            value = patientName,
+                            onValueChange = { patientName = it },
+                            label = { Text("Patient Name *") },
+                            placeholder = { Text("e.g. Ramesh Gupta") },
+                            isError = attemptedSubmit && !isPatientNameValid,
+                            supportingText = {
+                                if (attemptedSubmit && !isPatientNameValid) {
+                                    Text("Patient name is required", color = MaterialTheme.colorScheme.error)
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(10.dp)
+                        )
+
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Text(
+                            text = "Relation",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color(0xFF555555)
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            listOf("Papa", "Mama", "Child", "Other").forEach { rel ->
+                                FilterChip(
+                                    selected = selectedRelation == rel,
+                                    onClick = {
+                                        selectedRelation = if (selectedRelation == rel) null else rel
+                                    },
+                                    label = { Text(rel, fontSize = 14.sp) },
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = PrimaryBlue,
+                                        selectedLabelColor = Color.White
+                                    )
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                    HorizontalDivider(color = Color(0xFFEEEEEE))
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    Text(
+                        text = "Your Contact Details",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF212121)
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+
                     OutlinedTextField(
-                        value = name,
-                        onValueChange = { name = it },
-                        label = { Text("Patient / Contact Name") },
-                        isError = attemptedSubmit && !isNameValid,
+                        value = contactName,
+                        onValueChange = { contactName = it },
+                        label = { Text("Contact Person Name") },
+                        isError = attemptedSubmit && !isContactNameValid,
                         supportingText = {
-                            if (attemptedSubmit && !isNameValid) {
-                                Text("Name cannot be empty", color = MaterialTheme.colorScheme.error)
+                            if (attemptedSubmit && !isContactNameValid) {
+                                Text("Contact name cannot be empty", color = MaterialTheme.colorScheme.error)
                             }
                         },
                         modifier = Modifier.fillMaxWidth(),
@@ -336,7 +434,6 @@ fun BookingScreen(
                     OutlinedTextField(
                         value = phone,
                         onValueChange = { input ->
-                            // Allow digits only up to 10 chars
                             phone = input.filter { it.isDigit() }.take(10)
                         },
                         label = { Text("Phone Number (10 digits)") },
@@ -367,12 +464,15 @@ fun BookingScreen(
                 text = "Confirm Booking",
                 onClick = {
                     attemptedSubmit = true
-                    if (isNameValid && isPhoneValid) {
+                    if (isContactNameValid && isPhoneValid && isPatientNameValid) {
+                        val effectivePatient = if (forWhom == "someone_else") patientName.trim() else "Myself"
                         viewModel.confirmBooking(
                             caregiverId = caregiverId,
-                            name = name.trim(),
+                            name = contactName.trim(),
                             phone = phone.trim(),
-                            slot = selectedSlot
+                            slot = selectedSlot,
+                            patientName = effectivePatient,
+                            relation = if (forWhom == "someone_else") selectedRelation else null
                         )
                     }
                 }

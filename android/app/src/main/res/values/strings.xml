@@ -138,9 +138,9 @@
     <string name="medical_disclaimer_hinglish">CareCompass care dhoondhne mein madad karta hai. Ye medical advice nahi deta.</string>
 
     <!-- Step 1: Reason -->
-    <string name="booking_step1_heading_en">Confirm your care</string>
-    <string name="booking_step1_heading_hi">देखभाल की पुष्टि करें</string>
-    <string name="booking_step1_heading_hinglish">Care confirm karein</string>
+    <string name="booking_step1_heading_en">Why do you need this?</string>
+    <string name="booking_step1_heading_hi">आपको यह सेवा क्यों चाहिए?</string>
+    <string name="booking_step1_heading_hinglish">Aapko ye service kyun chahiye?</string>
 
     <string name="reason_hint_en">Type reason or describe what you need...</string>
     <string name="reason_hint_hi">यहाँ कारण लिखें या अपनी ज़रूरत बताएं...</string>
@@ -181,9 +181,9 @@
     <string name="switch_to_tele_btn_hinglish">Doctor se online consult karein</string>
 
     <!-- Step 3: Date & Time -->
-    <string name="booking_step3_heading_en">Choose a time slot</string>
-    <string name="booking_step3_heading_hi">समय स्लॉट चुनें</string>
-    <string name="booking_step3_heading_hinglish">Time slot chunein</string>
+    <string name="booking_step3_heading_en">When do you need it?</string>
+    <string name="booking_step3_heading_hi">आपको यह कब चाहिए?</string>
+    <string name="booking_step3_heading_hinglish">Booking kis din aur samay ki karni hai?</string>
 
     <string name="fasting_note_en">Please keep fasting if your doctor said so</string>
     <string name="fasting_note_hi">यदि आपके डॉक्टर ने कहा है तो कृपया उपवास (खाली पेट) रखें</string>
@@ -225,4 +225,200 @@
     <string name="connection_error_en">Connection error. Please try again.</string>
     <string name="connection_error_hi">कनेक्शन में समस्या। कृपया पुन: प्रयास करें।</string>
     <string name="connection_error_hinglish">Connection error. Dobara try karein.</string>
+
+    <!-- Bottom Navigation Bar Labels -->
+    <string name="nav_home_en">Home</string>
+    <string name="nav_home_hi">होम</string>
+    <string name="nav_home_hinglish">Home</string>
+
+    <string name="nav_history_en">History</string>
+    <string name="nav_history_hi">इतिहास</string>
+    <string name="nav_history_hinglish">History</string>
+
+    <string name="nav_bookings_en">Bookings</string>
+    <string name="nav_bookings_hi">बुकिंग</string>
+    <string name="nav_bookings_hinglish">Bookings</string>
+
+    <!-- History Tab Strings -->
+    <string name="history_title_en">Recent chats</string>
+    <string name="history_title_hi">हालिया बातचीत</string>
+    <string name="history_title_hinglish">Recent chats</string>
+
+    <string name="outcome_emergency_en">Emergency</string>
+    <string name="outcome_emergency_hi">आपातकालीन</string>
+    <string name="outcome_emergency_hinglish">Emergency</string>
+
+    <string name="outcome_sameday_en">Same-day care</string>
+    <string name="outcome_sameday_hi">उसी दिन देखभाल</string>
+    <string name="outcome_sameday_hinglish">Same-day care</string>
+
+    <string name="outcome_scheduled_en">Scheduled</string>
+    <string name="outcome_scheduled_hi">निर्धारित</string>
+    <string name="outcome_scheduled_hinglish">Scheduled</string>
+
+    <string name="outcome_needs_info_en">Needs more info</string>
+    <string name="outcome_needs_info_hi">और जानकारी चाहिए</string>
+    <string name="outcome_needs_info_hinglish">Needs more info</string>
+
+    <string name="history_detail_title_en">Chat details</string>
+    <string name="history_detail_title_hi">बातचीत विवरण</string>
+    <string name="history_detail_title_hinglish">Chat details</string>
+
+    <string name="step_you_said_en">You said</string>
+    <string name="step_you_said_hi">आपने कहा</string>
+    <string name="step_you_said_hinglish">Aapne kaha</string>
+
+    <string name="tag_via_voice_en">via voice</string>
+    <string name="tag_via_voice_hi">आवाज़ से</string>
+    <string name="tag_via_voice_hinglish">Voice se</string>
+
+    <string name="step_result_en">Result</string>
+    <string name="step_result_hi">परिणाम</string>
+    <string name="step_result_hinglish">Result</string>
+
+    <string name="step_caregivers_en">Suggested caregivers</string>
+    <string name="step_caregivers_hi">सुझाए गए देखभालकर्ता</string>
+    <string name="step_caregivers_hinglish">Suggested caregivers</string>
+
+    <string name="step_booking_en">Booking</string>
+    <string name="step_booking_hi">बुकिंग</string>
+    <string name="step_booking_hinglish">Booking</string>
+
+    <string name="btn_view_in_bookings_en">View in Bookings</string>
+    <string name="btn_view_in_bookings_hi">बुकिंग में देखें</string>
+    <string name="btn_view_in_bookings_hinglish">Bookings mein dekhein</string>
+
+    <string name="step_emergency_alert_en">Emergency steps shown, 112 advised</string>
+    <string name="step_emergency_alert_hi">आपातकालीन कदम दिखाए गए, 112 की सलाह दी गई</string>
+    <string name="step_emergency_alert_hinglish">Emergency steps dikhaye gaye, 112 advised</string>
+
+    <string name="btn_delete_chat_en">Delete this chat</string>
+    <string name="btn_delete_chat_hi">यह बातचीत हटाएं</string>
+    <string name="btn_delete_chat_hinglish">Ye chat delete karein</string>
+
+    <string name="dialog_delete_title_en">Delete this chat?</string>
+    <string name="dialog_delete_title_hi">क्या यह बातचीत हटाएं?</string>
+    <string name="dialog_delete_title_hinglish">Ye chat delete karni hai?</string>
+
+    <string name="dialog_delete_msg_en">This chat session will be permanently removed.</string>
+    <string name="dialog_delete_msg_hi">यह बातचीत स्थायी रूप से हटा दी जाएगी।</string>
+    <string name="dialog_delete_msg_hinglish">Ye chat permanently remove ho jayegi.</string>
+
+    <string name="btn_delete_confirm_en">Delete</string>
+    <string name="btn_delete_confirm_hi">हटाएं</string>
+    <string name="btn_delete_confirm_hinglish">Delete</string>
+
+    <string name="btn_cancel_en">Cancel</string>
+    <string name="btn_cancel_hi">रद्द करें</string>
+    <string name="btn_cancel_hinglish">Cancel</string>
+
+    <string name="history_empty_title_en">No chats yet. Start from Home.</string>
+    <string name="history_empty_title_hi">अभी तक कोई बातचीत नहीं है। होम से शुरू करें।</string>
+    <string name="history_empty_title_hinglish">Abhi tak koi chat nahi hai. Home se shuru karein.</string>
+
+    <string name="btn_start_home_en">Start from Home</string>
+    <string name="btn_start_home_hi">होम से शुरू करें</string>
+    <string name="btn_start_home_hinglish">Home se shuru karein</string>
+
+    <!-- Bookings Tab Strings -->
+    <string name="bookings_title_en">Upcoming bookings</string>
+    <string name="bookings_title_hi">आगामी बुकिंग</string>
+    <string name="bookings_title_hinglish">Upcoming bookings</string>
+
+    <string name="past_bookings_title_en">Past bookings</string>
+    <string name="past_bookings_title_hi">पिछली बुकिंग</string>
+    <string name="past_bookings_title_hinglish">Past bookings</string>
+
+    <string name="for_whom_prefix_en">For: %s</string>
+    <string name="for_whom_prefix_hi">के लिए: %s</string>
+    <string name="for_whom_prefix_hinglish">For: %s</string>
+
+    <string name="whom_myself_en">Myself</string>
+    <string name="whom_myself_hi">स्वयं</string>
+    <string name="whom_myself_hinglish">Myself</string>
+
+    <string name="whom_someone_else_en">Someone else</string>
+    <string name="whom_someone_else_hi">कोई और</string>
+    <string name="whom_someone_else_hinglish">Kisi aur ke liye</string>
+
+    <string name="badge_today_en">Today</string>
+    <string name="badge_today_hi">आज</string>
+    <string name="badge_today_hinglish">Today</string>
+
+    <string name="badge_tomorrow_en">Tomorrow</string>
+    <string name="badge_tomorrow_hi">कल</string>
+    <string name="badge_tomorrow_hinglish">Tomorrow</string>
+
+    <string name="btn_join_call_en">Join call</string>
+    <string name="btn_join_call_hi">कॉल से जुड़ें</string>
+    <string name="btn_join_call_hinglish">Call join karein</string>
+
+    <string name="status_confirmed_en">Confirmed</string>
+    <string name="status_confirmed_hi">कन्फर्म</string>
+    <string name="status_confirmed_hinglish">Confirmed</string>
+
+    <string name="status_pending_en">Pending</string>
+    <string name="status_pending_hi">लंबित</string>
+    <string name="status_pending_hinglish">Pending</string>
+
+    <string name="btn_call_caregiver_en">Call caregiver</string>
+    <string name="btn_call_caregiver_hi">देखभालकर्ता को कॉल करें</string>
+    <string name="btn_call_caregiver_hinglish">Caregiver ko call karein</string>
+
+    <string name="btn_reschedule_en">Reschedule</string>
+    <string name="btn_reschedule_hi">समय बदलें</string>
+    <string name="btn_reschedule_hinglish">Reschedule</string>
+
+    <string name="btn_cancel_booking_en">Cancel</string>
+    <string name="btn_cancel_booking_hi">रद्द करें</string>
+    <string name="btn_cancel_booking_hinglish">Cancel</string>
+
+    <string name="dialog_cancel_booking_title_en">Cancel this booking?</string>
+    <string name="dialog_cancel_booking_title_hi">क्या यह बुकिंग रद्द करें?</string>
+    <string name="dialog_cancel_booking_title_hinglish">Ye booking cancel karni hai?</string>
+
+    <string name="dialog_cancel_booking_msg_en">Are you sure you want to cancel this booking?</string>
+    <string name="dialog_cancel_booking_msg_hi">क्या आप वाकई यह बुकिंग रद्द करना चाहते हैं?</string>
+    <string name="dialog_cancel_booking_msg_hinglish">Kya aap ye booking cancel karna chahte hain?</string>
+
+    <string name="bookings_empty_title_en">No upcoming bookings</string>
+    <string name="bookings_empty_title_hi">कोई आगामी बुकिंग नहीं है</string>
+    <string name="bookings_empty_title_hinglish">Koi upcoming booking nahi hai</string>
+
+    <string name="btn_book_service_en">Book a service</string>
+    <string name="btn_book_service_hi">सेवा बुक करें</string>
+    <string name="btn_book_service_hinglish">Service book karein</string>
+
+    <!-- Booking Flow Step 3 "Who is this for?" -->
+    <string name="who_is_this_for_en">Who is this for?</string>
+    <string name="who_is_this_for_hi">यह किसके लिए है?</string>
+    <string name="who_is_this_for_hinglish">Ye kiske liye hai?</string>
+
+    <string name="relation_papa_en">Papa</string>
+    <string name="relation_papa_hi">पापा</string>
+    <string name="relation_papa_hinglish">Papa</string>
+
+    <string name="relation_mama_en">Mama</string>
+    <string name="relation_mama_hi">मम्मी</string>
+    <string name="relation_mama_hinglish">Mama</string>
+
+    <string name="relation_child_en">Child</string>
+    <string name="relation_child_hi">बच्चा</string>
+    <string name="relation_child_hinglish">Child</string>
+
+    <string name="relation_other_en">Other</string>
+    <string name="relation_other_hi">अन्य</string>
+    <string name="relation_other_hinglish">Other</string>
+
+    <string name="label_patient_name_req_en">Patient Name *</string>
+    <string name="label_patient_name_req_hi">मरीज का नाम *</string>
+    <string name="label_patient_name_req_hinglish">Patient ka naam *</string>
+
+    <string name="label_relation_opt_en">Relation (Optional)</string>
+    <string name="label_relation_opt_hi">संबंध (वैकल्पिक)</string>
+    <string name="label_relation_opt_hinglish">Relation (Optional)</string>
+
+    <string name="summary_for_label_en">For:</string>
+    <string name="summary_for_label_hi">के लिए:</string>
+    <string name="summary_for_label_hinglish">For:</string>
 </resources>

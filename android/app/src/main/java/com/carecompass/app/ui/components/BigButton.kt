@@ -21,11 +21,13 @@ fun BigButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
     containerColor: Color = PrimaryBlue,
     contentColor: Color = Color.White
 ) {
     Button(
         onClick = onClick,
+        enabled = enabled,
         modifier = modifier
             .fillMaxWidth()
             .defaultMinSize(minHeight = 56.dp),
@@ -33,7 +35,9 @@ fun BigButton(
         shape = RoundedCornerShape(12.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = containerColor,
-            contentColor = contentColor
+            contentColor = contentColor,
+            disabledContainerColor = Color(0xFFCBD5E1),
+            disabledContentColor = Color(0xFF94A3B8)
         )
     ) {
         Text(

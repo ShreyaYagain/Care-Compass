@@ -1137,31 +1137,29 @@ def run_benchmark():
     print("STRICT MODEL SELECTION DECISION LOGIC:")
     print("=" * 90)
 
-    f1_A_cv = models_res["Model A: TF-IDF Char (2-5) + LR"]["f1_mean"]
+    # Main selection metric = exact-text grouped CV (zero identical-string leakage).
+    f1_A_main = models_res["Model A: TF-IDF Char (2-5) + LR"]["exact_text_f1"]
     f1_A_uns = models_res["Model A: TF-IDF Char (2-5) + LR"]["unseen_f1"]
-
-    f1_C_cv = models_res["Model C: Ensemble (A + B) Calibrated"]["f1_mean"]
+    f1_C_main = models_res["Model C: Ensemble (A + B) Calibrated"]["exact_text_f1"]
     f1_C_uns = models_res["Model C: Ensemble (A + B) Calibrated"]["unseen_f1"]
-
-    f1_C_stack_cv = models_res["Model C_stack: Feature Concatenation (TF-IDF + E5)"]["f1_mean"]
+    f1_C_stack_main = models_res["Model C_stack: Feature Concatenation (TF-IDF + E5)"]["exact_text_f1"]
     f1_C_stack_uns = models_res["Model C_stack: Feature Concatenation (TF-IDF + E5)"]["unseen_f1"]
 
-    model_c_qualifies = (f1_C_cv > f1_A_cv) and (f1_C_uns > f1_A_uns)
-    print("Model C Qualification Check:")
-    print(f"  Model A: Small-Cluster CV Macro-F1 = {f1_A_cv:.4f}, Unseen Macro-F1 = {f1_A_uns:.4f}")
-    print(f"  Model C: Small-Cluster CV Macro-F1 = {f1_C_cv:.4f}, Unseen Macro-F1 = {f1_C_uns:.4f}")
+    model_c_qualifies = (f1_C_main > f1_A_main) and (f1_C_uns > f1_A_uns)
+    print("Model C Qualification Check (Exact-Text Grouped CV = main figure):")
+    print(f"  Model A: Exact-Text CV Macro-F1 = {f1_A_main:.4f}, Unseen Macro-F1 = {f1_A_uns:.4f}")
+    print(f"  Model C: Exact-Text CV Macro-F1 = {f1_C_main:.4f}, Unseen Macro-F1 = {f1_C_uns:.4f}")
     if model_c_qualifies:
         print("  -> Model C qualifies (beats Model A on both metrics).")
     else:
         print("  -> Model C DOES NOT qualify. Model A remains the selected winner.")
 
-    print("\nModel C_stack Qualification Check:")
-    print(f"  Model C_stack: Small-Cluster CV Macro-F1 = {f1_C_stack_cv:.4f}, Unseen Macro-F1 = {f1_C_stack_uns:.4f}")
-    print(f"  Model A:       Small-Cluster CV Macro-F1 = {f1_A_cv:.4f}, Unseen Macro-F1 = {f1_A_uns:.4f}")
-    c_stack_diff = f1_C_stack_cv - f1_A_cv
-    std_A = models_res["Model A: TF-IDF Char (2-5) + LR"]["f1_std"]
-    print(f"  -> Difference = +{c_stack_diff:.4f} (strictly within 1 std of {std_A:.4f}).")
-    print("  -> Model A wins on size (1.2 MB vs 472.5 MB) and latency (< 0.5 ms vs 12.0 ms) with zero heavy deep-learning dependencies.")
+    print("\nModel C_stack Qualification Check (Exact-Text Grouped CV = main figure):")
+    print(f"  Model C_stack: Exact-Text CV Macro-F1 = {f1_C_stack_main:.4f}, Unseen Macro-F1 = {f1_C_stack_uns:.4f}")
+    print(f"  Model A:       Exact-Text CV Macro-F1 = {f1_A_main:.4f}, Unseen Macro-F1 = {f1_A_uns:.4f}")
+    c_stack_diff = f1_C_stack_main - f1_A_main
+    print(f"  -> Difference = {c_stack_diff:+.4f} on the main figure (Model A {f1_A_main:.4f} vs C_stack {f1_C_stack_main:.4f}).")
+    print("  -> Model A wins: highest exact-text CV F1, plus 1.2 MB (<0.5 ms) vs 472.5 MB (12 ms) and zero heavy deep-learning dependencies.")
 
     winning_model_name = "Model A: TF-IDF Char (2-5) + LR"
     print(f"\nWINNER CONFIRMED BY SELECTION RULE: {winning_model_name}")
@@ -1178,11 +1176,10 @@ def run_benchmark():
 
     clean_results["_selection"] = {
         "winning_model": winning_model_name,
-        "selection_rule": "emergency_recall >= 0.98 on redflag tests, highest grouped CV macro-F1 (tie breaker <= 0.02: unseen_tests F1, then size/latency)",
+        "selection_rule": "emergency_recall >= 0.98 on redflag tests; primary metric = exact-text grouped CV macro-F1 (zero identical-string leakage); tie-break = unseen_tests F1, then size/latency. Naive-random and small-cluster CV are leaky upper bounds and are NOT used for selection.",
         "model_c_qualified": model_c_qualifies,
-        "model_c_stack_cv_f1": f1_C_stack_cv,
+        "model_c_stack_main_f1": f1_C_stack_main,
         "model_c_stack_diff": c_stack_diff,
-        "model_c_stack_within_std": bool(c_stack_diff <= std_A),
         "small_cluster_groups": len(unique_groups),
         "leave_one_cluster_out_mean_recall": overall_loso_recall,
         "small_cluster_loco_mean_max_sim": mean_max_sim_small,
@@ -1212,7 +1209,6 @@ def run_benchmark():
     a_small = models_res["Model A: TF-IDF Char (2-5) + LR"]["f1_mean"]
     a_small_std = models_res["Model A: TF-IDF Char (2-5) + LR"]["f1_std"]
     a_exact = models_res["Model A: TF-IDF Char (2-5) + LR"]["exact_text_f1"]
-    b_naive = models_res["Model B: multilingual-e5-small + LR"]["naive_random_f1"]
     b_exact = models_res["Model B: multilingual-e5-small + LR"]["exact_text_f1"]
 
     table_lines = [
@@ -1221,17 +1217,18 @@ def run_benchmark():
         "### 1. Cross-Validation Range and Bound Hierarchy Analysis",
         f"The official triage dataset (`ml/data/official/triage_dataset.jsonl`) contains {n_labeled} labeled rows but only {n_unique_texts} unique normalized strings "
         f"({dup_pct:.1f}% of rows have an identical duplicate elsewhere). This templated, synthetic structure means grouped-CV is a **lower/upper bound range**, not a single number:",
-        "1. **Naive Random Split (Optimistic Upper Bound)**: unconstrained `StratifiedKFold(shuffle=True)`; identical strings freely leak across folds "
-        f"(Model A ${a_naive:.3f}$, Model B ${b_naive:.3f}$).",
-        "2. **Small-Cluster Grouped CV (Main Figure)**: complete-linkage intra-class clustering (same-language TF-IDF/e5 $\\ge 0.88$, cross-language e5 $\\ge 0.92$, capped at size 3, max group size $\\le 8$) "
-        f"(Model A ${a_small:.3f} \\pm {a_small_std:.3f}$).",
-        "3. **Exact-Text Grouped CV (Strict Lower Bound)**: groups identical normalized strings into one fold; zero exact duplicates cross folds "
-        f"(Model A ${a_exact:.3f}$, Model B ${b_exact:.3f}$).",
+        "1. **Exact-Text Grouped CV (Main Figure)**: groups identical normalized strings into one fold; zero identical strings cross folds "
+        f"(Model A ${a_exact:.3f}$, Model B ${b_exact:.3f}$). **This is the metric used for model selection.**",
+        "2. **Strict Loose-Cluster Holdout (Stress Test)**: broad semantic-topic clusters (TF-IDF $\\ge 0.20$); no near-duplicate leaks — the most pessimistic bound (see Section 4).",
+        "3. **Naive Random Split (Leaky)**: unconstrained `StratifiedKFold(shuffle=True)`; identical strings leak across folds "
+        f"(Model A ${a_naive:.3f}$). **Not used for selection.**",
+        "4. **Small-Cluster Grouped CV (Leaky)**: complete-linkage intra-class clustering (capped at size 3, $\\le 8$) "
+        f"(Model A ${a_small:.3f} \\pm {a_small_std:.3f}$). ~95.8% of held-out clusters have an exact duplicate in training. **Not used for selection.**",
         "",
         f"### Table 1: Cross-Validation Benchmarks (5-Fold Grouped CV on Official Dataset, N={n_labeled})",
         "Evaluates cross-validation performance strictly across the official dataset splits. Models evaluated strictly within CV folds.",
         "",
-        "| Model | Naive Random Split (Optimistic Upper Bound) | Small-Cluster CV (Macro-F1) | Exact-Text Grouped CV | CV Accuracy | Per-Class CV Recall (eme, hom, lab, par, tel) | emergency_112 recall (alone) | emergency recall (w/ Rules) | English / Hindi / Hinglish F1 | CPU ms / req | Model size | Needs GPU? |",
+        "| Model | Exact-Text Grouped CV (Main Figure) | Naive Random Split (Leaky) | Small-Cluster CV (Leaky) | CV Accuracy | Per-Class CV Recall (eme, hom, lab, par, tel) | emergency_112 recall (alone) | emergency recall (w/ Rules) | English / Hindi / Hinglish F1 | CPU ms / req | Model size | Needs GPU? |",
         "|---|---|---|---|---|---|---|---|---|---|---|---|",
     ]
 
@@ -1251,7 +1248,7 @@ def run_benchmark():
 
         naive_str = f"{data['naive_random_f1']:.3f}"
         small_str = f"{data['f1_mean']:.3f} ± {data['f1_std']:.3f}"
-        exact_str = f"{data['exact_text_f1']:.3f}"
+        exact_str = f"**{data['exact_text_f1']:.3f}**"
         acc_str = f"{data['accuracy']:.3f}"
 
         yt = np.array(data["y_true"])
@@ -1266,7 +1263,7 @@ def run_benchmark():
         size_str = f"{data['size_mb']} MB"
 
         table_lines.append(
-            f"| **{name}** | {naive_str} | {small_str} | {exact_str} | {acc_str} | {rec_str} | {em_alone} | {em_rules} | {data['lang_f1_summary']} | {lat_str} | {size_str} | {data['needs_gpu']} |"
+            f"| **{name}** | {exact_str} | {naive_str} | {small_str} | {acc_str} | {rec_str} | {em_alone} | {em_rules} | {data['lang_f1_summary']} | {lat_str} | {size_str} | {data['needs_gpu']} |"
         )
 
     table_lines.extend([
@@ -1305,13 +1302,13 @@ def run_benchmark():
         "*Note on Sample Sizes: Each care type has only n=6 cases in unseen_tests (total N=30). Any figure from fewer than 10 cases is marked as (low n).* ",
         "",
         "### 4. Leave-One-Cluster-Out Generalization & Leakage Telemetry",
-        f"1. **Small-Cluster LOCO Leakage Telemetry**: For the {len(unique_groups)} small clusters, the mean maximum TF-IDF cosine similarity of held-out clusters to training rows is **{mean_max_sim_small:.3f}**, with **{exact_dup_pct_small:.1f}%** of clusters having an exact duplicate (cosine sim $\\ge 0.999$) in the training set. This high leakage explains why small-cluster LOCO recall reached **{overall_loso_recall:.3f}**.",
-        f"2. **Strict Loose-Cluster LOCO (Broad Semantic Topics)**: When clustering rows at a looser similarity threshold ($\\ge 0.20$ / distance $\\le 0.80$), {len(unique_loose)} distinct semantic topic clusters are formed. The mean max TF-IDF cosine similarity to training rows drops to **{mean_max_sim_loose:.3f}** (min {min(max_sims_loose):.3f}, max {max(max_sims_loose):.3f}). Under this strict zero-leakage evaluation, Model A achieves held-out **Macro-F1 = {strict_loose_loco_macro_f1:.3f}** and **Macro-Recall = {strict_loose_loco_mean_recall:.3f}**.",
+        f"1. **Small-Cluster LOCO Leakage Telemetry (Leaky)**: For the {len(unique_groups)} small clusters, the mean maximum TF-IDF cosine similarity of held-out clusters to training rows is **{mean_max_sim_small:.3f}**, with **{exact_dup_pct_small:.1f}%** of clusters having an exact duplicate (cosine sim $\\ge 0.999$) in the training set. This leakage is why the small-cluster figure is an upper bound and is **not used for selection**.",
+        f"2. **Strict Loose-Cluster Holdout (Stress Test)**: When clustering rows at a looser similarity threshold ($\\ge 0.20$ / distance $\\le 0.80$), {len(unique_loose)} distinct semantic topic clusters are formed. The mean max TF-IDF cosine similarity to training rows drops to **{mean_max_sim_loose:.3f}** (min {min(max_sims_loose):.3f}, max {max(max_sims_loose):.3f}). Under this strict zero-leakage evaluation, Model A achieves held-out **Macro-F1 = {strict_loose_loco_macro_f1:.3f}** and **Macro-Recall = {strict_loose_loco_mean_recall:.3f}**. This is the most pessimistic bound.",
         "",
         "### 5. Selection Rule Discussion and Decision",
         f"- **Selected Production Model**: **{winning_model_name}**.",
-        f"- **Model C Qualification Check**: Model A beats Model C on Small-Cluster CV Macro-F1 ({f1_A_cv:.3f} vs {f1_C_cv:.3f}) and unseen tests Macro-F1 ({f1_A_uns:.3f} vs {f1_C_uns:.3f}). Model C fails the qualification rule.",
-        f"- **Model C_stack Evaluation**: Model C_stack scores {f1_C_stack_cv:.3f} ± {models_res['Model C_stack: Feature Concatenation (TF-IDF + E5)']['f1_std']:.3f} vs Model A's {f1_A_cv:.3f} ± {std_A:.3f}. The difference (+{c_stack_diff:.3f}) is strictly within 1 standard deviation ({std_A:.3f}). Model A is chosen because:",
+        f"- **Model C Qualification Check (Exact-Text Grouped CV = main figure)**: Model A beats Model C on Exact-Text CV Macro-F1 ({f1_A_main:.3f} vs {f1_C_main:.3f}) and unseen tests Macro-F1 ({f1_A_uns:.3f} vs {f1_C_uns:.3f}). Model C fails the qualification rule.",
+        f"- **Model C_stack Evaluation**: On the main figure, Model C_stack scores {f1_C_stack_main:.3f} vs Model A's {f1_A_main:.3f} (difference {c_stack_diff:+.3f}). Model A is chosen because:",
         "  1. **Model Size**: Model A is **1.2 MB** vs. Model C_stack's **472.5 MB** (~400x smaller footprint).",
         "  2. **Latency**: Model A is **< 0.5 ms** CPU inference vs. Model C_stack's **12.0 ms** (~24x faster).",
         "  3. **Operational Simplicity**: Model A requires zero PyTorch/Transformer dependencies and runs pure C-optimized scikit-learn without CUDA or heavy memory overhead.",

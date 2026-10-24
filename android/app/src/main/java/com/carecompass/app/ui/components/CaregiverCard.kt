@@ -1,8 +1,11 @@
 package com.carecompass.app.ui.components
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Star
@@ -21,8 +24,11 @@ import com.carecompass.app.ui.theme.PrimaryBlue
 @Composable
 fun CaregiverCard(
     caregiver: MatchedCaregiver,
-    onBookClick: () -> Unit,
-    modifier: Modifier = Modifier
+    onBookClick: () -> Unit = {},
+    modifier: Modifier = Modifier,
+    isSelected: Boolean = false,
+    onSelect: (() -> Unit)? = null,
+    showBookButton: Boolean = true
 ) {
     val displayName = caregiver.name?.takeIf { it.isNotBlank() } ?: "Caregiver ${caregiver.caregiverId}"
     val roleDisplay = when (caregiver.role?.lowercase()) {
@@ -36,13 +42,18 @@ fun CaregiverCard(
     val freeWindow = "Free ${caregiver.freeFrom ?: "09:00"}–${caregiver.freeUntil ?: "18:00"}"
     val langs = if (caregiver.languages.isNotEmpty()) caregiver.languages.joinToString(", ") else "Hindi, English"
 
+    val cardBorder = if (isSelected) BorderStroke(2.dp, PrimaryBlue) else null
+    val cardBg = if (isSelected) PrimaryBlue.copy(alpha = 0.05f) else Color.White
+
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
+            .padding(vertical = 8.dp)
+            .then(if (onSelect != null) Modifier.clickable { onSelect() } else Modifier),
         shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        border = cardBorder,
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 6.dp else 4.dp),
+        colors = CardDefaults.cardColors(containerColor = cardBg)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             // Header: Name & Rating
@@ -52,12 +63,23 @@ fun CaregiverCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = displayName,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF212121)
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = displayName,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF212121)
+                        )
+                        if (isSelected) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = "Selected",
+                                tint = PrimaryBlue,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -173,26 +195,28 @@ fun CaregiverCard(
                 lineHeight = 20.sp
             )
 
-            Spacer(modifier = Modifier.height(14.dp))
+            if (showBookButton) {
+                Spacer(modifier = Modifier.height(14.dp))
 
-            // Button: White, bold, at least 18sp
-            Button(
-                onClick = onBookClick,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                shape = RoundedCornerShape(10.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = PrimaryBlue,
-                    contentColor = Color.White
-                )
-            ) {
-                Text(
-                    text = "Select & Book",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
+                // Button: White, bold, at least 18sp
+                Button(
+                    onClick = onBookClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = PrimaryBlue,
+                        contentColor = Color.White
+                    )
+                ) {
+                    Text(
+                        text = "Select & Book",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
             }
         }
     }

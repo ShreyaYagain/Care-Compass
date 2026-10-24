@@ -49,6 +49,14 @@ data class ContextUsedInfo(
     @SerializedName("reason") val reason: String? = null
 )
 
+data class MatchRequest(
+    @SerializedName("care_type") val careType: String = "",
+    @SerializedName("urgency") val urgency: String = "",
+    @SerializedName("location") val location: Location? = null,
+    @SerializedName("language") val language: String = "auto",
+    @SerializedName("time_pref") val timePref: String? = null
+)
+
 data class TriageRequest(
     @SerializedName("user_input") val userInput: String,
     @SerializedName("language") val language: String = "auto",
@@ -93,7 +101,12 @@ data class BookingRequest(
     @SerializedName("slot") val slot: String,
     @SerializedName("user_name") val userName: String,
     @SerializedName("phone") val phone: String,
-    @SerializedName("triage_summary") val triageSummary: String? = null
+    @SerializedName("triage_summary") val triageSummary: String? = null,
+    @SerializedName("patient_name") val patientName: String? = null,
+    @SerializedName("relation") val relation: String? = null,
+    @SerializedName("service") val service: String? = null,
+    @SerializedName("care_type") val careType: String? = null,
+    @SerializedName("address") val address: String? = null
 )
 
 data class BookingResponse(
@@ -103,7 +116,62 @@ data class BookingResponse(
     @SerializedName("caregiver_id") val caregiverId: String,
     @SerializedName("slot") val slot: String,
     @SerializedName("user_name") val userName: String,
-    @SerializedName("phone") val phone: String
+    @SerializedName("phone") val phone: String,
+    @SerializedName("patient_name") val patientName: String? = null,
+    @SerializedName("relation") val relation: String? = null
+)
+
+data class CaregiverInfo(
+    @SerializedName("name") val name: String = "",
+    @SerializedName("role") val role: String = "",
+    @SerializedName("qualification") val qualification: String = "",
+    @SerializedName("phone") val phone: String = ""
+)
+
+data class Booking(
+    @SerializedName("id") val id: String = "",
+    @SerializedName("service") val service: String = "",
+    @SerializedName("care_type") val careType: String = "",
+    @SerializedName("patient_name") val patientName: String = "",
+    @SerializedName("relation") val relation: String? = null,
+    @SerializedName("caregiver") val caregiver: CaregiverInfo = CaregiverInfo(),
+    @SerializedName("start_time") val startTime: String = "", // ISO-8601 UTC
+    @SerializedName("end_time") val endTime: String = "",     // ISO-8601 UTC
+    @SerializedName("address") val address: String? = null,
+    @SerializedName("status") val status: String = "confirmed" // "confirmed", "pending", "completed", "cancelled"
+)
+
+data class HistorySummary(
+    @SerializedName("id") val id: String = "",
+    @SerializedName("first_message") val firstMessage: String = "",
+    @SerializedName("via_voice") val viaVoice: Boolean = false,
+    @SerializedName("outcome") val outcome: String = "scheduled", // "emergency", "same_day", "scheduled", "needs_more_info"
+    @SerializedName("care_type") val careType: String = "",
+    @SerializedName("created_at") val createdAt: String = "" // ISO-8601 UTC
+)
+
+data class HistoryStep(
+    @SerializedName("type") val type: String = "user_said", // "user_said", "follow_up", "result", "caregivers", "booking", "emergency_alert"
+    @SerializedName("title") val title: String = "",
+    @SerializedName("subtitle") val subtitle: String? = null,
+    @SerializedName("is_voice") val isVoice: Boolean = false,
+    @SerializedName("user_answer") val userAnswer: String? = null,
+    @SerializedName("care_type") val careType: String? = null,
+    @SerializedName("urgency") val urgency: String? = null,
+    @SerializedName("reasoning") val reasoning: String? = null,
+    @SerializedName("suggested_caregivers") val suggestedCaregivers: List<String> = emptyList(),
+    @SerializedName("chosen_caregiver") val chosenCaregiver: String? = null,
+    @SerializedName("booking_id") val bookingId: String? = null,
+    @SerializedName("booking_date") val bookingDate: String? = null,
+    @SerializedName("booking_time") val bookingTime: String? = null,
+    @SerializedName("emergency_text") val emergencyText: String? = null
+)
+
+data class HistoryDetail(
+    @SerializedName("id") val id: String = "",
+    @SerializedName("created_at") val createdAt: String = "",
+    @SerializedName("steps") val steps: List<HistoryStep> = emptyList(),
+    @SerializedName("summary") val summary: HistorySummary? = null
 )
 
 data class TranscribeResponse(

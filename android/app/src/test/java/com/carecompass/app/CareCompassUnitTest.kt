@@ -1,0 +1,134 @@
+package com.carecompass.app
+
+import com.carecompass.app.data.*
+import com.carecompass.app.util.DateTimeFormatterHelper
+import com.carecompass.app.viewmodel.BookingsViewModel
+import com.carecompass.app.viewmodel.HistoryViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
+import org.junit.Assert.*
+import org.junit.Before
+import org.junit.Test
+import java.time.Instant
+import java.time.temporal.ChronoUnit
+
+@OptIn(ExperimentalCoroutinesApi::class)
+class CareCompassUnitTest {
+
+    private val testDispatcher = StandardTestDispatcher()
+
+    @Before
+    fun setUp() {
+        Dispatchers.setMain(testDispatcher)
+    }
+
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
+    }
+
+    @Test
+    fun testDateTimeFormatterHelper_dayBadgeAndFormatting() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            val now = Instant.now()
+            val todayIso = now.toString()
+            val tomorrowIso = now.plus(1, ChronoUnit.DAYS).toString()
+
+            val badgeTodayEn = DateTimeFormatterHelper.getDayBadge(todayIso, "en")
+            val badgeTodayHi = DateTimeFormatterHelper.getDayBadge(todayIso, "hi")
+            val badgeTomorrowEn = DateTimeFormatterHelper.getDayBadge(tomorrowIso, "en")
+
+            assertEquals("Today", badgeTodayEn)
+            assertEquals("आज", badgeTodayHi)
+            assertEquals("Tomorrow", badgeTomorrowEn)
+
+            val formattedRange = DateTimeFormatterHelper.formatBookingDateRange(
+                todayIso,
+                now.plus(1, ChronoUnit.HOURS).toString()
+            )
+            assertTrue(formattedRange.contains("to"))
+        }
+    }
+
+    @Test
+    fun testDateTimeFormatterHelper_within15Minutes() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            val now = Instant.now()
+            // 5 minutes from now -> within 15 min
+            val startNear = now.plus(5, ChronoUnit.MINUTES).toString()
+            val endNear = now.plus(35, ChronoUnit.MINUTES).toString()
+            assertTrue(DateTimeFormatterHelper.isWithin15MinutesOfStart(startNear, endNear))
+
+            // 60 minutes from now -> not within 15 min
+            val startFar = now.plus(60, ChronoUnit.MINUTES).toString()
+            val endFar = now.plus(90, ChronoUnit.MINUTES).toString()
+            assertFalse(DateTimeFormatterHelper.isWithin15MinutesOfStart(startFar, endFar))
+        }
+    }
+
+    @Test
+    fun testHistoryViewModel_loadsHistoryAndDetail() = runTest {
+        val repository = Repository(ApiService.create())
+        val historyViewModel = HistoryViewModel(repository)
+
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val state = historyViewModel.uiState.value
+        assertFalse(state.isLoading)
+        assertTrue(state.historyItems.isNotEmpty())
+        assertEquals(5, state.historyItems.size)
+
+        // Select first item
+        val firstId = state.historyItems.first().id
+        historyViewModel.selectHistoryItem(firstId)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val detailState = historyViewModel.uiState.value
+        assertNotNull(detailState.selectedDetail)
+        assertEquals(firstId, detailState.selectedDetail?.id)
+        assertTrue(detailState.selectedDetail?.steps?.isNotEmpty() == true)
+
+        // Delete flow
+        historyViewModel.promptDelete(firstId)
+        assertTrue(historyViewModel.uiState.value.showDeleteConfirmDialog)
+
+        var deletedCalled = false
+        historyViewModel.confirmDelete { deletedCalled = true }
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertTrue(deletedCalled)
+        assertEquals(4, historyViewModel.uiState.value.historyItems.size)
+    }
+
+    @Test
+    fun testBookingsViewModel_loadsAndCancels() = runTest {
+        val repository = Repository(ApiService.create())
+        val bookingsViewModel = BookingsViewModel(repository)
+
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val state = bookingsViewModel.uiState.value
+        assertFalse(state.isLoading)
+        assertTrue(state.upcomingBookings.isNotEmpty())
+
+        val upcomingCountBefore = state.upcomingBookings.size
+        val pastCountBefore = state.pastBookings.size
+
+        val toCancel = state.upcomingBookings.first()
+        bookingsViewModel.promptCancel(toCancel)
+        assertTrue(bookingsViewModel.uiState.value.showCancelConfirmDialog)
+
+        bookingsViewModel.confirmCancel()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val updatedState = bookingsViewModel.uiState.value
+        assertEquals(upcomingCountBefore - 1, updatedState.upcomingBookings.size)
+        assertEquals(pastCountBefore + 1, updatedState.pastBookings.size)
+        assertEquals("cancelled", updatedState.pastBookings.first().status)
+    }
+}

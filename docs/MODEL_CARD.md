@@ -24,19 +24,26 @@ User Query (Text / Spoken Voice)
                        │ (No unnegated high red flags)
                        ▼
 ┌──────────────────────────────────────────────┐
-│  Stage 2: Model A Calibrated Classifier      │
-│  ├── Character N-Grams (2–5) TF-IDF Vectorizer│
-│  ├── Balanced Logistic Regression (C=2.0)    │
-│  └── Sigmoid Calibration (CalibratedCV)      │
+│  Stage 2: ML Models Decide (care_type + flags) │
+│  ├── Model A TF-IDF (2-5) + Calibrated LR    │
+│  ├── ML Red-Flag Model (multi-label, 9 flags)│
+│  └── Deterministic corroboration guardrails  │
 └──────────────────────┬───────────────────────┘
-                       │ (Calibrated probabilities sum strictly to 1.0)
+                       │ (ML decides; positive flag hits ask one question)
                        ▼
 ┌──────────────────────────────────────────────┐
-│  Stage 3: Decision Gate & Optional Hybrid    │
-│  ├── P(emergency_112) >= 0.50 check          │
-│  ├── If conf < 0.60: Groq fallback (top-2)   │
-│  ├── Top-5 contributing words / n-grams      │
-│  └── 3 Nearest Training Examples (TF-IDF Cos)│
+│  Stage 3: LLM Second Opinion (parallel)      │
+│  ├── own care_type + red flags + reason      │
+│  └── evidence quotes validated               │
+└──────────────────────┬───────────────────────┘
+                       │
+                       ▼
+┌──────────────────────────────────────────────┐
+│  Stage 4: Reconcile                          │
+│  ├── agree -> confidence up                  │
+│  ├── more severe -> one confirmation question│
+│  ├── less severe -> ignored (never lowers)   │
+│  └── Top-5 features + 3 nearest examples     │
 └──────────────────────────────────────────────┘
 ```
 

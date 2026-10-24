@@ -13,17 +13,13 @@ This system is trained and benchmarked on the official dataset:
 
 ---
 
-## 2. Gemini LLM & Speech AI (Cloud Acceleration)
-- **Gemini (`gemini-2.5-flash`)**:
-  - Used strictly for structured intake slot extraction (symptoms, service requested, relation, duration, age group).
-  - Out-of-dataset mapping: canonicalizes unfamiliar medical queries (physiotherapy, dental, vaccinations, certificates) to the 5 official care types without inventing labels.
-  - Follow-up question generation: enforces the zero-severity-question policy (never asks the user to rate discomfort), eliminates duplicate questions, and prioritizes screening of ambiguous red flags.
-  - Semantic red-flag screening (`app/core/semantic_screen.py`): meaning-based detection of the nine official red flags, gated on evidence quotes present in the user's message.
-  - Fallback order: Gemini $\rightarrow$ deterministic rule/regex layer (never crashes).
-- **Gemini Audio Transcription (`gemini-2.5-flash`)**:
-  - Cloud STT endpoint at `/transcribe` accepting `.m4a`, `.wav`, `.mp3`, `.ogg`, `.webm`, `.flac` (multimodal audio input).
-  - Tuned with Hindi/English medical vocabulary prompt hints (`bukhar, khansi, dard, saans, ulti, injection, dressing, checkup, fever, cough`).
-  - Timeout bounded (min 10s deadline) with clean 503 fallback.
+## 2. LLM as Second Opinion (DeepSeek) & On-Device Speech
+- **DeepSeek (`deepseek-chat`)** — the LLM is a **second opinion**, never the primary decision-maker:
+  - The deterministic rules and the ML models decide `care_type` and the nine red flags first; the LLM runs in parallel and returns its own `care_type`, red flags, and a one-line reason (strict JSON with evidence quotes).
+  - Reconcile policy (safety invariant): the LLM can only **raise** severity — if it agrees, confidence goes up; if it is more severe, the system asks one confirmation question (never decides); if it is less severe, it is ignored. The LLM can never lower urgency or remove a red flag.
+  - `LLM_ROLE=second_opinion` (default) enables this; `LLM_ROLE=off` runs rules + ML only.
+  - Fallback order: ML result $\rightarrow$ deterministic rule/regex layer (never crashes); a failed LLM call leaves the ML result unchanged.
+- **On-Device `SpeechRecognizer`** (`hi-IN` / `en-IN`): voice input is transcribed on-device and the transcript is validated/normalised by the LLM before triage (no server-side audio upload; `/transcribe` takes text).
 
 ---
 
@@ -59,6 +55,8 @@ This system is trained and benchmarked on the official dataset:
   - `lab_test_home`
   - `teleconsultation`
   - `emergency_112`
+- **ML Red-Flag Model (`ml/artifacts/redflag_model.joblib`)**: a multi-label classifier (one binary TF-IDF char n-gram + LR per flag, plus a `multilingual-e5-small` embedding + LR candidate) for the nine official flags. Per-flag thresholds are tuned on a validation split for recall $\ge 0.90$ (the holdout is never used), and the hits decide together with the rules — a positive hit asks the same single confirmation question. A deterministic corroboration guardrail drops impossible hits (e.g. `high_fever_infant` for an adult, `suicidal_ideation` for asthma).
+- **Decision Order (ML-first)**: (a) deterministic safety rules (can only raise) → (b) ML models decide `care_type` and red flags → (c) LLM runs as a **second opinion** → (d) reconcile (agree → confidence up; more severe → one confirmation question; less severe → ignored).
 - **Urgency Mapping**: Deterministically derived from predicted care type using `CARE_TO_URGENCY`:
   - `emergency_112` $\rightarrow$ `emergency`
   - `home_nursing` $\rightarrow$ `same_day`

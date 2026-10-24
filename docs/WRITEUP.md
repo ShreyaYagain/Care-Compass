@@ -18,8 +18,10 @@ CareCompass implements a three-module architecture wrapped in a production-ready
   - Negation window parsing: accurately identifies phrases like *"saans me dikkat nahi"* (breathlessness = false).
   - Safety-critical information gain: systematically poses at most 2 to 4 targeted yes/no follow-up questions to clarify ambiguous presentations.
 
-- **Module 2: Calibrated Triage with Asymmetric Cost Optimization**
+- **Module 2: Calibrated ML-First Triage with an LLM Second Opinion**
   - **Deterministic Safety Net (Tier 0)**: High-recall rule-based red flag detection overriding ML models for emergencies (chest pain, stroke signs, seizures, anaphylaxis, severe head injuries).
+  - **ML Decides First**: a calibrated TF-IDF + LR classifier decides `care_type`, and a multi-label ML red-flag model (TF-IDF + LR, with a `multilingual-e5-small` + LR candidate) decides the nine flags together with the rules; positive hits ask one confirmation question.
+  - **LLM as Second Opinion**: the LLM (DeepSeek) runs in parallel and can only raise severity — agree bumps confidence, more severe asks one confirmation question, less severe is ignored. The LLM can never lower urgency or remove a red flag (`LLM_ROLE=second_opinion`).
   - **Deterministic Urgency & Safety Gate**: Urgency is deterministically derived from care type, with emergency status triggered strictly by high-severity red flags, confirmed red-flag symptoms, or model P(emergency_112) >= 0.50.
   - **Clinical Risk Modifiers**: Automatic escalation for vulnerable demographics (infants, seniors >75, pregnancy, chronic diabetes/COPD).
 
@@ -32,7 +34,7 @@ CareCompass implements a three-module architecture wrapped in a production-ready
 ## 3. Evaluation & Key Results
 - **Emergency Recall (own test set)**: **98.5%** of 137 emergency rows in `redflag_tests.csv` with a **0% false-alarm rate** on 80 non-emergency rows. On a separate freshly-drafted holdout (`redflag_holdout.csv`) the same rules catch ~6% — so the rule layer memorizes known phrasings and we are **validating on human-written cases** (see `docs/DATA_AUDIT.md`).
 - **Under-Triage Rate**: **0.00%** (Target < 5%).
-- **Latency**: P95 < 50ms without external LLM, < 2.5s with Gemini.
+- **Latency**: P95 < 50ms without external LLM, < 2.5s with the LLM second opinion.
 - **Fail-Safe Operation**: Complete autonomy with zero external API dependencies when network or LLM is unavailable.
 
 ## 4. Known Limitations & Future Work

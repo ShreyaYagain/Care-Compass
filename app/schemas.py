@@ -134,6 +134,8 @@ class TriageRequest(BaseModel):
     context_consent: Optional[bool] = False
     session_id: Optional[str] = None
     input_mode: Optional[str] = None
+    module_id: Optional[str] = None
+    module_answers: Optional[dict[str, Any]] = None
 
 
 class TriageResponse(BaseModel):
@@ -149,6 +151,8 @@ class TriageResponse(BaseModel):
     context_used: Optional[dict[str, Any]] = None
     debug: Optional[dict[str, Any]] = None
     session_id: Optional[str] = None
+    module_card: Optional[dict[str, Any]] = None
+    secondary_options: list[dict[str, Any]] = []
 
 
 # --- /match ---

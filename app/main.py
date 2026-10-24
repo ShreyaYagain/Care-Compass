@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.db.session import init_db
-from app.api import health, triage, caregivers, booking, transcribe, history, bookings
+from app.api import health, triage, caregivers, booking, transcribe, history, bookings, synthetic
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -44,6 +44,7 @@ app.include_router(booking.router)
 app.include_router(bookings.router)
 app.include_router(history.router)
 app.include_router(transcribe.router)
+app.include_router(synthetic.router)
 
 
 @app.get("/")

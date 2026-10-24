@@ -51,7 +51,8 @@ class TestFollowupPolicy(unittest.TestCase):
             self.assertIn(resp.care_type, ["teleconsultation", "paramedic_home_visit"])
 
     def test_pair_moch_decision_or_nonservice(self):
-        # "pair mein moch aa gayi hai" -> sprain -> decide paramedic/teleconsultation
+        # "pair mein moch aa gayi hai" -> sprain -> injury module card or a
+        # paramedic/teleconsultation decision (never a service question).
         req = TriageRequest(
             user_input="pair mein moch aa gayi hai",
             language="hinglish",
@@ -60,14 +61,13 @@ class TestFollowupPolicy(unittest.TestCase):
         )
         resp = run_triage_pipeline(req)
         self._assert_no_forbidden_phrases(resp)
-        # Should decide paramedic_home_visit or teleconsultation
         if resp.care_type:
             self.assertIn(resp.care_type, ["paramedic_home_visit", "teleconsultation"])
         else:
-            self.assertTrue(
-                any(w in resp.follow_up_question.lower() for w in ["kab se", "duration", "how long"]),
-                f"Unexpected question: {resp.follow_up_question}",
-            )
+            # Injury module card: the follow-up question is the module label.
+            self.assertIsNotNone(resp.module_card)
+            self.assertEqual(resp.module_card["module_id"], "injury")
+            self.assertTrue(resp.module_card["fields"])
 
     def test_sugar_check_decides_lab_test_home(self):
         # "sugar check karna hai subah" -> fasting blood sugar -> decide lab_test_home

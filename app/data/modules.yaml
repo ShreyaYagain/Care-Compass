@@ -1,0 +1,227 @@
+# CareCompass follow-up MODULES (closed question bank).
+#
+# A module is a single-card set of structured questions chosen by the extracted
+# symptom. The LLM may only pick a module id and mark which fields are still
+# unanswered; it never writes free-form question text. Fields are
+# buttons/sliders, localised, and anything already stated in the message is
+# prefilled/skipped.
+#
+# Field types:
+#   slider010  - 0..10 slider with band labels (mild/moderate/severe)
+#   choice     - fixed options (buttons/chips)
+#   choice_opt - fixed options plus an optional free-text field
+#
+# "informational": fields never change the care decision (shown on the booking
+# summary only).
+
+modules:
+  injury:
+    label_en: "Injury / fall"
+    label_hi: "चोट / गिरना"
+    label_hinglish: "Chot / girna"
+    trigger_symptoms: [injury]
+    fields:
+      - id: pain_level
+        type: slider010
+        slot: severity
+        question_en: "How much pain is there (0-10)?"
+        question_hi: "कितना दर्द है (0-10)?"
+        question_hinglish: "Kitna dard hai (0-10)?"
+        bands: {en: {low: "Mild (1-3)", mid: "Moderate (4-6)", high: "Severe (7-10)"},
+                hi: {low: "हल्का (1-3)", mid: "मध्यम (4-6)", high: "तेज़ (7-10)"},
+                hinglish: {low: "Mild (1-3)", mid: "Moderate (4-6)", high: "Severe (7-10)"}}
+        evidence: ["severe", "tez", "mild", "halka", "8/10", "9/10", "10/10", "pain 7", "bahut dard"]
+      - id: swelling
+        type: choice
+        slot: swelling
+        question_en: "Any swelling or bruising?"
+        question_hi: "कोई सूजन या चोट के निशान?"
+        question_hinglish: "Koi sujan ya chot ka nishaan?"
+        options: [{en: "Yes", hi: "हाँ", hinglish: "Yes"}, {en: "No", hi: "नहीं", hinglish: "No"}]
+        evidence: ["swelling", "swollen", "sujan", "soojan", "bruise", "neel"]
+      - id: weight_bearing
+        type: choice
+        slot: weight_bearing
+        question_en: "Can you put weight on it / move it?"
+        question_hi: "क्या आप उस पर वज़न डाल सकते हैं / हिला सकते हैं?"
+        question_hinglish: "Us par weight daal sakte hain / hila sakte hain?"
+        options:
+          - {en: "Yes, normally", hi: "हाँ, सामान्य रूप से", hinglish: "Yes, normally"}
+          - {en: "With pain", hi: "दर्द के साथ", hinglish: "Dard ke saath"}
+          - {en: "Not at all", hi: "बिल्कुल नहीं", hinglish: "Bilkul nahi"}
+        evidence: ["cannot walk", "cant walk", "walk nahi", "khada nahi", "weight nahi", "move nahi", "hil nahi"]
+      - id: deformity
+        type: choice
+        slot: deformity
+        question_en: "Does the bone look bent, or is there an open wound / bone visible?"
+        question_hi: "क्या हड्डी मुड़ी दिख रही है, या खुला घाव / हड्डी दिख रही है?"
+        question_hinglish: "Haddi mudhi dikh rahi hai, ya khula ghaav / haddi dikh rahi hai?"
+        options: [{en: "Yes", hi: "हाँ", hinglish: "Yes"}, {en: "No", hi: "नहीं", hinglish: "No"}]
+        evidence: ["bone", "haddi", "bent", "mudhi", "open wound", "khula ghaav", "deformed"]
+      - id: neuro_vascular
+        type: choice
+        slot: neuro_vascular
+        question_en: "Is the foot/limb numb, tingling, cold or pale?"
+        question_hi: "क्या पैर/अंग सुन्न, झुनझुनी, ठंडा या पीला है?"
+        question_hinglish: "Kya pair/ang sunn, jhunjhuni, thanda ya peela hai?"
+        options: [{en: "Yes", hi: "हाँ", hinglish: "Yes"}, {en: "No", hi: "नहीं", hinglish: "No"}]
+        evidence: ["numb", "sun", "tingling", "jhunjhuni", "cold foot", "thanda", "pale"]
+      - id: head_hit
+        type: choice
+        slot: head_injury
+        question_en: "Did you hit your head, faint, or are you very drowsy?"
+        question_hi: "क्या सिर पर चोट लगी, बेहोशी हुई, या बहुत नींद आ रही है?"
+        question_hinglish: "Sir par chot lagi, behoshi hui, ya bahut neend aa rahi hai?"
+        options: [{en: "Yes", hi: "हाँ", hinglish: "Yes"}, {en: "No", hi: "नहीं", hinglish: "No"}]
+        evidence: ["head", "sir", "faint", "behosh", "drowsy", "neend", "unconscious"]
+      - id: meds_used
+        type: choice_opt
+        slot: meds_used
+        informational: true
+        question_en: "Have you used a spray, balm, ice or any medicine?"
+        question_hi: "क्या आपने कोई स्प्रे, बाम, बर्फ या दवा इस्तेमाल की है?"
+        question_hinglish: "Kya aapne spray, balm, ice ya koi dawa use ki hai?"
+        options:
+          - {en: "None", hi: "कुछ नहीं", hinglish: "None"}
+          - {en: "Spray or balm", hi: "स्प्रे या बाम", hinglish: "Spray ya balm"}
+          - {en: "Painkiller", hi: "दर्द की दवा", hinglish: "Painkiller"}
+          - {en: "Other", hi: "अन्य", hinglish: "Other"}
+        evidence: []
+
+  fever:
+    label_en: "Fever"
+    label_hi: "बुखार"
+    label_hinglish: "Bukhar"
+    trigger_symptoms: [fever]
+    fields:
+      - id: duration
+        type: choice
+        slot: duration
+        question_en: "How long has the fever lasted?"
+        question_hi: "बुखार कितने समय से है?"
+        question_hinglish: "Bukhar kitne samay se hai?"
+        options:
+          - {en: "Today", hi: "आज से", hinglish: "Today"}
+          - {en: "2-3 days", hi: "2-3 दिन", hinglish: "2-3 din"}
+          - {en: "More than a week", hi: "एक हफ्ते से अधिक", hinglish: "Ek hafte se zyada"}
+        evidence: ["din", "days", "week", "hafte", "kal se"]
+      - id: temperature
+        type: choice
+        slot: temperature
+        question_en: "What is the highest temperature?"
+        question_hi: "सबसे ज्यादा तापमान क्या है?"
+        question_hinglish: "Sabse zyada temperature kya hai?"
+        options:
+          - {en: "Below 100°F", hi: "100°F से कम", hinglish: "100F se kam"}
+          - {en: "100-102°F", hi: "100-102°F", hinglish: "100-102F"}
+          - {en: "Above 102°F", hi: "102°F से अधिक", hinglish: "102F se zyada"}
+        evidence: ["102", "103", "104", "101", "temperature", "taap"]
+      - id: rash
+        type: choice
+        slot: rash
+        question_en: "Is there any rash?"
+        question_hi: "क्या कोई दाने हैं?"
+        question_hinglish: "Koi daane hain?"
+        options: [{en: "Yes", hi: "हाँ", hinglish: "Yes"}, {en: "No", hi: "नहीं", hinglish: "No"}]
+        evidence: ["rash", "daane", "dane"]
+      - id: age_group
+        type: choice
+        slot: age_group
+        question_en: "Who has the fever?"
+        question_hi: "बुखार किसे है?"
+        question_hinglish: "Bukhar kise hai?"
+        options:
+          - {en: "Child", hi: "बच्चा", hinglish: "Child"}
+          - {en: "Adult", hi: "वयस्क", hinglish: "Adult"}
+          - {en: "Elderly (60+)", hi: "बुजुर्ग (60+)", hinglish: "Elderly (60+)"}
+        evidence: ["bacha", "child", "buzurg", "elderly", "senior"]
+
+  abdominal_pain:
+    label_en: "Abdominal pain"
+    label_hi: "पेट दर्द"
+    label_hinglish: "Pet dard"
+    trigger_symptoms: [stomach_pain]
+    fields:
+      - id: location
+        type: choice
+        slot: location
+        question_en: "Where is the pain?"
+        question_hi: "दर्द कहाँ है?"
+        question_hinglish: "Dard kahan hai?"
+        options:
+          - {en: "Upper abdomen", hi: "पेट का ऊपरी हिस्सा", hinglish: "Pet ka upar"}
+          - {en: "Lower abdomen", hi: "पेट का निचला हिस्सा", hinglish: "Pet ka neeche"}
+          - {en: "Around navel", hi: "नाभि के आसपास", hinglish: "Naabhi ke aas paas"}
+          - {en: "Right side", hi: "दाहिनी ओर", hinglish: "Dahini taraf"}
+        evidence: []
+      - id: vomiting
+        type: choice
+        slot: vomiting
+        question_en: "Any vomiting?"
+        question_hi: "क्या उल्टी हो रही है?"
+        question_hinglish: "Kya ulti ho rahi hai?"
+        options: [{en: "Yes", hi: "हाँ", hinglish: "Yes"}, {en: "No", hi: "नहीं", hinglish: "No"}]
+        evidence: ["ulti", "vomit", "dast"]
+      - id: pain_level
+        type: slider010
+        slot: severity
+        question_en: "How much pain is there (0-10)?"
+        question_hi: "कितना दर्द है (0-10)?"
+        question_hinglish: "Kitna dard hai (0-10)?"
+        bands: {en: {low: "Mild (1-3)", mid: "Moderate (4-6)", high: "Severe (7-10)"},
+                hi: {low: "हल्का (1-3)", mid: "मध्यम (4-6)", high: "तेज़ (7-10)"},
+                hinglish: {low: "Mild (1-3)", mid: "Moderate (4-6)", high: "Severe (7-10)"}}
+        evidence: ["severe", "tez", "mild", "halka"]
+      - id: duration
+        type: choice
+        slot: duration
+        question_en: "How long has the pain lasted?"
+        question_hi: "दर्द कितने समय से है?"
+        question_hinglish: "Dard kitne samay se hai?"
+        options:
+          - {en: "Hours", hi: "घंटे", hinglish: "Ghante"}
+          - {en: "Days", hi: "दिन", hinglish: "Din"}
+          - {en: "Weeks", hi: "हफ्ते", hinglish: "Hafte"}
+        evidence: ["din", "days", "ghante", "hours"]
+
+  cough_breathing:
+    label_en: "Cough / breathing"
+    label_hi: "खांसी / सांस"
+    label_hinglish: "Khansi / saans"
+    trigger_symptoms: [cough, breathlessness]
+    fields:
+      - id: duration
+        type: choice
+        slot: duration
+        question_en: "How long has this been going on?"
+        question_hi: "यह कितने समय से है?"
+        question_hinglish: "Ye kitne samay se hai?"
+        options:
+          - {en: "Today", hi: "आज से", hinglish: "Today"}
+          - {en: "2-3 days", hi: "2-3 दिन", hinglish: "2-3 din"}
+          - {en: "More than a week", hi: "एक हफ्ते से अधिक", hinglish: "Ek hafte se zyada"}
+        evidence: ["din", "days", "week", "hafte"]
+      - id: breathing_difficulty
+        type: choice
+        slot: breathing_difficulty
+        question_en: "Any difficulty breathing?"
+        question_hi: "सांस लेने में कोई दिक्कत?"
+        question_hinglish: "Saans lene me koi dikkat?"
+        options: [{en: "Yes", hi: "हाँ", hinglish: "Yes"}, {en: "No", hi: "नहीं", hinglish: "No"}]
+        evidence: ["saans", "breath", "dikkat"]
+      - id: fever
+        type: choice
+        slot: fever
+        question_en: "Any fever?"
+        question_hi: "कोई बुखार?"
+        question_hinglish: "Koi bukhar?"
+        options: [{en: "Yes", hi: "हाँ", hinglish: "Yes"}, {en: "No", hi: "नहीं", hinglish: "No"}]
+        evidence: ["bukhar", "fever"]
+      - id: blood_sputum
+        type: choice
+        slot: blood_sputum
+        question_en: "Any blood in the sputum/phlegm?"
+        question_hi: "क्या बलगम में खून है?"
+        question_hinglish: "Kya balgam me khoon hai?"
+        options: [{en: "Yes", hi: "हाँ", hinglish: "Yes"}, {en: "No", hi: "नहीं", hinglish: "No"}]
+        evidence: ["khoon", "blood", "balgam"]

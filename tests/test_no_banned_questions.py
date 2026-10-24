@@ -87,12 +87,20 @@ class TestNoBannedQuestions(unittest.TestCase):
             )
             resp = run_triage_pipeline(req)
             if resp.follow_up_question:
-                self.assertIsNotNone(
-                    is_bank_question(resp.follow_up_question),
-                    f"Follow-up question not in bank: {resp.follow_up_question!r}",
-                )
-                for word in BANNED_QUESTION_WORDS:
-                    self.assertNotIn(word, resp.follow_up_question.lower())
+                # Either a closed-bank question, or a structured module card whose
+                # field questions/options never contain banned words.
+                if resp.module_card is not None:
+                    for field in resp.module_card.get("fields", []):
+                        q = field.get("question", "").lower()
+                        for word in BANNED_QUESTION_WORDS:
+                            self.assertNotIn(word, q, f"banned word in module field: {field!r}")
+                else:
+                    self.assertIsNotNone(
+                        is_bank_question(resp.follow_up_question),
+                        f"Follow-up question not in bank: {resp.follow_up_question!r}",
+                    )
+                    for word in BANNED_QUESTION_WORDS:
+                        self.assertNotIn(word, resp.follow_up_question.lower())
 
     def test_hard_turn_cap_assistant_turns(self):
         # 0 and 1 assistant turns may still ask; 2+ assistant turns must decide.
@@ -157,9 +165,15 @@ class TestNoBannedQuestions(unittest.TestCase):
 
                 if resp.follow_up_question:
                     self.assertLess(turn, 2, f"Input {text!r}: asked a 3rd follow-up!")
-                    self.assertIsNotNone(is_bank_question(resp.follow_up_question))
-                    for word in BANNED_QUESTION_WORDS:
-                        self.assertNotIn(word, resp.follow_up_question.lower())
+                    # A structured module card is a valid follow-up turn too.
+                    if resp.module_card is not None:
+                        for field in resp.module_card.get("fields", []):
+                            for word in BANNED_QUESTION_WORDS:
+                                self.assertNotIn(word, field.get("question", "").lower())
+                    else:
+                        self.assertIsNotNone(is_bank_question(resp.follow_up_question))
+                        for word in BANNED_QUESTION_WORDS:
+                            self.assertNotIn(word, resp.follow_up_question.lower())
                     transcript.append(f"  Q{turn + 1}: {resp.follow_up_question}")
                     # Answer the first option every time
                     answer = resp.follow_up_options[0] if resp.follow_up_options else "Yes"

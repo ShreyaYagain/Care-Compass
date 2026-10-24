@@ -41,6 +41,14 @@ from app.core.triage_model import predict_triage
 from app.core.risk_modifiers import apply_risk_modifiers
 from app.core.matching import rank_caregivers
 from app.core.explain import build_reasoning
+from app.core.modules import (
+    detect_module,
+    llm_select_module,
+    render_module_card,
+    injury_decision,
+    summarize_answers,
+)
+from app.core.synthetic import secondary_doctor_options
 from app.core.context import get_context, season_display
 from app.core.guardrails import (
     input_guard,
@@ -659,6 +667,65 @@ def run_triage_pipeline(
         if pregnancy_risk.reason:
             slots["pregnancy_reason"] = pregnancy_risk.reason
 
+    # 3.5 Symptom-specific follow-up MODULE (injury/fall, fever, abdominal, cough).
+    module_id = request.module_id or llm_select_module(norm_text, slots)
+
+    if module_id and request.module_answers is not None and module_id == "injury":
+        decision = injury_decision(request.module_answers, slots)
+        dc, du, df = decision["care_type"], decision["urgency"], decision["red_flags"]
+        module_summary = summarize_answers(request.module_answers)
+        module_reason = f"{module_summary}. {decision['reason']}"
+
+        if dc == "emergency_112":
+            guard_res = output_guard(module_reason, lang=lang, is_emergency=True, care_type="emergency_112", field_name="reasoning")
+            return TriageResponse(
+                care_type="emergency_112", urgency="emergency", red_flags=df,
+                reasoning=guard_res["safe_text"], emergency_steps=_get_emergency_steps(lang),
+                matched_caregivers=[], context_used=context_used,
+                debug={"module_id": module_id, "module_answers": request.module_answers} if debug else None,
+            )
+
+        matched = rank_caregivers(care_type=dc, urgency=du, user_location=request.location, user_language=lang, user_text=cleaned_input, limit=3)
+        guard_res = output_guard(module_reason, lang=lang, is_emergency=False, care_type=dc, field_name="reasoning")
+        return TriageResponse(
+            care_type=dc, urgency=du, red_flags=df, reasoning=guard_res["safe_text"],
+            confidence=0.8, matched_caregivers=matched, emergency_steps=[],
+            context_used=context_used, secondary_options=secondary_doctor_options(dc, lang),
+            debug={"module_id": module_id, "module_answers": request.module_answers} if debug else None,
+        )
+
+    if module_id and request.module_answers is not None:
+        # Other modules: fold the answers into slots and continue the normal flow.
+        merge_answers_into_slots(slots, request.module_answers)
+
+    has_context = bool(
+        slots.get("severity") or slots.get("duration") or slots.get("age_group")
+        or (slots.get("patient_relation") not in (None, "self", ""))
+        or slots.get("pregnancy") or slots.get("chronic_conditions")
+    )
+    should_ask_module = module_id is not None and not is_high_emergency
+    # Never ask a card when a red-flag answer (breathing/chest/consciousness/
+    # bleeding) is already present in the conversation.
+    if slots.get("breathing_difficulty") is True or slots.get("chest_pain") is True or \
+            slots.get("consciousness") in ("unconscious", "drowsy") or slots.get("bleeding") is True:
+        should_ask_module = False
+    # Non-injury modules only ask when the case is still undecided: a single
+    # symptom with no context. Multi-symptom / context -> decide directly.
+    if should_ask_module and module_id != "injury" and (has_context or len(slots.get("symptoms", [])) >= 2):
+        should_ask_module = False
+
+    if should_ask_module and request.module_answers is None:
+        card = render_module_card(module_id, lang, slots, norm_text)
+        if card:
+            guard_q = output_guard(card["label"], lang=lang, is_emergency=False, care_type="teleconsultation", field_name="follow_up_question")
+            return TriageResponse(
+                follow_up_question=guard_q["safe_text"], follow_up_options=[],
+                care_type=None, urgency=None, red_flags=[], reasoning=None,
+                matched_caregivers=[], emergency_steps=[], context_used=None,
+                module_card=card,
+                debug={"module_id": module_id, "slots": slots} if debug else None,
+            )
+
     # 4. Check if follow-up question is needed
     if needs_more_info(slots, history_turns, history_dicts):
         qid = _select_question_id(slots, history_dicts, context)
@@ -1092,6 +1159,7 @@ def run_triage_pipeline(
         matched_caregivers=matched_caregivers,
         emergency_steps=emergency_steps,
         context_used=context_used,
+        secondary_options=secondary_doctor_options(final_care_type, lang),
         debug=debug_trace if debug else None,
     )
 

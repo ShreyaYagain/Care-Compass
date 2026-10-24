@@ -58,3 +58,10 @@ In strict compliance with evaluation rules, all public datasets are used exclusi
 4. **health_hindi_200**: OdiaGenAI, *Health Hindi 200*, [HF](https://huggingface.co/datasets/OdiaGenAI/health_hindi_200), Licence: CC-BY-4.0. (Hindi patient inquiry prompts).
 5. **MMCQS (MedSumm)**: Arkadeep Acharya et al., *MedSumm* (ECIR 2024), [Repo](https://github.com/ArkadeepAcharya/MedSumm-ECIR2024) / [HF](https://huggingface.co/datasets/ArkaAcharya/MMCQSD), Licence: **CC-BY-4.0** (per the HF dataset card). Used for Hinglish **vocabulary mining**, **robustness runs**, and short **few-shot extraction examples**. It has **no care-type labels**; we do not redistribute its text.
 
+
+### Synthetic caregivers (demo)
+A separate `app/data/caregivers_synthetic.csv` (30 invented doctors, `source=synthetic`)
+powers a demo-only "Other ways to see a doctor" secondary list (hospital OPD, home
+consult, virtual) with `venue`, `facility_name`, and `department`. It is gated behind
+`USE_SYNTHETIC_CAREGIVERS` (default off for scoring) and never changes the official
+five care-type labels or the official caregiver matching.

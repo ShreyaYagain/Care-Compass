@@ -167,3 +167,13 @@ python ml/eval_redflag_rules.py            # rule-layer recall / false-alarm / W
 python ml/augment_synthetic.py             # Groq paraphrase augmentation (training only)
 python ml/eval_augmentation.py             # before/after holdout + emergency recall
 ```
+
+## 8. Synthetic caregivers (demo data)
+
+`app/data/caregivers_synthetic.csv` (30 rows, `source=synthetic`) is **not** part
+of the official scoring set and is never used for matching the official five care
+types. It provides a demo "Other ways to see a doctor" list (hospital OPD, home
+consult, virtual) with `venue`, `facility_name` (invented names only), and
+`department` (orthopaedics / general_medicine / paediatrics / gynaecology).
+Gated behind `USE_SYNTHETIC_CAREGIVERS` (default false); the official
+`ml/data/official/caregivers.csv` is untouched.

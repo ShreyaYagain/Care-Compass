@@ -593,6 +593,11 @@ def rule_based_extract(text: str, history: list[dict] = None) -> dict:
         if "joint_pain" not in detected_symptoms:
             detected_symptoms.append("joint_pain")
 
+    # Fall / injury: "I fell down and my leg hurts" -> injury (injury module)
+    if any(re.search(rf"\b{re.escape(w)}\b", norm) for w in ["fell", "fell down", "fall", "gir gaya", "gir ke", "gira hai", "giri hai", "gir", "leg hurts", "ankle", "foot", "knee", "hurt", "sprain", "twisted ankle"]):
+        if "injury" not in detected_symptoms:
+            detected_symptoms.append("injury")
+
     if any(re.search(rf"\b{re.escape(w)}\b", norm) for w in ["ghabrahat", "anxiety", "restlessness", "palpitation"]):
         if "restlessness" not in detected_symptoms:
             detected_symptoms.append("restlessness")

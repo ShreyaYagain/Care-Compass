@@ -82,6 +82,9 @@ try:
 
         RED_FLAGS_FILE: Path = DATA_DIR / "red_flags.yaml"
         SYMPTOMS_FILE: Path = DATA_DIR / "symptoms.yaml"
+        MODULES_FILE: Path = DATA_DIR / "modules.yaml"
+        USE_SYNTHETIC_CAREGIVERS: bool = False
+        SYNTHETIC_CAREGIVERS_FILE: Path = DATA_DIR / "caregivers_synthetic.csv"
         HINGLISH_NORM_FILE: Path = DATA_DIR / "hinglish_norm.json"
         OFFICIAL_DATA_DIR: Path = ML_DIR / "data" / "official"
         CAREGIVERS_CSV_FILE: Path = OFFICIAL_DATA_DIR / "caregivers.csv"
@@ -164,6 +167,9 @@ except ImportError:
 
         RED_FLAGS_FILE: Path = DATA_DIR / "red_flags.yaml"
         SYMPTOMS_FILE: Path = DATA_DIR / "symptoms.yaml"
+        MODULES_FILE: Path = DATA_DIR / "modules.yaml"
+        USE_SYNTHETIC_CAREGIVERS: bool = False
+        SYNTHETIC_CAREGIVERS_FILE: Path = DATA_DIR / "caregivers_synthetic.csv"
         HINGLISH_NORM_FILE: Path = DATA_DIR / "hinglish_norm.json"
         OFFICIAL_DATA_DIR: Path = ML_DIR / "data" / "official"
         CAREGIVERS_CSV_FILE: Path = OFFICIAL_DATA_DIR / "caregivers.csv"

@@ -16,6 +16,7 @@ sealed class ScreenDestination {
     object Chat : ScreenDestination()
     object Emergency : ScreenDestination()
     object Result : ScreenDestination()
+    object ModuleCard : ScreenDestination()
     data class Booking(val caregiverId: String) : ScreenDestination()
     object BookingConfirmed : ScreenDestination()
     object BookingFlow : ScreenDestination()
@@ -28,6 +29,8 @@ data class TriageUiState(
     val currentQuestion: String? = null,
     val currentOptions: List<String> = emptyList(),
     val latestResponse: TriageResponse? = null,
+    val moduleCard: ModuleCard? = null,
+    val lastModuleAnswers: Map<String, String>? = null,
     val emergencyInfo: EmergencyInfo? = null,
     val emergencySteps: List<String> = emptyList(),
     val bookingResponse: BookingResponse? = null,
@@ -245,13 +248,16 @@ class TriageViewModel(
 
         if (!response.followUpQuestion.isNullOrBlank()) {
             currentHistory.add(ChatMessage(role = "assistant", text = response.followUpQuestion, content = response.followUpQuestion))
+            // A structured module card is rendered instead of the generic chat.
+            val isModule = response.moduleCard != null
             _uiState.value = _uiState.value.copy(
                 isLoading = false,
                 conversationHistory = currentHistory,
                 currentQuestion = response.followUpQuestion,
                 currentOptions = response.followUpOptions,
                 latestResponse = response,
-                destination = ScreenDestination.Chat
+                moduleCard = response.moduleCard,
+                destination = if (isModule) ScreenDestination.ModuleCard else ScreenDestination.Chat
             )
             return
         }
@@ -262,6 +268,34 @@ class TriageViewModel(
             latestResponse = response,
             destination = ScreenDestination.Result
         )
+    }
+
+    /** Submits the collected module-card answers as a structured follow-up turn. */
+    fun submitModuleAnswers(moduleId: String, answers: Map<String, String>) {
+        val state = _uiState.value
+        _uiState.value = state.copy(isLoading = true, errorMessage = null, moduleCard = null, lastModuleAnswers = answers)
+        viewModelScope.launch {
+            val req = TriageRequest(
+                userInput = state.lastSubmittedInput ?: moduleId,
+                language = state.selectedLanguage,
+                location = if (state.contextConsent) state.userLocation else null,
+                conversationHistory = state.conversationHistory,
+                clientTime = getCurrentClientTime(),
+                contextConsent = state.contextConsent,
+                moduleId = moduleId,
+                moduleAnswers = answers
+            )
+            logTriageRequest("TriageModule", req)
+            repository.triage(req).fold(
+                onSuccess = { handleTriageResponse(it) },
+                onFailure = { err ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = err.localizedMessage ?: "Connection error. Please try again."
+                    )
+                }
+            )
+        }
     }
 
     fun startBooking(caregiverId: String) {

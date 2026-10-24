@@ -232,6 +232,36 @@ fun BookingScreen(
                         Text(phone, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                     }
 
+                    val triageSummary = uiState.latestResponse?.reasoning
+                    if (!triageSummary.isNullOrBlank()) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        HorizontalDivider(color = Color(0xFFEEEEEE))
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = "Doctor Summary / Medical Notes",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF212121)
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = triageSummary,
+                            fontSize = 14.sp,
+                            color = Color(0xFF424242),
+                            lineHeight = 20.sp
+                        )
+                        val meds = uiState.lastModuleAnswers?.get("meds_used")
+                        if (!meds.isNullOrBlank() && meds != "None") {
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = "Self-care reported: $meds (shared for doctor review only)",
+                                fontSize = 13.sp,
+                                color = Color(0xFF757575),
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+
                     Spacer(modifier = Modifier.height(24.dp))
                     BigButton(
                         text = "Return to Home",

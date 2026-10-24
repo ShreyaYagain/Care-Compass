@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.carecompass.app.data.SecondaryOption
 import com.carecompass.app.ui.components.BigButton
 import com.carecompass.app.ui.components.CaregiverCard
 import com.carecompass.app.ui.theme.AmberWarning
@@ -282,11 +283,114 @@ fun ResultScreen(
             }
         }
 
+
+        val secondary = resp?.secondaryOptions ?: emptyList()
+        if (secondary.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(24.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Other ways to see a doctor",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF212121)
+                )
+                Surface(
+                    color = Color(0xFFEEEEEE),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        text = "demo data",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF616161),
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                    )
+                }
+            }
+            Text(
+                text = "Hospital OPD appointments and doctors who visit home",
+                fontSize = 14.sp,
+                color = Color(0xFF757575)
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            secondary.forEach { opt ->
+                SecondaryDoctorCard(opt)
+            }
+        }
+
         Spacer(modifier = Modifier.height(20.dp))
 
         BigButton(
             text = "Return to Home",
             onClick = onStartOver
         )
+    }
+}
+
+
+@Composable
+private fun SecondaryDoctorCard(
+    option: SecondaryOption,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "${option.name}, ${option.qualification}",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 15.sp,
+                    color = Color(0xFF212121)
+                )
+                Surface(
+                    color = Color(0xFFFFF3E0),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = "★ ${option.rating}",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp,
+                        color = Color(0xFFE65100),
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            val venueText = when (option.venue) {
+                "hospital" -> option.facilityName?.let { "Hospital OPD · $it" } ?: "Hospital OPD"
+                "home" -> "Doctor Home Consult"
+                else -> "Virtual Consultation"
+            }
+            val deptText = option.department.replace("_", " ").replaceFirstChar { it.uppercase() }
+            Text(
+                text = "$deptText · $venueText",
+                fontSize = 13.sp,
+                color = PrimaryBlue,
+                fontWeight = FontWeight.Medium
+            )
+            if (option.languages.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(3.dp))
+                Text(
+                    text = "Languages: " + option.languages.joinToString(", "),
+                    fontSize = 12.sp,
+                    color = Color(0xFF757575)
+                )
+            }
+        }
     }
 }

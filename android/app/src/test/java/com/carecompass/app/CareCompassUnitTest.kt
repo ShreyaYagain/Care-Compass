@@ -288,4 +288,87 @@ class CareCompassUnitTest {
             )
         }
     }
+
+    @Test
+    fun testModuleCardResponse_navigatesToModuleCardScreen() = runTest {
+        val card = ModuleCard(
+            moduleId = "injury",
+            label = "Injury / fall",
+            fields = listOf(
+                ModuleField(id = "pain_level", type = "slider010", question = "How much pain is there (0-10)?"),
+                ModuleField(id = "swelling", type = "choice", question = "Any swelling?", options = listOf("Yes", "No"))
+            )
+        )
+        val repo = object : Repository(ApiService.create()) {
+            override suspend fun triage(request: TriageRequest): Result<TriageResponse> {
+                return Result.success(
+                    TriageResponse(
+                        followUpQuestion = "Injury / fall",
+                        moduleCard = card
+                    )
+                )
+            }
+        }
+        val viewModel = TriageViewModel(repo)
+        viewModel.submitSymptomTiles(listOf("wound_injury"))
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(ScreenDestination.ModuleCard, viewModel.uiState.value.destination)
+        assertNotNull(viewModel.uiState.value.moduleCard)
+        assertEquals("injury", viewModel.uiState.value.moduleCard?.moduleId)
+        assertEquals(2, viewModel.uiState.value.moduleCard?.fields?.size)
+    }
+
+    @Test
+    fun testSubmitModuleAnswers_sendsPayloadAndNavigatesToResult() = runTest {
+        var capturedRequest: TriageRequest? = null
+        val secondary = listOf(
+            SecondaryOption(
+                caregiverId = "SYN_001",
+                name = "Dr. Arjun Sharma",
+                qualification = "MBBS, MS (Ortho)",
+                venue = "hospital",
+                facilityName = "NCR Apollo Multispeciality",
+                department = "orthopaedics",
+                rating = 4.6,
+                languages = listOf("Hindi", "English"),
+                demo = true
+            )
+        )
+        val repo = object : Repository(ApiService.create()) {
+            override suspend fun triage(request: TriageRequest): Result<TriageResponse> {
+                capturedRequest = request
+                return Result.success(
+                    TriageResponse(
+                        careType = "paramedic_home_visit",
+                        urgency = "same_day",
+                        reasoning = "Pain 8/10, swelling, cannot bear weight, so a medic home visit is recommended.",
+                        secondaryOptions = secondary
+                    )
+                )
+            }
+        }
+        val viewModel = TriageViewModel(repo)
+        val answers = mapOf(
+            "pain_level" to "8",
+            "swelling" to "Yes",
+            "weight_bearing" to "Not at all",
+            "meds_used" to "Spray or balm"
+        )
+        viewModel.submitModuleAnswers("injury", answers)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertNotNull(capturedRequest)
+        assertEquals("injury", capturedRequest?.moduleId)
+        assertEquals("8", capturedRequest?.moduleAnswers?.get("pain_level"))
+        assertEquals("Spray or balm", capturedRequest?.moduleAnswers?.get("meds_used"))
+
+        // State assertions
+        assertEquals(ScreenDestination.Result, viewModel.uiState.value.destination)
+        assertEquals("paramedic_home_visit", viewModel.uiState.value.latestResponse?.careType)
+        assertEquals(1, viewModel.uiState.value.latestResponse?.secondaryOptions?.size)
+        assertEquals("Dr. Arjun Sharma", viewModel.uiState.value.latestResponse?.secondaryOptions?.first()?.name)
+        assertEquals("Spray or balm", viewModel.uiState.value.lastModuleAnswers?.get("meds_used"))
+    }
+
 }

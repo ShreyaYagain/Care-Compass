@@ -1,7 +1,9 @@
 package com.carecompass.app.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.carecompass.app.BuildConfig
 import com.carecompass.app.data.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,6 +17,8 @@ sealed class ScreenDestination {
     object Result : ScreenDestination()
     data class Booking(val caregiverId: String) : ScreenDestination()
     object BookingConfirmed : ScreenDestination()
+    object BookServices : ScreenDestination()
+    object BookingFlow : ScreenDestination()
 }
 
 data class TriageUiState(
@@ -64,6 +68,18 @@ class TriageViewModel(
         }
     }
 
+    // Debug-only request-body logging. Never logs personal data (user input,
+    // conversation text, or precise location are omitted/redacted).
+    private fun logTriageRequest(tag: String, req: TriageRequest) {
+        if (!BuildConfig.DEBUG) return
+        Log.d(tag, "Triage request -> language=${req.language}, " +
+            "historyTurns=${req.conversationHistory.size}, " +
+            "contextConsent=${req.contextConsent}, " +
+            "hasLocation=${req.location != null}, " +
+            "hasPatient=${req.patient != null}, " +
+            "clientTime=${req.clientTime ?: "null"}")
+    }
+
     fun triggerEmergencyImmediately(symptomText: String) {
         val trimmed = symptomText.trim()
         val defaultSteps = listOf(
@@ -94,6 +110,7 @@ class TriageViewModel(
                     clientTime = getCurrentClientTime(),
                     contextConsent = state.contextConsent
                 )
+                logTriageRequest("Triage", req)
                 repository.triage(req).onSuccess { resp ->
                     if (resp.emergencySteps.isNotEmpty()) {
                         _uiState.value = _uiState.value.copy(emergencySteps = resp.emergencySteps)
@@ -130,6 +147,7 @@ class TriageViewModel(
                 clientTime = getCurrentClientTime(),
                 contextConsent = state.contextConsent
             )
+            logTriageRequest("Triage", req)
 
             repository.triage(req).fold(
                 onSuccess = { resp ->
@@ -191,6 +209,43 @@ class TriageViewModel(
     fun startBooking(caregiverId: String) {
         _uiState.value = _uiState.value.copy(
             destination = ScreenDestination.Booking(caregiverId)
+        )
+    }
+
+    fun navigateToBookServices() {
+        _uiState.value = _uiState.value.copy(
+            destination = ScreenDestination.BookServices
+        )
+    }
+
+    fun navigateToBookingFlow() {
+        _uiState.value = _uiState.value.copy(
+            destination = ScreenDestination.BookingFlow
+        )
+    }
+
+    fun navigateToEmergency(emergencyResponse: TriageResponse? = null) {
+        val steps = emergencyResponse?.emergencySteps?.ifEmpty { null }
+            ?: emergencyResponse?.emergency?.steps?.ifEmpty { null }
+            ?: listOf(
+                "Call 112 (National Emergency) immediately.",
+                "Keep the patient calm, resting, and sitting or lying down comfortably.",
+                "Do not give food or drink if patient is breathless, drowsy, or having chest pain.",
+                "If unconscious or breathing with difficulty, keep airway clear and turn onto side (recovery position)."
+            )
+
+        _uiState.value = _uiState.value.copy(
+            destination = ScreenDestination.Emergency,
+            latestResponse = emergencyResponse ?: _uiState.value.latestResponse,
+            emergencySteps = steps,
+            emergencyInfo = emergencyResponse?.emergency ?: _uiState.value.emergencyInfo,
+            isLoading = false
+        )
+    }
+
+    fun navigateToHome() {
+        _uiState.value = _uiState.value.copy(
+            destination = ScreenDestination.Home
         )
     }
 

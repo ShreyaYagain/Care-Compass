@@ -87,4 +87,142 @@
     <string name="service_talk_doctor_hinglish">Talk to a doctor</string>
 
     <string name="btn_continue">Continue</string>
+
+    <!-- Book Services Button on Home -->
+    <string name="book_services_en">Book Services</string>
+    <string name="book_services_hi">सेवा बुक करें</string>
+    <string name="book_services_hinglish">Service book karein</string>
+
+    <!-- BookServicesScreen Header -->
+    <string name="book_service_title_en">Book a service</string>
+    <string name="book_service_title_hi">सेवा बुक करें</string>
+    <string name="book_service_title_hinglish">Service book karein</string>
+
+    <string name="book_service_subtitle_en">Not an emergency? Pick a service and a time.</string>
+    <string name="book_service_subtitle_hi">इमरजेंसी नहीं है? सेवा और समय चुनें।</string>
+    <string name="book_service_subtitle_hinglish">Emergency nahi hai? Service aur time chunein.</string>
+
+    <!-- BookServicesScreen Service Cards -->
+    <string name="service_nursing_title_en">Home nursing</string>
+    <string name="service_nursing_title_hi">होम नर्सिंग</string>
+    <string name="service_nursing_title_hinglish">Home nursing</string>
+
+    <string name="service_nursing_desc_en">Injection, dressing, IV, vitals at home</string>
+    <string name="service_nursing_desc_hi">घर पर इंजेक्शन, ड्रेसिंग, ड्रिप, जांच</string>
+    <string name="service_nursing_desc_hinglish">Ghar par injection, dressing, IV, vitals</string>
+
+    <string name="service_lab_title_en">Lab test at home</string>
+    <string name="service_lab_title_hi">घर पर लैब टेस्ट</string>
+    <string name="service_lab_title_hinglish">Lab test at home</string>
+
+    <string name="service_lab_desc_en">Blood test or full check-up sample collection</string>
+    <string name="service_lab_desc_hi">ब्लड टेस्ट या फुल चेकअप सैंपल कलेक्शन</string>
+    <string name="service_lab_desc_hinglish">Blood test ya full check-up sample collection</string>
+
+    <string name="service_tele_title_en">Doctor teleconsultation</string>
+    <string name="service_tele_title_hi">डॉक्टर से टेलीकंसल्टेशन</string>
+    <string name="service_tele_title_hinglish">Doctor teleconsultation</string>
+
+    <string name="service_tele_desc_en">Talk to a doctor by video or call</string>
+    <string name="service_tele_desc_hi">वीडियो या कॉल पर डॉक्टर से बात करें</string>
+    <string name="service_tele_desc_hinglish">Video ya call par doctor se baat karein</string>
+
+    <!-- Emergency Link on Booking Screens -->
+    <string name="call_112_link_en">Feeling very unwell right now? Call 112</string>
+    <string name="call_112_link_hi">अभी बहुत ज्यादा तबियत खराब है? 112 पर कॉल करें</string>
+    <string name="call_112_link_hinglish">Zyada tabiyat kharab hai? 112 call karein</string>
+
+    <!-- Footer Medical Disclaimer -->
+    <string name="medical_disclaimer_en">CareCompass helps you find care. It does not give medical advice.</string>
+    <string name="medical_disclaimer_hi">CareCompass आपको देखभाल खोजने में मदद करता है। यह चिकित्सीय सलाह नहीं देता है।</string>
+    <string name="medical_disclaimer_hinglish">CareCompass care dhoondhne mein madad karta hai. Ye medical advice nahi deta.</string>
+
+    <!-- Step 1: Reason -->
+    <string name="booking_step1_heading_en">Confirm your care</string>
+    <string name="booking_step1_heading_hi">देखभाल की पुष्टि करें</string>
+    <string name="booking_step1_heading_hinglish">Care confirm karein</string>
+
+    <string name="reason_hint_en">Type reason or describe what you need...</string>
+    <string name="reason_hint_hi">यहाँ कारण लिखें या अपनी ज़रूरत बताएं...</string>
+    <string name="reason_hint_hinglish">Yahan reason likhein ya apni zaroorat batayein...</string>
+
+    <string name="btn_next_en">Next</string>
+    <string name="btn_next_hi">आगे बढ़ें</string>
+    <string name="btn_next_hinglish">Aage badhein</string>
+
+    <!-- Follow-up Question Options -->
+    <string name="option_yes_en">Yes</string>
+    <string name="option_yes_hi">हाँ</string>
+    <string name="option_yes_hinglish">Haan</string>
+
+    <string name="option_no_en">No</string>
+    <string name="option_no_hi">नहीं</string>
+    <string name="option_no_hinglish">Nahi</string>
+
+    <string name="option_not_sure_en">Not sure</string>
+    <string name="option_not_sure_hi">पक्का नहीं पता</string>
+    <string name="option_not_sure_hinglish">Pakka nahi pata</string>
+
+    <!-- Step 2: Caregivers -->
+    <string name="booking_step2_heading_en">Choose a caregiver</string>
+    <string name="booking_step2_heading_hi">देखभालकर्ता चुनें</string>
+    <string name="booking_step2_heading_hinglish">Caregiver chunein</string>
+
+    <string name="choose_caregiver_btn_en">Choose this caregiver</string>
+    <string name="choose_caregiver_btn_hi">यह देखभालकर्ता चुनें</string>
+    <string name="choose_caregiver_btn_hinglish">Ye caregiver chunein</string>
+
+    <string name="no_caregiver_msg_en">No caregivers currently available for home visit in your area.</string>
+    <string name="no_caregiver_msg_hi">आपके क्षेत्र में इस समय घर पर आने वाले देखभालकर्ता उपलब्ध नहीं हैं।</string>
+    <string name="no_caregiver_msg_hinglish">Aapke area mein abhi home visit ke liye caregiver available nahi hain.</string>
+
+    <string name="switch_to_tele_btn_en">Consult a Doctor Online Instead</string>
+    <string name="switch_to_tele_btn_hi">डॉक्टर से ऑनलाइन परामर्श लें</string>
+    <string name="switch_to_tele_btn_hinglish">Doctor se online consult karein</string>
+
+    <!-- Step 3: Date & Time -->
+    <string name="booking_step3_heading_en">Choose a time slot</string>
+    <string name="booking_step3_heading_hi">समय स्लॉट चुनें</string>
+    <string name="booking_step3_heading_hinglish">Time slot chunein</string>
+
+    <string name="fasting_note_en">Please keep fasting if your doctor said so</string>
+    <string name="fasting_note_hi">यदि आपके डॉक्टर ने कहा है तो कृपया उपवास (खाली पेट) रखें</string>
+    <string name="fasting_note_hinglish">Doctor ne bola hai toh please fasting (khali pet) rakhein</string>
+
+    <string name="patient_name_label_en">Patient / Contact Name</string>
+    <string name="patient_name_label_hi">मरीज / संपर्क का नाम</string>
+    <string name="patient_name_label_hinglish">Patient / Contact Name</string>
+
+    <string name="phone_label_en">Phone Number (10 digits)</string>
+    <string name="phone_label_hi">फोन नंबर (10 अंक)</string>
+    <string name="phone_label_hinglish">Phone number (10 digits)</string>
+
+    <string name="address_label_en">Address for Home Visit</string>
+    <string name="address_label_hi">घर का पता</string>
+    <string name="address_label_hinglish">Ghar ka address</string>
+
+    <string name="confirm_booking_btn_en">Confirm Booking</string>
+    <string name="confirm_booking_btn_hi">बुकिंग कन्फर्म करें</string>
+    <string name="confirm_booking_btn_hinglish">Booking confirm karein</string>
+
+    <!-- Confirmation Screen -->
+    <string name="booking_confirmed_title_en">Booking Confirmed!</string>
+    <string name="booking_confirmed_title_hi">बुकिंग कन्फर्म हो गई!</string>
+    <string name="booking_confirmed_title_hinglish">Booking confirm ho gayi!</string>
+
+    <string name="add_to_calendar_btn_en">Add to calendar</string>
+    <string name="add_to_calendar_btn_hi">कैलेंडर में जोड़ें</string>
+    <string name="add_to_calendar_btn_hinglish">Calendar mein jodein</string>
+
+    <string name="back_to_home_btn_en">Back to Home</string>
+    <string name="back_to_home_btn_hi">होम स्क्रीन पर जाएं</string>
+    <string name="back_to_home_btn_hinglish">Home par jayein</string>
+
+    <string name="btn_retry_en">Retry</string>
+    <string name="btn_retry_hi">फिर से कोशिश करें</string>
+    <string name="btn_retry_hinglish">Dobara try karein</string>
+
+    <string name="connection_error_en">Connection error. Please try again.</string>
+    <string name="connection_error_hi">कनेक्शन में समस्या। कृपया पुन: प्रयास करें।</string>
+    <string name="connection_error_hinglish">Connection error. Dobara try karein.</string>
 </resources>

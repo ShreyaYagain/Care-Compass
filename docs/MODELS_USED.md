@@ -17,7 +17,7 @@ This system is trained and benchmarked on the official dataset:
 - **Groq Llama / GPT-OSS Inference (`openai/gpt-oss-120b`, `openai/gpt-oss-20b`, `llama-3.3-70b-versatile`)**:
   - Used strictly for structured intake slot extraction (symptoms, service requested, relation, duration, age group).
   - Out-of-dataset mapping: canonicalizes unfamiliar medical queries (physiotherapy, dental, vaccinations, certificates) to the 5 official care types without inventing labels.
-  - Follow-up question generation: enforces zero severity questioning ("never ask how severe it is"), eliminates duplicate questions, and prioritizes screening of ambiguous red flags.
+  - Follow-up question generation: enforces the zero-severity-question policy (never asks the user to rate discomfort), eliminates duplicate questions, and prioritizes screening of ambiguous red flags.
   - Fallback order: Groq $\rightarrow$ Gemini $\rightarrow$ deterministic rule/regex layer (never crashes).
 - **Groq Whisper Audio Transcription (`whisper-large-v3-turbo`)**:
   - Cloud STT endpoint at `/transcribe` accepting `.m4a`, `.wav`, `.mp3`, `.ogg`, `.webm`, `.flac`.
@@ -107,9 +107,20 @@ The emergency red-flag taxonomy and escalation triggers are grounded in peer-rev
 
 ### Public Datasets Used for Guardrails & Vocabulary Benchmarking
 All public datasets are cited below. In accordance with competition rules, they are utilized strictly as **unlabelled evaluation test prompts and linguistic vocabulary benchmarking**, never as training labels:
-1. **TriageBench**: Wong et al., *TriageBench: Benchmarking LLMs for Clinical Triage Decision-Making*, [Hugging Face](https://huggingface.co/datasets/wongqihan/triagebench), Licence: Apache-2.0 / Research Use. (Unlabelled clinical scenario evaluation).
+1. **TriageBench**: Wong Qi Han, *TriageBench*, [Repo](https://github.com/wongqihan/triagebench) / [Hugging Face](https://huggingface.co/datasets/wongqihan/triagebench), Licence: **MIT**. Used as a **fairness / consistency harness only**: the same clinical vignette is repeated with one irrelevant detail (gender, language, ZIP) swapped, and we measure whether our decision changes. It has **no care-type labels**, so results are reported as *consistency*, never accuracy (see `docs/FAIRNESS_REPORT.md`).
 2. **HiMed**: FreedomIntelligence, *HiMed: A Large-scale Hindi Medical Question-Answering Dataset*, [Hugging Face](https://huggingface.co/datasets/FreedomIntelligence/HiMed), Licence: MIT / CC-BY-NC 4.0. (Hindi patient inquiry evaluation).
 3. **MedMCQA-Indic**: Eka Care, *MedMCQA-Indic: Multi-language Indic Medical MCQs*, [Hugging Face](https://huggingface.co/datasets/ekacare/MedMCQA-Indic), Licence: Apache-2.0. (Multilingual clinical vocabulary testing).
 4. **health_hindi_200**: OdiaGenAI, *Health Hindi 200 Question-Answer Dataset*, [Hugging Face](https://huggingface.co/datasets/OdiaGenAI/health_hindi_200), Licence: CC-BY-4.0. (Hindi health question prompts).
-5. **MMCQS (MedSumm)**: Joshi et al., *Multi-lingual Medical Code-mixed Question Set*, [arXiv:2401.01596](https://arxiv.org/pdf/2401.01596), Licence: Research Use Only. (Code-mixed Hinglish phrasing patterns).
+5. **MMCQS (MedSumm)**: Arkadeep Acharya et al., *MedSumm: A Multimodal Approach to Summarizing Code-Mixed Hindi-English Clinical Queries* (ECIR 2024), [Repo](https://github.com/ArkadeepAcharya/MedSumm-ECIR2024) / [Hugging Face](https://huggingface.co/datasets/ArkaAcharya/MMCQSD), Licence: **CC-BY-4.0** (per the HF dataset card; not stated in the repo). Used for Hinglish **vocabulary mining** (human-reviewed, never auto-merged), **robustness runs**, and short **few-shot extraction examples**. It has **no care-type labels**. We do not redistribute its text.
+
+### BibTeX
+```bibtex
+@misc{wong2026gender,
+  title  = {Gender-Dependent Diagnostic Substitution in LLM Medical Triage: Same Symptoms, Unequal Urgency},
+  author = {Wong, Qi Han},
+  year   = {2026},
+  eprint = {2606.03641},
+  archivePrefix = {arXiv}
+}
+```
 

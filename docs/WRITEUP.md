@@ -50,9 +50,9 @@ The red-flag protocol, emergency escalation ladder, and triage categorization ar
 
 ### Public Datasets Used
 In strict compliance with evaluation rules, all public datasets are used exclusively for **unlabelled guardrail evaluation prompts and multilingual vocabulary benchmarking**; none were used as training labels:
-1. **TriageBench**: Wong et al., *TriageBench: Benchmarking LLMs for Clinical Triage Decision-Making*, [Link](https://huggingface.co/datasets/wongqihan/triagebench), Licence: Apache-2.0 / Research Use. (Used for unlabelled clinical triage scenario evaluation).
-2. **HiMed**: FreedomIntelligence, *HiMed: A Large-scale Hindi Medical Question-Answering Dataset*, [Link](https://huggingface.co/datasets/FreedomIntelligence/HiMed), Licence: MIT / CC-BY-NC 4.0. (Used for Hindi vernacular health vocabulary stress-testing).
-3. **MedMCQA-Indic**: Eka Care, *MedMCQA-Indic: Multi-language Indic Medical Multiple Choice Questions*, [Link](https://huggingface.co/datasets/ekacare/MedMCQA-Indic), Licence: Apache-2.0. (Used for clinical concept vocabulary verification).
-4. **health_hindi_200**: OdiaGenAI, *Health Hindi 200 Question-Answer Dataset*, [Link](https://huggingface.co/datasets/OdiaGenAI/health_hindi_200), Licence: CC-BY-4.0. (Used for patient inquiry prompts in Hindi).
-5. **MMCQS (MedSumm)**: Joshi et al., *Multi-lingual Medical Code-mixed Question Set*, [Link](https://arxiv.org/pdf/2401.01596), Licence: Research Use Only. (Used for Hinglish code-mixed phrasing patterns).
+1. **TriageBench**: Wong Qi Han, *TriageBench*, [Repo](https://github.com/wongqihan/triagebench) / [HF](https://huggingface.co/datasets/wongqihan/triagebench), Licence: **MIT**. Used as a **fairness / consistency harness**: the same clinical vignette is swapped on gender, language and ZIP code and we measure whether our decision changes (see `docs/FAIRNESS_REPORT.md`). It has **no care-type labels**, so we report *consistency*, never accuracy.
+2. **HiMed**: FreedomIntelligence, *HiMed*, [HF](https://huggingface.co/datasets/FreedomIntelligence/HiMed), Licence: MIT / CC-BY-NC 4.0. (Hindi vernacular health vocabulary stress-testing).
+3. **MedMCQA-Indic**: Eka Care, *MedMCQA-Indic*, [HF](https://huggingface.co/datasets/ekacare/MedMCQA-Indic), Licence: Apache-2.0. (Clinical concept vocabulary verification).
+4. **health_hindi_200**: OdiaGenAI, *Health Hindi 200*, [HF](https://huggingface.co/datasets/OdiaGenAI/health_hindi_200), Licence: CC-BY-4.0. (Hindi patient inquiry prompts).
+5. **MMCQS (MedSumm)**: Arkadeep Acharya et al., *MedSumm* (ECIR 2024), [Repo](https://github.com/ArkadeepAcharya/MedSumm-ECIR2024) / [HF](https://huggingface.co/datasets/ArkaAcharya/MMCQSD), Licence: **CC-BY-4.0** (per the HF dataset card). Used for Hinglish **vocabulary mining**, **robustness runs**, and short **few-shot extraction examples**. It has **no care-type labels**; we do not redistribute its text.
 

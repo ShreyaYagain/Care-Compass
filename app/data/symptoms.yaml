@@ -1,95 +1,127 @@
-slots:
-  breathing_difficulty:
-    priority: 1
-    safety_critical: true
-    description: "Difficulty breathing, shortness of breath, gasping"
-    question:
-      en: "Is there any difficulty in breathing or shortness of breath?"
-      hi: "क्या सांस लेने में कोई तकलीफ या सांस फूलने की समस्या है?"
-      hinglish: "Kya saans lene mein koi dikkat ya saans phool rahi hai?"
-    options:
-      - "Yes"
-      - "No"
-      - "Not sure"
+# CareCompass closed follow-up question bank.
+#
+# This file is the ONLY source of follow-up questions. No free-form question text
+# (from the LLM or otherwise) may reach the user. `core/intake.py` selects an `id`
+# from this bank and localises it into the user's language.
+#
+# Allowed ids are a closed set. Nothing about choosing a service, a treatment,
+# scheduling/time of treatment, medicines, or "what the doctor should do" is
+# permitted here. Severity questions are forbidden.
+#
+# Schema per entry:
+#   id            : stable bank id (closed set below)
+#   slot          : the intake slot this question fills
+#   purpose       : red_flag_screen | who_for | main_symptom | duration
+#   text_en       : English wording
+#   text_hi       : Hindi (Devanagari) wording
+#   text_hinglish : Hinglish (Roman Hindi-English) wording
+#   options       : list of {en, hi, hinglish} option labels
 
-  chest_pain:
-    priority: 2
-    safety_critical: true
-    description: "Pain, heaviness, or pressure in the chest"
-    question:
-      en: "Is the patient experiencing any chest pain or chest tightness?"
-      hi: "क्या सीने में दर्द, भारीपन या दबाव महसूस हो रहा है?"
-      hinglish: "Kya seene mein dard, bharipan ya pressure mehsoos ho raha hai?"
+question_bank:
+  - id: breathing_difficulty
+    slot: breathing_difficulty
+    purpose: red_flag_screen
+    text_en: "Is the patient experiencing any difficulty in breathing?"
+    text_hi: "क्या सांस लेने में कोई तकलीफ या सांस फूलने की समस्या है?"
+    text_hinglish: "Kya saans lene mein koi dikkat ya takleef ho rahi hai?"
     options:
-      - "Yes"
-      - "No"
-      - "Not sure"
+      - { en: "Yes", hi: "हाँ", hinglish: "Yes" }
+      - { en: "No", hi: "नहीं", hinglish: "No" }
+      - { en: "Not sure", hi: "पक्का नहीं", hinglish: "Not sure" }
 
-  consciousness:
-    priority: 3
-    safety_critical: true
-    description: "Alertness, fainting, responsiveness"
-    question:
-      en: "Is the person fully conscious, alert, and responding properly?"
-      hi: "क्या मरीज पूरी तरह होश में है और ठीक से बातचीत कर पा रहा है?"
-      hinglish: "Kya patient poori tarah hosh mein hai aur normal respond kar raha hai?"
+  - id: chest_pain_check
+    slot: chest_pain
+    purpose: red_flag_screen
+    text_en: "Is the patient experiencing acute chest pain or heavy pressure?"
+    text_hi: "क्या सीने में तेज दर्द या भारी दबाव महसूस हो रहा है?"
+    text_hinglish: "Kya seene mein tez dard ya dabav mehsoos ho raha hai?"
     options:
-      - "Yes, fully alert"
-      - "Drowsy / faint"
-      - "Unconscious"
+      - { en: "Yes", hi: "हाँ", hinglish: "Yes" }
+      - { en: "No", hi: "नहीं", hinglish: "No" }
+      - { en: "Not sure", hi: "पक्का नहीं", hinglish: "Not sure" }
 
-  bleeding:
-    priority: 4
-    safety_critical: true
-    description: "Heavy or uncontrollable bleeding"
-    question:
-      en: "Is there any active or heavy bleeding?"
-      hi: "क्या कहीं से तेज या लगातार खून बह रहा है?"
-      hinglish: "Kya kahin se tez ya lagatar bleeding (khoon) ho rahi hai?"
+  - id: consciousness_check
+    slot: consciousness
+    purpose: red_flag_screen
+    text_en: "Is the person fully conscious, alert, and responding properly?"
+    text_hi: "क्या मरीज पूरी तरह होश में है और ठीक से बातचीत कर पा रहा है?"
+    text_hinglish: "Kya patient poori tarah hosh mein hai aur normal respond kar raha hai?"
     options:
-      - "Yes"
-      - "No"
-      - "Minor only"
+      - { en: "Yes, fully alert", hi: "हाँ, पूरी तरह होश में", hinglish: "Yes, fully alert" }
+      - { en: "Drowsy / faint", hi: "सुस्त / बेहोश जैसा", hinglish: "Drowsy / faint" }
+      - { en: "Unconscious", hi: "बेहोश", hinglish: "Unconscious" }
 
-  duration:
-    priority: 5
-    safety_critical: false
-    description: "How many days/hours have the symptoms lasted"
-    question:
-      en: "How long has this issue been going on?"
-      hi: "यह समस्या कितने समय या दिनों से है?"
-      hinglish: "Yeh problem kitne din ya ghanton se chal rahi hai?"
+  - id: bleeding_check
+    slot: bleeding
+    purpose: red_flag_screen
+    text_en: "Is there any active or heavy bleeding?"
+    text_hi: "क्या कहीं से तेज या लगातार खून बह रहा है?"
+    text_hinglish: "Kya kahin se tez ya lagatar bleeding (khoon) ho rahi hai?"
     options:
-      - "Just started today"
-      - "1-3 days"
-      - "More than 5 days"
+      - { en: "Yes", hi: "हाँ", hinglish: "Yes" }
+      - { en: "No", hi: "नहीं", hinglish: "No" }
+      - { en: "Minor only", hi: "हल्का सा", hinglish: "Minor only" }
 
-  severity:
-    priority: 6
-    safety_critical: false
-    description: "Mild, moderate, severe discomfort"
-    question:
-      en: "How severe is the discomfort right now?"
-      hi: "तकलीफ कितनी गंभीर महसूस हो रही है?"
-      hinglish: "Takleef kitni zyada hai?"
+  - id: who_for_age_group
+    slot: who_for
+    purpose: who_for
+    text_en: "Who is this consultation for?"
+    text_hi: "यह परामर्श किसके लिए है?"
+    text_hinglish: "Yeh consultation kiske liye hai?"
     options:
-      - "Mild (can manage)"
-      - "Moderate"
-      - "Severe / Unbearable"
+      - { en: "Self", hi: "स्वयं", hinglish: "Self" }
+      - { en: "Child (<5)", hi: "छोटा बच्चा (<5)", hinglish: "Child (<5)" }
+      - { en: "Elderly (60+)", hi: "बुजुर्ग व्यक्ति (60+)", hinglish: "Elderly (60+)" }
+      - { en: "Other adult", hi: "अन्य वयस्क", hinglish: "Other adult" }
 
-  age_group:
-    priority: 7
-    safety_critical: false
-    description: "Patient age category"
-    question:
-      en: "What is the approximate age of the patient?"
-      hi: "मरीज की उम्र लगभग कितनी है?"
-      hinglish: "Patient ki lagbhag age kya hai?"
+  - id: main_symptom_buttons
+    slot: main_symptom
+    purpose: main_symptom
+    text_en: "Please tell us what main symptoms or health concern you are experiencing."
+    text_hi: "कृपया बताएं कि मरीज को क्या मुख्य समस्या या लक्षण हैं?"
+    text_hinglish: "Kripya batayein mareez ko kya main samasya ya lakshan hain?"
     options:
-      - "Child (<12 yrs)"
-      - "Adult (12-60 yrs)"
-      - "Senior citizen (>60 yrs)"
+      - { en: "Fever or cough", hi: "बुखार या खांसी", hinglish: "Bukhar ya khansi" }
+      - { en: "Pain or injury", hi: "दर्द या चोट", hinglish: "Dard ya chot" }
+      - { en: "Weak or elderly person", hi: "कमज़ोर या बुज़ुर्ग व्यक्ति", hinglish: "Kamzor ya buzurg person" }
+      - { en: "Wound / injection / dressing", hi: "घाव / इंजेक्शन / पट्टी", hinglish: "Ghaav / injection / dressing" }
+      - { en: "Lab test", hi: "खून या लैब टेस्ट", hinglish: "Lab test" }
+      - { en: "Something else", hi: "कुछ और", hinglish: "Kuch aur" }
 
+  - id: duration_days
+    slot: duration
+    purpose: duration
+    text_en: "How long has this issue been going on?"
+    text_hi: "यह समस्या कब से हो रही है?"
+    text_hinglish: "Yeh pareshani kab se ho rahi hai?"
+    options:
+      - { en: "Today", hi: "आज से", hinglish: "Today" }
+      - { en: "2-3 days", hi: "2-3 दिन", hinglish: "2-3 days" }
+      - { en: "More than a week", hi: "एक हफ्ते से अधिक", hinglish: "More than a week" }
+
+  - id: infant_fever_age_check
+    slot: high_fever_infant
+    purpose: red_flag_screen
+    text_en: "Is the baby under 3 months old and running a fever?"
+    text_hi: "क्या बच्चा 3 महीने से छोटा है और उसे बुखार है?"
+    text_hinglish: "Kya baby 3 mahine se chhota hai aur bukhar hai?"
+    options:
+      - { en: "Yes", hi: "हाँ", hinglish: "Yes" }
+      - { en: "No", hi: "नहीं", hinglish: "No" }
+      - { en: "Not sure", hi: "पक्का नहीं", hinglish: "Not sure" }
+
+  - id: dehydration_check
+    slot: severe_dehydration
+    purpose: red_flag_screen
+    text_en: "Has the patient stopped passing urine, or have sunken eyes / cannot keep water down?"
+    text_hi: "क्या मरीज का पेशाब बंद हो गया है, आंखें धंस गई हैं, या पानी नहीं रुक रहा?"
+    text_hinglish: "Kya patient ka peshab band hai, aankhen dhas gayi, ya paani nahi ruk raha?"
+    options:
+      - { en: "Yes", hi: "हाँ", hinglish: "Yes" }
+      - { en: "No", hi: "नहीं", hinglish: "No" }
+      - { en: "Not sure", hi: "पक्का नहीं", hinglish: "Not sure" }
+
+# --- Symptom synonym list (used by the rule-based intake extractor) ---
 symptoms_list:
   fever:
     synonyms: ["bukhar", "bukhaar", "fever", "taap", "temperature", "garam sharir"]

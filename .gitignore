@@ -22,3 +22,12 @@ ml/artifacts/*.safetensors
 ml/artifacts/large_*
 
 ml/guardrail_eval/data/*_prompts.jsonl
+
+# External datasets/repos (downloaded, never committed)
+ml/external/raw/
+ml/external/*.csv
+!ml/external/hinglish_candidates.csv
+!ml/external/pseudo_review.csv
+ml/external/mmcqs_fewshot.json
+ml/external/selftrain_results.json
+

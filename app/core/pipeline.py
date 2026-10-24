@@ -13,7 +13,13 @@ from app.schemas import (
 )
 from app.core.language import detect_and_normalise
 from app.core.red_flags import check_red_flags
-from app.core.intake import extract_slots, needs_more_info, select_follow_up_question
+from app.core.intake import (
+    extract_slots,
+    needs_more_info,
+    select_follow_up_question,
+    count_assistant_turns,
+    enforce_question_bank,
+)
 from app.core.triage_model import predict_triage
 from app.core.risk_modifiers import apply_risk_modifiers
 from app.core.matching import rank_caregivers
@@ -72,7 +78,7 @@ def run_triage_pipeline(
     template_replaced: bool = False
 
     history_dicts = [{"role": m.role, "text": m.text or m.content or ""} for m in request.conversation_history]
-    history_turns = len(request.conversation_history) // 2
+    history_turns = count_assistant_turns(history_dicts)
 
     # Check if disclaimer has already been shown in this session
     history_texts = [
@@ -264,6 +270,7 @@ def run_triage_pipeline(
     # 4. Check if follow-up question is needed
     if needs_more_info(slots, history_turns, history_dicts):
         q_text, q_options = select_follow_up_question(slots, lang, history_dicts, context)
+        q_text = enforce_question_bank(q_text, lang)
 
         # Output guard on follow up question and options
         guard_q = output_guard(q_text, lang=lang, is_emergency=False, care_type="teleconsultation", field_name="follow_up_question")
@@ -384,6 +391,7 @@ def run_triage_pipeline(
     ):
         if needs_more_info(slots, history_turns, history_dicts):
             q_text, q_options = select_follow_up_question(slots, lang, history_dicts, context)
+            q_text = enforce_question_bank(q_text, lang)
 
             guard_q = output_guard(q_text, lang=lang, is_emergency=False, care_type="teleconsultation", field_name="follow_up_question")
             if not guard_q["ok"]:

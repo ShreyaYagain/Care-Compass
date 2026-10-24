@@ -345,13 +345,13 @@ def run_benchmark():
     splits_naive = list(skf_naive.split(texts, labels))
 
     # 2. Exact-Text Grouped Split - StratifiedGroupKFold on exact normalized string (zero exact duplicate leakage)
-    text_to_grp = {t: i for i, t in enumerate(set(texts))}
+    text_to_grp = {t: i for i, t in enumerate(sorted(set(texts)))}
     exact_groups = np.array([text_to_grp[t] for t in texts])
-    sgkf_exact = StratifiedGroupKFold(n_splits=5)
+    sgkf_exact = StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=42)
     splits_exact = list(sgkf_exact.split(texts, labels, groups=exact_groups))
 
     # 3. 5-fold StratifiedGroupKFold on small groups
-    sgkf = StratifiedGroupKFold(n_splits=5)
+    sgkf = StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=42)
     splits = list(sgkf.split(texts, labels, groups=groups))
     for fold_idx, (tr, val) in enumerate(splits):
         tr_y = set(labels[i] for i in tr)

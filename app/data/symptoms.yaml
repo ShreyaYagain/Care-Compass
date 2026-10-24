@@ -121,7 +121,42 @@ question_bank:
       - { en: "No", hi: "नहीं", hinglish: "No" }
       - { en: "Not sure", hi: "पक्का नहीं", hinglish: "Not sure" }
 
+  - id: stroke_check
+    slot: stroke_symptoms
+    purpose: red_flag_screen
+    text_en: "Is one side of the face or body weak, drooping, or not working right now?"
+    text_hi: "क्या चेहरे या शरीर का एक तरफ अभी कमजोर, टेढ़ा या काम नहीं कर रहा है?"
+    text_hinglish: "Kya face ya body ka ek side abhi kamzor, tedha ya kaam nahi kar raha hai?"
+    options:
+      - { en: "Yes", hi: "हाँ", hinglish: "Yes" }
+      - { en: "No", hi: "नहीं", hinglish: "No" }
+      - { en: "Not sure", hi: "पक्का नहीं", hinglish: "Not sure" }
+
+  - id: seizure_check
+    slot: seizure
+    purpose: red_flag_screen
+    text_en: "Is the person having a fit, jerking, or shaking uncontrollably right now?"
+    text_hi: "क्या मरीज़ को अभी दौरा पड़ रहा है या शरीर अनियंत्रित झटक रहा है?"
+    text_hinglish: "Kya patient ko abhi daura pad raha hai ya body jhatak rahi hai?"
+    options:
+      - { en: "Yes", hi: "हाँ", hinglish: "Yes" }
+      - { en: "No", hi: "नहीं", hinglish: "No" }
+      - { en: "Not sure", hi: "पक्का नहीं", hinglish: "Not sure" }
+
+  - id: suicidal_check
+    slot: suicidal_ideation
+    purpose: red_flag_screen
+    text_en: "Is the person saying they want to hurt themselves or end their life right now?"
+    text_hi: "क्या व्यक्ति अभी खुद को नुकसान पहुंचाने या जान देने की बात कर रहा है?"
+    text_hinglish: "Kya person abhi khud ko nuksan pahunchane ya jaan dene ki baat kar raha hai?"
+    options:
+      - { en: "Yes", hi: "हाँ", hinglish: "Yes" }
+      - { en: "No", hi: "नहीं", hinglish: "No" }
+      - { en: "Not sure", hi: "पक्का नहीं", hinglish: "Not sure" }
+
 # --- Symptom synonym list (used by the rule-based intake extractor) ---
+# This is the single canonical symptom lexicon: the extractor and the
+# explanation builder may only ever emit names from this list.
 symptoms_list:
   fever:
     synonyms: ["bukhar", "bukhaar", "fever", "taap", "temperature", "garam sharir"]
@@ -143,4 +178,28 @@ symptoms_list:
     related_specialties: ["orthopaedics", "general_medicine"]
   vomiting:
     synonyms: ["ulti", "vomit", "dast", "loose motion"]
+    related_specialties: ["general_medicine"]
+  headache:
+    synonyms: ["sir dard", "sar dard", "headache", "migraine"]
+    related_specialties: ["general_medicine", "neurology"]
+  joint_pain:
+    synonyms: ["joint pain", "ghutne mein dard", "knee pain", "twisted ankle", "sprain"]
+    related_specialties: ["orthopaedics"]
+  restlessness:
+    synonyms: ["ghabrahat", "anxiety", "restlessness", "palpitation"]
+    related_specialties: ["cardiology", "psychiatry"]
+  dizziness:
+    synonyms: ["dizzy", "dizziness", "vertigo", "chakkar", "ghoomta"]
+    related_specialties: ["neurology", "general_medicine"]
+  weakness:
+    synonyms: ["weakness", "kamzori", "kamjor", "thakan", "thakavat", "fatigue"]
+    related_specialties: ["general_medicine"]
+  nursing_procedure:
+    synonyms: ["injection", "iv drip", "dressing", "catheter", "bedsore care"]
+    related_specialties: ["nursing"]
+  lab_test:
+    synonyms: ["blood test", "sample collection", "sugar check", "lipid profile", "lab test"]
+    related_specialties: ["pathology"]
+  teleconsultation_query:
+    synonyms: ["consultation", "second opinion", "prescription", "medicine advice"]
     related_specialties: ["general_medicine"]

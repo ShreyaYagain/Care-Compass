@@ -1,6 +1,67 @@
 import re
 from app.core.guardrails import get_disclaimer, get_escalation_line, _load_guardrail_data, _LEXICON
 
+# Human-readable symptom labels per language. Keys are the CANONICAL names in
+# app/data/symptoms.yaml — never raw extracted tokens.
+SYMPTOM_LABELS: dict[str, dict[str, str]] = {
+    "fever": {"en": "fever", "hi": "बुखार", "hinglish": "bukhar"},
+    "cough": {"en": "cough", "hi": "खांसी", "hinglish": "khansi"},
+    "chest_pain": {"en": "chest pain", "hi": "सीने में दर्द", "hinglish": "seene mein dard"},
+    "breathlessness": {"en": "breathlessness", "hi": "सांस फूलना", "hinglish": "saans phoolna"},
+    "stomach_pain": {"en": "stomach pain", "hi": "पेट दर्द", "hinglish": "pet dard"},
+    "injury": {"en": "injury", "hi": "चोट", "hinglish": "chot"},
+    "vomiting": {"en": "vomiting", "hi": "उल्टी", "hinglish": "ulti"},
+    "headache": {"en": "headache", "hi": "सिर दर्द", "hinglish": "sir dard"},
+    "joint_pain": {"en": "joint pain", "hi": "जोड़ों का दर्द", "hinglish": "jodo ka dard"},
+    "restlessness": {"en": "restlessness", "hi": "बेचैनी", "hinglish": "bechaini"},
+    "dizziness": {"en": "dizziness", "hi": "चक्कर आना", "hinglish": "chakkar aana"},
+    "weakness": {"en": "weakness", "hi": "कमजोरी", "hinglish": "kamzori"},
+    "nursing_procedure": {"en": "nursing procedure", "hi": "नर्सिंग प्रक्रिया", "hinglish": "nursing procedure"},
+    "lab_test": {"en": "lab test", "hi": "लैब टेस्ट", "hinglish": "lab test"},
+    "teleconsultation_query": {"en": "consultation request", "hi": "परामर्श", "hinglish": "consultation"},
+}
+
+# Full action sentences per care type per language.
+CARE_ACTION: dict[str, dict[str, str]] = {
+    "paramedic_home_visit": {
+        "en": "A medic home visit is recommended for in-person assessment and vitals.",
+        "hinglish": "Ghar par medic visit recommended hai jaanch aur vitals ke liye.",
+        "hi": "घर पर मेडिक विज़िट की सिफारिश की जाती है।",
+    },
+    "home_nursing": {
+        "en": "A home nursing procedure is recommended.",
+        "hinglish": "Home nursing procedure recommended hai.",
+        "hi": "होम नर्सिंग प्रक्रिया की सिफारिश की जाती है।",
+    },
+    "lab_test_home": {
+        "en": "Home sample collection is scheduled for diagnostic testing.",
+        "hinglish": "Ghar par sample collection diagnostic test ke liye scheduled hai.",
+        "hi": "घर पर सैंपल कलेक्शन निर्धारित है।",
+    },
+    "teleconsultation": {
+        "en": "A virtual doctor consultation is recommended.",
+        "hinglish": "Video par doctor consultation recommended hai.",
+        "hi": "वीडियो डॉक्टर परामर्श की सिफारिश की जाती है।",
+    },
+}
+
+_BECAUSE_PREFIX = {
+    "en": "Because you mentioned ",
+    "hinglish": "Aapne bataya ",
+    "hi": "आपने बताया ",
+}
+
+
+def _lang(language: str | None) -> str:
+    return language if language in ("en", "hi", "hinglish") else "en"
+
+
+def _symptom_label(name: str, language: str) -> str:
+    labels = SYMPTOM_LABELS.get(name)
+    if labels:
+        return labels.get(language) or labels["en"]
+    return name.replace("_", " ")
+
 
 def build_reasoning(
     symptoms: list[str],
@@ -18,16 +79,17 @@ def build_reasoning(
 ) -> str:
     """
     Constructs a plain-language explanation adhering to the Response Policy:
-    - Never names a disease or likely condition.
-    - Never mentions medicine names, doses, or home-remedy dosages.
-    - Never gives false reassurance.
-    - Never discourages seeking care or calling 112.
-    - Always includes escalation line on non-emergency answers in user's language.
-    - Plain words (approx Grade 6 reading level), max 2 sentences for core rationale.
-    - Shows disclaimer once per session (if include_disclaimer=True).
+    - Symptom names come ONLY from the canonical lexicon (symptoms.yaml) and are
+      shown in the user's language.
+    - Raw classifier n-gram terms ("tin", "ting") are never written.
+    - If no valid symptom was recognised, no "Because you mentioned ..."
+      sentence is produced.
+    - Never names a disease, medicine, or gives false reassurance.
+    - Disclaimer ("not a doctor") appears once, in the user's language.
     """
     _load_guardrail_data()
-    disclaimer = get_disclaimer(language) if include_disclaimer else ""
+    lang = _lang(language)
+    disclaimer = get_disclaimer(lang) if include_disclaimer else ""
 
     # 1. Red flag / Emergency (emergency_112 / emergency)
     if red_flags or urgency == "emergency" or care_type == "emergency_112":
@@ -53,56 +115,61 @@ def build_reasoning(
             return f"{disclaimer} {full_emergency}".strip()
         return full_emergency
 
-    # 2. Symptom narrative & top contributing clean terms
-    terms_phrase = ""
-    if top_terms:
-        clean_terms = []
-        diseases = _LEXICON.get("diseases", [])
-        drugs = _LEXICON.get("drugs_and_medicines", [])
-        for item in top_terms[:3]:
-            t = item.get("term", "").strip().lower()
-            if len(t) >= 3 and t not in clean_terms:
-                # Do not leak diseases or drug names into explanation
-                if any(dis == t for dis in diseases) or any(drug == t for drug in drugs):
-                    continue
-                clean_terms.append(t)
-        if clean_terms:
-            terms_phrase = f"Because you mentioned {' and '.join(clean_terms[:2])}, "
+    # 2. Canonical symptoms only (never raw classifier terms). `top_terms` is
+    # accepted for backward compatibility but deliberately ignored: TF-IDF char
+    # n-grams are not symptom names.
+    mention = ""
+    labels = [_symptom_label(s, lang) for s in symptoms if s]
+    if labels:
+        mention = _BECAUSE_PREFIX[lang] + " aur ".join(labels[:3]) if lang != "en" else _BECAUSE_PREFIX[lang] + " and ".join(labels[:3])
 
-    sym_str = ", ".join(s.replace("_", " ") for s in symptoms) if symptoms else "Reported symptoms"
-    dur_str = f" for {duration}" if duration else ""
+    if duration:
+        dur_label = {
+            "en": f" for {duration}",
+            "hinglish": f" {duration} se",
+            "hi": f" {duration} से",
+        }[lang]
+        mention = f"{mention}{dur_label}"
 
     negations = []
     if breathing_difficulty is False:
-        negations.append("no breathing difficulty reported")
+        negations.append({
+            "en": "no breathing difficulty reported",
+            "hinglish": "saans me koi dikkat nahi batayi gayi",
+            "hi": "सांस लेने में कोई दिक्कत नहीं बताई गई",
+        }[lang])
     if chest_pain is False:
-        negations.append("no chest pain reported")
+        negations.append({
+            "en": "no chest pain reported",
+            "hinglish": "seene me koi dard nahi bataya gaya",
+            "hi": "सीने में कोई दर्द नहीं बताया गया",
+        }[lang])
 
-    negation_str = f", {', '.join(negations)}" if negations else ""
+    action = CARE_ACTION.get(care_type, {}).get(lang) or CARE_ACTION.get(care_type, {}).get("en", "Timely care is recommended.")
 
-    # 3. Action description by care_type
-    care_action = {
-        "paramedic_home_visit": "Medic home visit recommended for in-person assessment and vitals.",
-        "home_nursing": "home nursing procedure recommended.",
-        "lab_test_home": "home sample collection scheduled for diagnostic testing.",
-        "teleconsultation": "virtual doctor consultation recommended.",
-    }.get(care_type, "Timely care is recommended.")
+    # Without any recognised symptom, never claim the user mentioned something.
+    if mention:
+        res = f"{mention}. {action}"
+    else:
+        res = action
+
+    if negations:
+        res = f"{res} {', '.join(negations)}."
 
     modifier_note = ""
     if "chronic_condition_with_acute_symptoms" in modifiers:
-        modifier_note = " Underlying conditions indicate same-day in-person monitoring."
-
-    if terms_phrase and care_type in ["home_nursing", "lab_test_home", "teleconsultation"]:
-        res = f"{terms_phrase}we suggest {care_action}{modifier_note}".strip()
-    else:
-        line1 = f"{sym_str.capitalize()}{dur_str}{negation_str}."
-        res = f"{line1} {care_action}{modifier_note}".strip()
+        modifier_note = {
+            "en": " Underlying conditions indicate same-day in-person monitoring.",
+            "hinglish": " Underlying conditions ki wajah se same-day monitoring zaroori hai.",
+            "hi": " पुरानी बीमारियों के कारण उसी दिन निगरानी आवश्यक है।",
+        }[lang]
+        res = f"{res}{modifier_note}"
 
     if context_reason:
         res = f"{res} {context_reason}".strip()
 
-    # 4. Mandatory escalation line on non-emergency answers
-    escalation = get_escalation_line(language)
+    # 3. Mandatory escalation line on non-emergency answers
+    escalation = get_escalation_line(lang)
 
     parts = []
     if disclaimer:

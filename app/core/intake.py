@@ -42,6 +42,52 @@ def _load_symptoms_config():
             _SYMPTOMS_CONFIG = {}
 
 
+def canonicalise_symptom(name: str) -> str | None:
+    """
+    Validates a raw symptom token against the canonical lexicon (symptoms.yaml).
+
+    Rules:
+      - Exact whole-token match against a canonical name or one of its synonyms
+        is accepted and mapped to the canonical id.
+      - Tokens shorter than 4 characters are rejected unless they are in the
+        lexicon (e.g. "gas"-like short synonyms live in the yaml).
+      - Everything else (substrings, near-matches, junk fragments like
+        "tin"/"ting") is rejected. No loose fuzzy matching below 0.85 similarity.
+    """
+    if not name:
+        return None
+    _load_symptoms_config()
+    n = normalise_text(str(name)).strip()
+    if not n:
+        return None
+
+    symptoms_list = _SYMPTOMS_CONFIG.get("symptoms_list", {})
+    for canon, info in symptoms_list.items():
+        if n == canon:
+            return canon
+        for syn in info.get("synonyms", []):
+            if n == normalise_text(syn):
+                return canon
+
+    # Short tokens must be in the lexicon to pass.
+    if len(n) < 4:
+        return None
+
+    return None
+
+
+def canonicalise_symptom_list(names: list[str]) -> list[str]:
+    """Maps a raw symptom list to canonical ids, dropping unrecognised tokens."""
+    out: list[str] = []
+    seen = set()
+    for raw in names or []:
+        canon = canonicalise_symptom(raw)
+        if canon and canon not in seen:
+            seen.add(canon)
+            out.append(canon)
+    return out
+
+
 def default_slots() -> dict:
     return {
         "symptoms": [],
@@ -373,7 +419,8 @@ def rule_based_extract(text: str, history: list[dict] = None) -> dict:
         and not any(s in detected_symptoms for s in ["headache", "stomach_pain", "fever", "cough", "nursing_procedure", "lab_test", "teleconsultation_query", "joint_pain", "restlessness"])
     )
 
-    slots["symptoms"] = detected_symptoms
+    # Only canonical symptoms may leave this function.
+    slots["symptoms"] = canonicalise_symptom_list(detected_symptoms)
 
     # Breathing & chest pain direct keywords
     if slots["breathing_difficulty"] is None:
@@ -498,8 +545,11 @@ def extract_slots(text: str, history: list[dict] = None) -> dict:
             model=settings.GROQ_FAST_MODEL or settings.GROQ_MODEL,
         )
         if groq_result:
-            # Merge Groq extractions into slots
-            merged_symptoms = list(set(rule_slots["symptoms"] + [s.lower() for s in groq_result.symptoms]))
+            # Merge Groq extractions into slots. Every LLM-returned symptom is
+            # validated against the canonical lexicon; junk fragments
+            # (substrings like "tin"/"ting") are dropped.
+            llm_symptoms = canonicalise_symptom_list(groq_result.symptoms)
+            merged_symptoms = list(set(rule_slots["symptoms"] + llm_symptoms))
             rule_slots["symptoms"] = merged_symptoms
 
             if groq_result.service_requested != "none":

@@ -9,15 +9,20 @@ class AuthInterceptor(private val authManager: SupabaseAuthManager) : Intercepto
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalRequest = chain.request()
 
-        // Attach Authorization header if token is present
-        val token = runBlocking { authManager.getAccessToken() }
-        val authenticatedRequest = if (!token.isNullOrBlank()) {
-            originalRequest.newBuilder()
-                .header("Authorization", "Bearer $token")
-                .build()
-        } else {
-            originalRequest
+        // Attach Authorization header (token) and the per-device history key.
+        // DEVICE_ID_HEADER is the single definition shared with the backend.
+        val (token, deviceId) = runBlocking {
+            authManager.getAccessToken() to authManager.getUserId()
         }
+
+        val builder = originalRequest.newBuilder()
+        if (!token.isNullOrBlank()) {
+            builder.header("Authorization", "Bearer $token")
+        }
+        if (deviceId.isNotBlank()) {
+            builder.header(DEVICE_ID_HEADER, deviceId)
+        }
+        val authenticatedRequest = builder.build()
 
         val response = chain.proceed(authenticatedRequest)
 
@@ -34,5 +39,10 @@ class AuthInterceptor(private val authManager: SupabaseAuthManager) : Intercepto
         }
 
         return response
+    }
+
+    companion object {
+        /** History key header: must match app/config.py HISTORY_KEY_HEADER. */
+        const val DEVICE_ID_HEADER = "X-Device-Id"
     }
 }

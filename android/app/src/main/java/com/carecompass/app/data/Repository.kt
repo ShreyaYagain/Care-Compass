@@ -2,13 +2,42 @@ package com.carecompass.app.data
 
 import com.carecompass.app.BuildConfig
 import com.carecompass.app.data.cache.HistoryCache
+import com.google.gson.Gson
+import com.google.gson.JsonObject
+import com.google.gson.JsonPrimitive
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
+import retrofit2.HttpException
 import java.io.File
 import java.time.Instant
 import java.time.temporal.ChronoUnit
+
+/**
+ * Extracts the real backend error message (FastAPI {"detail": ...} body) from a
+ * failed HTTP request so the UI can show it instead of failing silently.
+ */
+fun readableErrorMessage(err: Throwable): String {
+    val httpEx = err as? HttpException ?: run {
+        return err.localizedMessage ?: err.message ?: "Request failed. Please try again."
+    }
+    return try {
+        val body = httpEx.response()?.errorBody()?.string()
+        val detail = body?.let {
+            Gson().fromJson(it, JsonObject::class.java)?.get("detail")
+        }
+        when (detail) {
+            is JsonPrimitive -> detail.asString
+            is JsonObject -> detail.get("message")?.asString
+                ?: detail.get("next_free_slots")?.toString()
+                ?: body.orEmpty()
+            else -> body.orEmpty()
+        }.ifBlank { "Server error (HTTP ${httpEx.code()})" }
+    } catch (e: Exception) {
+        "Server error (HTTP ${httpEx.code()})"
+    }
+}
 
 class Repository(
     private val apiService: ApiService,
@@ -19,6 +48,10 @@ class Repository(
     // In-memory store for mock demo
     private val mockHistory = mutableListOf<HistoryDetail>()
     private val mockBookings = mutableListOf<Booking>()
+
+    // Test seam: the last booking request body (asserted by unit tests).
+    var lastBookingRequest: BookingRequest? = null
+        private set
 
     init {
         initMockData()
@@ -349,6 +382,7 @@ class Repository(
     }
 
     suspend fun createBooking(request: BookingRequest): Result<BookingResponse> {
+        lastBookingRequest = request
         if (useMockRepo) {
             val bId = "BK_" + System.currentTimeMillis().toString().takeLast(6)
             val displayName = if (request.relation != null && request.relation.isNotBlank()) {

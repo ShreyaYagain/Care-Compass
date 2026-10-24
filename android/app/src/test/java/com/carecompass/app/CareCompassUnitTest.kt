@@ -2,7 +2,9 @@ package com.carecompass.app
 
 import com.carecompass.app.data.*
 import com.carecompass.app.util.DateTimeFormatterHelper
+import com.carecompass.app.viewmodel.BookingViewModel
 import com.carecompass.app.viewmodel.BookingsViewModel
+import com.carecompass.app.viewmodel.CareService
 import com.carecompass.app.viewmodel.HistoryViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -130,5 +132,66 @@ class CareCompassUnitTest {
         assertEquals(upcomingCountBefore - 1, updatedState.upcomingBookings.size)
         assertEquals(pastCountBefore + 1, updatedState.pastBookings.size)
         assertEquals("cancelled", updatedState.pastBookings.first().status)
+    }
+
+    @Test
+    fun testBookingViewModel_happyPath_confirmsBooking() = runTest {
+        val repository = Repository(ApiService.create(), useMockRepo = true)
+        val viewModel = BookingViewModel(repository)
+
+        viewModel.startNewBooking()
+        // Seam that reaches step 3 without a network call: a caregiver is chosen.
+        viewModel.openStep3ForReschedule(
+            caregiver = MatchedCaregiver(
+                caregiverId = "CG_001",
+                score = 0.95,
+                reason = "test",
+                name = "Mohit Gupta",
+                role = "doctor",
+                qualification = "MBBS",
+                freeFrom = "09:00",
+                freeUntil = "18:00"
+            ),
+            service = CareService.TELECONSULTATION,
+            initialPatientName = "Rohan",
+            initialRelation = null
+        )
+        viewModel.selectDate(0)
+        viewModel.selectSlot("10:00-11:00")
+        viewModel.updatePatientDetails("Rohan", "9876543210", "Noida Sec 18")
+        viewModel.setForWhom("myself")
+
+        var confirmed: BookingResponse? = null
+        viewModel.confirmBooking { confirmed = it }
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertNull(state.errorMessage)
+        assertEquals(4, state.currentStep)
+        assertNotNull(state.bookingResponse)
+        assertNotNull(confirmed)
+        assertTrue(confirmed!!.bookingId.isNotBlank())
+
+        // The request must carry an ISO start/end time and the mapped care type.
+        val saved = repository.lastBookingRequest
+        assertNotNull(saved)
+        assertEquals("teleconsultation", saved!!.careType)
+        assertNotNull(saved.startTime)
+        assertNotNull(saved.endTime)
+    }
+
+    @Test
+    fun testCareService_fromCareType_mapsAllTypes() {
+        assertEquals(CareService.HOME_NURSING, CareService.fromCareType("home_nursing"))
+        assertEquals(CareService.HOME_NURSING, CareService.fromCareType("paramedic_home_visit"))
+        assertEquals(CareService.LAB_TEST_HOME, CareService.fromCareType("lab_test_home"))
+        assertEquals(CareService.TELECONSULTATION, CareService.fromCareType("teleconsultation"))
+        assertEquals(CareService.HOME_NURSING, CareService.fromCareType(null))
+    }
+
+    @Test
+    fun testBuildBookingIso_producesIsoFormat() {
+        val iso = DateTimeFormatterHelper.buildBookingIso(1, 10, 0)
+        assertTrue(iso.matches(Regex("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z")))
     }
 }

@@ -451,7 +451,8 @@ private fun Step1ReasonView(
             )
         }
 
-        // Follow-up question banner with Yes / No / Not sure
+        // Follow-up question banner: shows the REAL options from the backend.
+        // Never a hardcoded Yes/No/I-don't-know step.
         if (uiState.followUpQuestion != null) {
             Spacer(modifier = Modifier.height(18.dp))
             Card(
@@ -469,53 +470,23 @@ private fun Step1ReasonView(
                     )
                     Spacer(modifier = Modifier.height(14.dp))
 
-                    val yesText = when (selectedLanguage) {
-                        "hi" -> stringResource(R.string.option_yes_hi)
-                        "hinglish" -> stringResource(R.string.option_yes_hinglish)
-                        else -> stringResource(R.string.option_yes_en)
-                    }
-                    val noText = when (selectedLanguage) {
-                        "hi" -> stringResource(R.string.option_no_hi)
-                        "hinglish" -> stringResource(R.string.option_no_hinglish)
-                        else -> stringResource(R.string.option_no_en)
-                    }
-                    val notSureText = when (selectedLanguage) {
-                        "hi" -> stringResource(R.string.option_not_sure_hi)
-                        "hinglish" -> stringResource(R.string.option_not_sure_hinglish)
-                        else -> stringResource(R.string.option_not_sure_en)
+                    val options = uiState.followUpOptions.ifEmpty {
+                        listOf("Yes", "No", "Not sure")
                     }
 
-                    Row(
+                    Column(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Button(
-                            onClick = { viewModel.answerFollowUp(yesText, selectedLanguage, userLocation, onEmergency) },
-                            modifier = Modifier.weight(1f).height(56.dp),
-                            shape = RoundedCornerShape(10.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
-                        ) {
-                            Text(yesText, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                        }
-
-                        Button(
-                            onClick = { viewModel.answerFollowUp(noText, selectedLanguage, userLocation, onEmergency) },
-                            modifier = Modifier.weight(1f).height(56.dp),
-                            shape = RoundedCornerShape(10.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = PrimaryBlue),
-                            border = BorderStroke(1.5.dp, PrimaryBlue)
-                        ) {
-                            Text(noText, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                        }
-
-                        Button(
-                            onClick = { viewModel.answerFollowUp(notSureText, selectedLanguage, userLocation, onEmergency) },
-                            modifier = Modifier.weight(1f).height(56.dp),
-                            shape = RoundedCornerShape(10.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = TextGray),
-                            border = BorderStroke(1.dp, Color(0xFFCBD5E1))
-                        ) {
-                            Text(notSureText, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                        options.forEach { opt ->
+                            Button(
+                                onClick = { viewModel.answerFollowUp(opt, selectedLanguage, userLocation, onEmergency) },
+                                modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+                                shape = RoundedCornerShape(10.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
+                            ) {
+                                Text(opt, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                            }
                         }
                     }
                 }
@@ -712,6 +683,15 @@ private fun Step3DateTimeView(
 
     val timeSlots = remember(freeFrom, freeUntil, selectedDayItem.isToday) {
         BookingViewModel.generate1HourSlots(freeFrom, freeUntil, selectedDayItem.isToday)
+    }
+
+    // Preferred time defaults to the earliest free slot (never blocks the form).
+    LaunchedEffect(timeSlots, uiState.selectedDateOffset) {
+        if (uiState.selectedSlot == null) {
+            timeSlots.firstOrNull { !it.isPast && !it.isBooked }?.let { first ->
+                viewModel.selectSlot(first.slotKey)
+            }
+        }
     }
 
     var localName by remember { mutableStateOf(uiState.patientName) }

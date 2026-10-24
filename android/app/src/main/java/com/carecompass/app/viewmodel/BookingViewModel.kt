@@ -255,7 +255,7 @@ class BookingViewModel(
                 onFailure = { err ->
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        errorMessage = err.localizedMessage ?: "Connection error. Please try again."
+                        errorMessage = readableErrorMessage(err).ifBlank { "Connection error. Please try again." }
                     )
                 }
             )
@@ -304,7 +304,7 @@ class BookingViewModel(
                 onFailure = { err ->
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        errorMessage = err.localizedMessage ?: "Failed to find caregivers. Please retry."
+                        errorMessage = readableErrorMessage(err).ifBlank { "Failed to find caregivers. Please retry." }
                     )
                 }
             )
@@ -412,7 +412,7 @@ class BookingViewModel(
                 onFailure = { err ->
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        errorMessage = err.localizedMessage ?: "Booking failed. Please try again."
+                        errorMessage = readableErrorMessage(err).ifBlank { "Booking failed. Please try again." }
                     )
                 }
             )

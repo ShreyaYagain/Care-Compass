@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="primary_blue">#1976D2</color>
+    <color name="emergency_red">#D32F2F</color>
+    <color name="amber_warning">#FFA000</color>
+    <color name="green_safe">#388E3C</color>
+    <color name="background_light">#F8F9FA</color>
+    <color name="surface_white">#FFFFFF</color>
+</resources>

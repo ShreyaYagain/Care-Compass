@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">CareCompass</string>
+    <string name="tap_and_speak">Tap and speak</string>
+    <string name="describe_symptoms">Describe symptoms or tap mic</string>
+    <string name="emergency_call">Emergency: Call 112</string>
+</resources>

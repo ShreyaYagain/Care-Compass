@@ -1,0 +1,31 @@
+id,user_input,language,age,sex,conditions,care_type,urgency,red_flags,source
+VIG_001,papa ko do din se bukhar hai aur khansi bhi,hinglish,68,male,diabetes,paramedic_home_visit,same_day,,handwritten_gold
+VIG_002,dadi ko subah se tez bukhar hai aur badan dard kar raha hai,hinglish,75,female,hypertension,paramedic_home_visit,same_day,,synthetic
+VIG_003,Father has had high fever and shivering since yesterday,en,62,male,,paramedic_home_visit,same_day,,synthetic
+VIG_004,पिताजी को दो दिन से तेज बुखार और कमजोरी है,hi,65,male,diabetes,paramedic_home_visit,same_day,,synthetic
+VIG_005,"Mummy ko 3 din se bukhar hai, khansi hai par saans lene me koi dikkat nahi hai",hinglish,58,female,,paramedic_home_visit,same_day,,handwritten_gold
+VIG_006,Elderly mother needs blood pressure and vitals check at home due to extreme fatigue,en,74,female,hypertension,paramedic_home_visit,same_day,,synthetic
+VIG_007,bachhe ko 2 din se bukhar aur ulti ho rahi hai,hinglish,6,male,,paramedic_home_visit,same_day,,synthetic
+VIG_008,Grandmother needs surgical wound dressing changed at home,en,78,female,diabetes,nurse_home_visit,same_day,,synthetic
+VIG_009,Papa ke pair me zakham hai jisme patti aur dressing karwani hai,hinglish,70,male,diabetes,nurse_home_visit,same_day,,handwritten_gold
+VIG_010,दादी के टांके कटवाने हैं और इंजेक्शन लगवाना है,hi,80,female,,nurse_home_visit,routine,,synthetic
+VIG_011,Need home nurse for urinary catheter flush and IV injection,en,82,male,prostate,nurse_home_visit,same_day,,synthetic
+VIG_012,Bedridden patient needs bed sore dressing and insulin administration,en,85,female,diabetes,nurse_home_visit,routine,,synthetic
+VIG_013,"Mild sore throat and runny nose since morning, need general advice",en,28,female,,gp_teleconsult,routine,,synthetic
+VIG_014,halka gala kharab hai aur thodi thakan lag rahi hai subah se,hinglish,32,male,,gp_teleconsult,routine,,handwritten_gold
+VIG_015,पेट में हल्की गैस और अपच की शिकायत है,hi,40,male,,gp_teleconsult,routine,,synthetic
+VIG_016,Doctor consultation for routine seasonal cold and prescription refill,en,45,female,,gp_teleconsult,routine,,synthetic
+VIG_017,thoda sirdard hai subah se koi gharelu upay ya consultation chahiye,hinglish,25,female,,gp_teleconsult,routine,,synthetic
+VIG_018,"Skin rash on both arms with itching for 2 weeks, getting worse",en,35,female,,specialist,routine,,synthetic
+VIG_019,Ghutno me purana dard hai chalne me dikkat hoti hai doctor ko dikhana hai,hinglish,63,female,arthritis,specialist,routine,,handwritten_gold
+VIG_020,"महीनों से सिरदर्द और माइग्रेन की पुरानी समस्या है, न्यूरोलॉजिस्ट से मिलना है",hi,38,male,migraine,specialist,routine,,synthetic
+VIG_021,"Chronic lower back ache for 2 months, need orthopaedic opinion",en,50,male,,specialist,routine,,synthetic
+VIG_022,Severe crushing chest pain radiating to left arm with cold sweat,en,55,male,hypertension,emergency_referral,immediate,chest_pain,handwritten_gold
+VIG_023,Papa ko seene me tez dard hai aur paseena aa raha hai saans nahi le pa rahe,hinglish,60,male,diabetes,emergency_referral,immediate,chest_pain;severe_breathlessness,handwritten_gold
+VIG_024,मरीज अचानक बेहोश होकर गिर पड़ा और कोई जवाब नहीं दे रहा है,hi,50,male,,emergency_referral,immediate,unconsciousness,synthetic
+VIG_025,Face drooping on right side and suddenly unable to speak or move right arm,en,72,female,hypertension,emergency_referral,immediate,stroke_signs,synthetic
+VIG_026,Khoon ki ulti ho rahi hai aur behoshi jaisi halat hai,hinglish,45,male,,emergency_referral,immediate,vomiting_blood,handwritten_gold
+VIG_027,Pregnant woman in 8th month with heavy vaginal bleeding and severe pain,en,27,female,pregnant,emergency_referral,immediate,pregnancy_emergency,synthetic
+VIG_028,Bachhe ne galti se floor cleaner ya poison pi liya hai,hinglish,4,male,,emergency_referral,immediate,poisoning_overdose,handwritten_gold
+VIG_029,"Heavy bleeding from leg wound after bike accident, not stopping with pressure",en,24,male,,emergency_referral,immediate,uncontrolled_bleeding,synthetic
+VIG_030,Patient is having continuous epileptic seizures and shaking violently,en,19,male,epilepsy,emergency_referral,immediate,seizure,synthetic

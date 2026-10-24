@@ -1,0 +1,29 @@
+en:
+  call_numbers:
+    - "112"
+    - "102"
+  steps:
+    - "Call 112 (National Emergency) or 102 (Ambulance) immediately."
+    - "Keep the patient calm, resting, and sitting upright if breathing is difficult."
+    - "Do not administer solid foods, water, or unprescribed medicines."
+    - "Keep the main door unlocked and clear path for paramedics."
+
+hi:
+  call_numbers:
+    - "112"
+    - "102"
+  steps:
+    - "तुरंत 112 या 102 (एम्बुलेंस) पर कॉल करें।"
+    - "मरीज को शांत रखें और सांस लेने में तकलीफ हो तो सीधा बैठाएं।"
+    - "मरीज को बिना डॉक्टर की सलाह के कुछ खाने या पीने को न दें।"
+    - "घर का दरवाजा खुला रखें ताकि एम्बुलेंस स्टाफ तुरंत अंदर आ सके।"
+
+hinglish:
+  call_numbers:
+    - "112"
+    - "102"
+  steps:
+    - "Turant 112 ya 102 (Ambulance) par call karein."
+    - "Patient ko shaant rakhein aur saans lene mein dikkat ho toh seedha bithayein."
+    - "Bina doctor ki salah ke kuch bhi khane ya peene ko na dein."
+    - "Main door unlock rakhein taaki ambulance team jaldi enter kar sake."

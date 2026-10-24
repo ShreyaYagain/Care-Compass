@@ -1,0 +1,114 @@
+slots:
+  breathing_difficulty:
+    priority: 1
+    safety_critical: true
+    description: "Difficulty breathing, shortness of breath, gasping"
+    question:
+      en: "Is there any difficulty in breathing or shortness of breath?"
+      hi: "क्या सांस लेने में कोई तकलीफ या सांस फूलने की समस्या है?"
+      hinglish: "Kya saans lene mein koi dikkat ya saans phool rahi hai?"
+    options:
+      - "Yes"
+      - "No"
+      - "Not sure"
+
+  chest_pain:
+    priority: 2
+    safety_critical: true
+    description: "Pain, heaviness, or pressure in the chest"
+    question:
+      en: "Is the patient experiencing any chest pain or chest tightness?"
+      hi: "क्या सीने में दर्द, भारीपन या दबाव महसूस हो रहा है?"
+      hinglish: "Kya seene mein dard, bharipan ya pressure mehsoos ho raha hai?"
+    options:
+      - "Yes"
+      - "No"
+      - "Not sure"
+
+  consciousness:
+    priority: 3
+    safety_critical: true
+    description: "Alertness, fainting, responsiveness"
+    question:
+      en: "Is the person fully conscious, alert, and responding properly?"
+      hi: "क्या मरीज पूरी तरह होश में है और ठीक से बातचीत कर पा रहा है?"
+      hinglish: "Kya patient poori tarah hosh mein hai aur normal respond kar raha hai?"
+    options:
+      - "Yes, fully alert"
+      - "Drowsy / faint"
+      - "Unconscious"
+
+  bleeding:
+    priority: 4
+    safety_critical: true
+    description: "Heavy or uncontrollable bleeding"
+    question:
+      en: "Is there any active or heavy bleeding?"
+      hi: "क्या कहीं से तेज या लगातार खून बह रहा है?"
+      hinglish: "Kya kahin se tez ya lagatar bleeding (khoon) ho rahi hai?"
+    options:
+      - "Yes"
+      - "No"
+      - "Minor only"
+
+  duration:
+    priority: 5
+    safety_critical: false
+    description: "How many days/hours have the symptoms lasted"
+    question:
+      en: "How long has this issue been going on?"
+      hi: "यह समस्या कितने समय या दिनों से है?"
+      hinglish: "Yeh problem kitne din ya ghanton se chal rahi hai?"
+    options:
+      - "Just started today"
+      - "1-3 days"
+      - "More than 5 days"
+
+  severity:
+    priority: 6
+    safety_critical: false
+    description: "Mild, moderate, severe discomfort"
+    question:
+      en: "How severe is the discomfort right now?"
+      hi: "तकलीफ कितनी गंभीर महसूस हो रही है?"
+      hinglish: "Takleef kitni zyada hai?"
+    options:
+      - "Mild (can manage)"
+      - "Moderate"
+      - "Severe / Unbearable"
+
+  age_group:
+    priority: 7
+    safety_critical: false
+    description: "Patient age category"
+    question:
+      en: "What is the approximate age of the patient?"
+      hi: "मरीज की उम्र लगभग कितनी है?"
+      hinglish: "Patient ki lagbhag age kya hai?"
+    options:
+      - "Child (<12 yrs)"
+      - "Adult (12-60 yrs)"
+      - "Senior citizen (>60 yrs)"
+
+symptoms_list:
+  fever:
+    synonyms: ["bukhar", "bukhaar", "fever", "taap", "temperature", "garam sharir"]
+    related_specialties: ["general_medicine", "paediatrics"]
+  cough:
+    synonyms: ["khansi", "khasi", "cough", "coughing", "khokhi"]
+    related_specialties: ["pulmonology", "general_medicine"]
+  chest_pain:
+    synonyms: ["chest pain", "seene me dard", "dil me dard", "chhati dard"]
+    related_specialties: ["cardiology"]
+  breathlessness:
+    synonyms: ["saans phoolna", "sans fulna", "shortness of breath", "dam phoolna"]
+    related_specialties: ["pulmonology", "cardiology"]
+  stomach_pain:
+    synonyms: ["pet dard", "abdominal pain", "pet kharab", "stomach ache"]
+    related_specialties: ["general_medicine", "gastroenterology"]
+  injury:
+    synonyms: ["chot", "wound", "accident", "fracture", "moch", "cut"]
+    related_specialties: ["orthopaedics", "general_medicine"]
+  vomiting:
+    synonyms: ["ulti", "vomit", "dast", "loose motion"]
+    related_specialties: ["general_medicine"]

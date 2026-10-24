@@ -1,0 +1,339 @@
+- id: chest_pain
+  severity: high
+  patterns_en:
+    - "chest pain"
+    - "chest pressure"
+    - "pain in chest"
+    - "heaviness in chest"
+    - "tightness in chest"
+    - "heart attack"
+    - "angina"
+  patterns_hi:
+    - "छाती में दर्द"
+    - "सीने में दर्द"
+    - "सीने में भारीपन"
+    - "दिल का दौरा"
+  patterns_hinglish:
+    - "seene mein dard"
+    - "seene me dard"
+    - "seene me tez dard"
+    - "seene mein tez dard"
+    - "chhati me dard"
+    - "chhati mein dard"
+    - "chest me dard"
+    - "chest mein dard"
+    - "chest pain"
+    - "dil ka daura"
+    - "seena dard"
+    - "sine me dard"
+    - "chhati par bharipan"
+  requires_not_negated: true
+
+- id: severe_breathlessness
+  severity: high
+  patterns_en:
+    - "difficulty breathing"
+    - "shortness of breath"
+    - "cannot breathe"
+    - "can't breathe"
+    - "struggling to breathe"
+    - "gasping for breath"
+    - "choking"
+    - "suffocating"
+  patterns_hi:
+    - "सांस लेने में बहुत तकलीफ"
+    - "सांस फूलना"
+    - "सांस नहीं आ रही"
+    - "दम घुट रहा है"
+  patterns_hinglish:
+    - "saans nahi aa rahi"
+    - "sans nahi aa rahi"
+    - "saans nahi le pa rahe"
+    - "sans nahi le pa rahe"
+    - "saas nahi aa rahi"
+    - "saans phool rahi hai"
+    - "saans lene me dikkat"
+    - "saans lene mein dikkat"
+    - "sans me dikkat"
+    - "dam ghut raha"
+    - "saans atak rahi"
+    - "breathlessness"
+  requires_not_negated: true
+
+- id: unconsciousness
+  severity: high
+  patterns_en:
+    - "unconscious"
+    - "fainted"
+    - "fainting"
+    - "passed out"
+    - "not responding"
+    - "unresponsive"
+    - "blacked out"
+    - "collapsed"
+  patterns_hi:
+    - "बेहोश"
+    - "बेहोशी"
+    - "होश नहीं है"
+    - "चक्कर खाकर गिर गया"
+  patterns_hinglish:
+    - "behosh"
+    - "behoshi"
+    - "hosh nahi hai"
+    - "chhakkar khakar gir gaya"
+    - "gira hua hai hosh nahi"
+    - "respond nahi kar raha"
+  requires_not_negated: true
+
+- id: stroke_signs
+  severity: high
+  patterns_en:
+    - "stroke"
+    - "face drooping"
+    - "slurred speech"
+    - "one sided weakness"
+    - "paralysis"
+    - "arm weakness"
+    - "mouth twisted"
+  patterns_hi:
+    - "लकवा"
+    - "फालिज"
+    - "चेहरा टेढ़ा"
+    - "आवाज लड़खड़ा रही"
+    - "एक तरफ कमजोरी"
+  patterns_hinglish:
+    - "lakwa"
+    - "falij"
+    - "face tedha"
+    - "chehra tedha"
+    - "chehra jhuk gaya"
+    - "awaz ladkhada"
+    - "ek side kamzori"
+    - "ek taraf paralysis"
+    - "bol nahi pa raha"
+  requires_not_negated: true
+
+- id: seizure
+  severity: high
+  patterns_en:
+    - "seizure"
+    - "convulsion"
+    - "epilepsy fit"
+    - "fits"
+    - "shaking violently"
+  patterns_hi:
+    - "दौरा"
+    - "मिर्गी"
+    - "झटके आना"
+  patterns_hinglish:
+    - "daura"
+    - "daure"
+    - "mirgi"
+    - "jhatke aa rahe"
+    - "fits aa rahe"
+    - "kaamp raha hai zor se"
+  requires_not_negated: true
+
+- id: uncontrolled_bleeding
+  severity: high
+  patterns_en:
+    - "heavy bleeding"
+    - "severe bleeding"
+    - "uncontrolled bleeding"
+    - "bleeding profusely"
+    - "blood won't stop"
+    - "spurting blood"
+  patterns_hi:
+    - "खून बहना बंद नहीं हो रहा"
+    - "बहुत ज्यादा खून"
+    - "खून का फव्वारा"
+  patterns_hinglish:
+    - "khoon band nahi ho raha"
+    - "bahut jyada khoon beh raha"
+    - "heavy bleeding"
+    - "khoon ruk nahi raha"
+    - "zyada blood nikal raha"
+  requires_not_negated: true
+
+- id: vomiting_blood
+  severity: high
+  patterns_en:
+    - "vomiting blood"
+    - "coughing up blood"
+    - "blood in vomit"
+    - "black stool"
+    - "coffee ground emesis"
+  patterns_hi:
+    - "खून की उल्टी"
+    - "खांसी में खून"
+    - "काला मल"
+  patterns_hinglish:
+    - "khoon ki ulti"
+    - "khansi me khoon"
+    - "vomit me blood"
+    - "kala pakhana"
+    - "kala latrine"
+  requires_not_negated: true
+
+- id: severe_burns
+  severity: high
+  patterns_en:
+    - "severe burns"
+    - "third degree burn"
+    - "acid burn"
+    - "fire burn"
+    - "burnt completely"
+  patterns_hi:
+    - "बुरी तरह जल गया"
+    - "तेजाब से जला"
+  patterns_hinglish:
+    - "buri tarah jal gaya"
+    - "acid se jala"
+    - "aag me jala"
+    - "skin utar gayi jalne se"
+  requires_not_negated: true
+
+- id: poisoning_overdose
+  severity: high
+  patterns_en:
+    - "poisoning"
+    - "swallowed poison"
+    - "drug overdose"
+    - "drank pesticide"
+    - "rat poison"
+    - "insecticide"
+    - "floor cleaner"
+    - "poison"
+  patterns_hi:
+    - "जहर खा लिया"
+    - "कीटनाशक पी लिया"
+    - "दवा का ओवरडोज"
+  patterns_hinglish:
+    - "zehar kha liya"
+    - "zahar peeliya"
+    - "poison pi liya"
+    - "floor cleaner pi liya"
+    - "cleaner pi liya"
+    - "insecticide pi liya"
+    - "overdose ho gaya"
+    - "chuhon ki dawai khaa li"
+  requires_not_negated: true
+
+- id: snake_bite
+  severity: high
+  patterns_en:
+    - "snake bite"
+    - "bitten by snake"
+    - "scorpion sting"
+  patterns_hi:
+    - "सांप ने काट लिया"
+    - "बिच्छू ने डंक मारा"
+  patterns_hinglish:
+    - "saanp ne kaat liya"
+    - "saap ne kaata"
+    - "snake bite"
+    - "bichhu ne danka mara"
+  requires_not_negated: true
+
+- id: anaphylaxis
+  severity: high
+  patterns_en:
+    - "allergic reaction"
+    - "anaphylaxis"
+    - "throat swelling"
+    - "face swelling and breathless"
+    - "tongue swollen"
+  patterns_hi:
+    - "गले में सूजन और सांस नहीं"
+    - "चेहरा सूज गया सांस नहीं आ रही"
+  patterns_hinglish:
+    - "gala sooj gaya"
+    - "allergy se saans ruk rahi"
+    - "face sooj gaya sans band"
+  requires_not_negated: true
+
+- id: suicide_crisis
+  severity: high
+  patterns_en:
+    - "suicide"
+    - "want to end my life"
+    - "kill myself"
+    - "suicidal"
+    - "slit wrist"
+    - "hanging myself"
+  patterns_hi:
+    - "आत्महत्या"
+    - "जान देना चाहता हूँ"
+    - "मरना चाहता हूँ"
+  patterns_hinglish:
+    - "aatmahatya"
+    - "jaan dena chahta"
+    - "khud ko marna chahta"
+    - "marna chahta hu"
+    - "suicide karna hai"
+  requires_not_negated: true
+
+- id: head_injury
+  severity: high
+  patterns_en:
+    - "severe head injury"
+    - "head hit concrete"
+    - "ear bleeding after fall"
+    - "skull fracture"
+  patterns_hi:
+    - "सिर पर गंभीर चोट"
+    - "सिर फूट गया खून बह रहा"
+  patterns_hinglish:
+    - "sir par gehri chot"
+    - "sar foot gaya"
+    - "sir me bhari chot behosh"
+  requires_not_negated: true
+
+- id: pregnancy_emergency
+  severity: high
+  patterns_en:
+    - "pregnant bleeding"
+    - "pregnancy severe pain"
+    - "water broke early"
+    - "no baby movement"
+  patterns_hi:
+    - "गर्भावस्था में खून"
+    - "प्रेगनेंसी में तेज दर्द"
+    - "बच्चा हलचल नहीं कर रहा"
+  patterns_hinglish:
+    - "pregnancy me khoon"
+    - "pregnant hu bleeding ho rahi"
+    - "garbh me dard bleeding"
+    - "bachha move nahi kar raha"
+  requires_not_negated: true
+
+- id: blue_lips
+  severity: high
+  patterns_en:
+    - "blue lips"
+    - "cyanosis"
+    - "fingers turning blue"
+    - "skin turned blue"
+  patterns_hi:
+    - "होंठ नीले पड़ गए"
+    - "नाखून नीले हो गए"
+  patterns_hinglish:
+    - "hoth neele pad gaye"
+    - "lips blue ho rahe"
+    - "neela pad gaya"
+  requires_not_negated: true
+
+- id: high_fever_infant
+  severity: medium
+  patterns_en:
+    - "infant high fever"
+    - "newborn fever"
+    - "baby fever 104"
+  patterns_hi:
+    - "नवजात को तेज बुखार"
+    - "छोटे बच्चे को 104 बुखार"
+  patterns_hinglish:
+    - "chote bacche ko tez bukhar"
+    - "newborn ko bukhar"
+    - "2 mahine ke bachhe ko bukhar"
+  requires_not_negated: true

@@ -1,0 +1,18 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: carecompass-api
+    ports:
+      - "8000:8000"
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - HOST=0.0.0.0
+      - PORT=8000
+      - MODEL_VERSION=1.0.0
+      - DATABASE_URL=sqlite:///./carecompass.db
+    volumes:
+      - ./app/data:/app/app/data
+      - ./carecompass.db:/app/carecompass.db
+    restart: unless-stopped

@@ -42,10 +42,12 @@ def check_red_flags(
             return [], [], None, False
         return [], None, False
 
-    # Create combined representations for maximum recall
+    # Create combined representations for maximum recall.
+    # " zzsepzzz " marks the boundary between the two representations so the
+    # negation window in is_phrase_negated never spans the duplicate text.
     combined_roman = (
         (normalised_text or normalise_text(original_text))
-        + " . "
+        + " zzsepzzz "
         + normalise_text(transliterate_devanagari_to_roman(original_text))
     )
     combined_raw = original_text + " . " + (translated_en or "")
@@ -60,19 +62,22 @@ def check_red_flags(
 
         found = False
 
-        # 1. Check Devanagari patterns against raw text
+        # 1. Check Devanagari patterns (transliterated to Roman, word-boundary match)
         for pat in patterns_hi:
-            if pat in combined_raw:
-                if requires_not_negated and is_phrase_negated(pat, combined_raw):
+            p_norm = normalise_text(pat)
+            if re.search(rf"\b{re.escape(p_norm)}\b", combined_roman):
+                if requires_not_negated and (
+                    is_phrase_negated(pat, combined_raw) or is_phrase_negated(p_norm, combined_roman)
+                ):
                     continue
                 found = True
                 break
 
-        # 2. Check English patterns
+        # 2. Check English patterns (word-boundary match on normalised text)
         if not found:
             for pat in patterns_en:
                 p_norm = normalise_text(pat)
-                if re.search(rf"\b{re.escape(p_norm)}\b", combined_roman) or pat.lower() in combined_raw.lower():
+                if re.search(rf"\b{re.escape(p_norm)}\b", combined_roman):
                     if requires_not_negated and (
                         is_phrase_negated(pat, combined_raw) or is_phrase_negated(p_norm, combined_roman)
                     ):
@@ -80,11 +85,11 @@ def check_red_flags(
                     found = True
                     break
 
-        # 3. Check Hinglish patterns
+        # 3. Check Hinglish patterns (word-boundary match on normalised text)
         if not found:
             for pat in patterns_hinglish:
                 p_norm = normalise_text(pat)
-                if p_norm in combined_roman or pat.lower() in combined_raw.lower():
+                if re.search(rf"\b{re.escape(p_norm)}\b", combined_roman):
                     if requires_not_negated and (
                         is_phrase_negated(pat, combined_raw) or is_phrase_negated(p_norm, combined_roman)
                     ):

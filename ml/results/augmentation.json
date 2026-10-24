@@ -1,0 +1,8 @@
+{
+  "loose_cluster_macro_f1_before": 0.7242508861054449,
+  "loose_cluster_macro_f1_after": 0.9605291982650475,
+  "classifier_emergency_recall_before": 0.6204379562043796,
+  "classifier_emergency_recall_after": 0.7591240875912408,
+  "keep_augmentation": true,
+  "augmented_rows": 607
+}

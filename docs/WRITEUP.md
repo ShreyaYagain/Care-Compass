@@ -27,6 +27,8 @@ CareCompass implements a three-module architecture wrapped in a production-ready
   - Evaluates mock caregivers around Delhi NCR using haversine distance decay ($e^{-\text{km}/5}$), exact and compatible skill matching, time-to-earliest slot, language concordance, and rating shrinkage.
   - Generates factual, interpretable match explanations (e.g., *"Hindi-speaking, 3 km away, free at 4 pm"*).
 
+- **Persistence & Auth (Supabase)**: chat history, bookings, and the caregiver roster are stored in **Supabase (Postgres + Auth)**. User access tokens are verified via Supabase JWT (HS256 / JWKS); Row-Level Security scopes users to their own rows. If the Supabase env vars are missing, the backend **fails soft to a local SQLite store** so the demo and test suite run with no external dependency. Only synthetic demo data is stored — no real patient identifiers.
+
 ## 3. Evaluation & Key Results
 - **Emergency Recall**: **100%** on held-out gold evaluations (Target $\ge$ 98%).
 - **Under-Triage Rate**: **0.00%** (Target < 5%).

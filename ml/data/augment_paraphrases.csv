@@ -1,0 +1,608 @@
+id,user_input,language,care_type,urgency,red_flags,source
+AUG_0001,My dad is clutching his chest and can't catch his breath.,English,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0002,"Papa is wheezing hard, says his chest feels like an elephant sitting on it.",English,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0003,Mummy is gasping for air and complaining of sharp chest pain.,English,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0004,My mother suddenly stopped breathing properly and has intense chest pain.,English,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0005,"Dad collapsed, chest hurting badly and he's struggling to breathe.",English,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0006,Father is short of breath and says his chest is burning.,English,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0007,"My sister is panting, clutching her chest with severe pain.",English,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0008,Grandma is having trouble breathing and a crushing pain in her chest.,English,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0009,"My brother can't breathe, his chest feels tight and painful.",English,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0010,"Papa is gasping, says his chest hurts like a knife.",English,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0011,"Mummy is wheezing, chest pain is radiating to her arm.",English,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0012,"Dad is struggling for air, chest pain is getting worse.",English,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0013,My father is breathless and his chest feels like it's on fire.,English,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0014,"Grandpa is clutching his chest, can't get enough air.",English,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0015,My aunt is short of breath and has a sharp chest ache.,English,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0016,"Dad is panting heavily, chest pain is severe.",English,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0017,"Papa is having a hard time breathing, chest feels tight.",English,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0018,"Mummy is gasping, says she has crushing chest pain.",English,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0019,"My mother is breathless, chest pain spreading across her ribcage.",English,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0020,"Father collapsed, can't breathe and chest hurts intensely.",English,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0021,"Brother is wheezing, chest pain is stabbing.",English,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0022,"Grandma is struggling to inhale, chest pain is sharp.",English,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0023,"Dad is out of breath, chest feels like a pressure cooker.",English,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0024,"My dad can't catch his breath, chest pain is unbearable.",English,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0025,"Papa is short of breath, says his chest is hurting a lot.",English,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0026,"Mummy is panting, severe chest pain radiating to her back.",English,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0027,"Father is gasping, chest pain is worsening by the minute.",English,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0028,"My sister is breathless, clutching her chest in pain.",English,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0029,"Grandpa is wheezing, chest pain is sharp and constant.",English,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0030,"Dad is struggling to inhale, chest feels like it's being squeezed.",English,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0031,"My mother is out of breath, chest pain is intense.",English,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0032,"Papa is having trouble breathing, chest pain is crushing.",English,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0033,"Mummy is gasping for air, chest pain is sharp.",English,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0034,"Father is short of breath, chest feels like a heavy weight.",English,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0035,"My brother is wheezing, severe chest pain in the center.",English,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0036,"Grandma is breathless, chest pain spreading to her neck.",English,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0037,"Dad collapsed, can't breathe, chest pain is severe.",English,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0038,"Papa is panting, chest pain is radiating to his left arm.",English,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0039,"Mummy is struggling to breathe, chest feels tight and painful.",English,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0040,"My father is gasping, chest pain is like a burning fire.",English,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0041,पापा को अचानक सीने में तेज दर्द और सांस नहीं ले पा रहे हैं,Hindi,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0042,मम्मी को सांस फूल रही है और छाती में बहुत दर्द है,Hindi,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0043,"दादी को सीने में दर्द है, सांस लेने में तकलीफ हो रही है",Hindi,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0044,"भाई को तेज़ सीने का दर्द है, सांस रुक सी गई है",Hindi,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0045,"बहन को सांस नहीं आ रही, साथ में छाती में दर्द भी है",Hindi,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0046,पापा को सीने में दर्द है और सांस लेने में दिक्कत है,Hindi,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0047,"मम्मी को अचानक सांस रुक गई, छाती में तीव्र दर्द है",Hindi,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0048,"दादी को सांस फूल रही है, सीने में बहुत तेज़ दर्द है",Hindi,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0049,भाई को छाती में दर्द है और सांस नहीं ले पा रहा है,Hindi,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0050,"बहन को सीने में दर्द है, सांस लेने में कठिनाई है",Hindi,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0051,"पापा को सांस नहीं आ रही, साथ में सीने में तेज़ दर्द है",Hindi,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0052,"मम्मी को सीने में दर्द है, सांस लेने में बहुत दिक्कत है",Hindi,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0053,"दादी को अचानक सांस रुक गई, छाती में दर्द भी है",Hindi,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0054,भाई को तेज़ सांस की कमी और सीने में दर्द है,Hindi,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0055,"बहन को सांस नहीं ले पा रही, छाती में दर्द भी है",Hindi,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0056,"पापा को सीने में दर्द है, सांस लेने में बहुत तकलीफ है",Hindi,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0057,"मम्मी को अचानक सांस नहीं आ रही, छाती में दर्द है",Hindi,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0058,दादी को सीने में तेज़ दर्द और सांस नहीं ले पा रही है,Hindi,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0059,भाई को सांस फूल रही है और छाती में दर्द है,Hindi,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0060,"बहन को सीने में दर्द है, सांस नहीं ले पा रही है",Hindi,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0061,"पापा को अचानक सांस नहीं ले पा रहे, सीने में दर्द भी है",Hindi,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0062,"मम्मी को सीने में दर्द है, सांस लेने में दिक्कत है",Hindi,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0063,"दादी को सांस नहीं आ रही, साथ में छाती में दर्द है",Hindi,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0064,"भाई को सीने में तेज़ दर्द है, सांस नहीं ले पा रहा है",Hindi,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0065,"बहन को सांस नहीं आ रही, छाती में दर्द भी है",Hindi,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0066,पापा को सीने में दर्द है और सांस रुक सी गई है,Hindi,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0067,"मम्मी को अचानक सांस नहीं ले पा रही, सीने में दर्द है",Hindi,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0068,"दादी को सीने में दर्द है, सांस नहीं ले पा रही है",Hindi,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0069,"भाई को सांस नहीं आ रही, साथ में छाती में दर्द है",Hindi,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0070,"बहन को सीने में तेज़ दर्द है, सांस नहीं ले पा रही है",Hindi,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0071,"पापा को सांस नहीं ले पा रहे, सीने में बहुत दर्द है",Hindi,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0072,मम्मी को सीने में दर्द है और सांस नहीं ले पा रही है,Hindi,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0073,"दादी को अचानक सांस नहीं आ रही, छाती में दर्द है",Hindi,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0074,"भाई को सीने में दर्द है, सांस नहीं ले पा रहा है",Hindi,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0075,"बहन को सांस नहीं ले पा रही, सीने में दर्द भी है",Hindi,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0076,"पापा को सीने में तेज़ दर्द है, सांस नहीं ले पा रहे हैं",Hindi,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0077,"मम्मी को सांस नहीं आ रही, साथ में छाती में दर्द है",Hindi,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0078,"भाई को अचानक सांस नहीं ले पा रहा, छाती में दर्द है",Hindi,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0079,Mummy ko chest pain hai aur saans lene mein bahut mushkil ho rahi hai.,Hinglish,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0080,"Papa ko achanak se seene mein dard hua, saans ruk rahi hai.",Hinglish,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0081,"Dadi ko severe chest pain hai, saans bilkul nahi aa rahi.",Hinglish,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0082,"Mere bhai ko chest mein bahut dard hai, saans chhoti ho gayi.",Hinglish,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0083,Maa ko chest ka pain hai aur saans lene mein takleef hai.,Hinglish,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0084,"Papa ko chest ka bahut tez dard hai, saans ruk rahi hai.",Hinglish,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0085,"Mummy ko seene mein dard hai, saans bahut kam ho rahi hai.",Hinglish,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0086,"Dada ko chest pain hai, saans lene mein problem ho rahi hai.",Hinglish,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0087,Mere bhai ko chest mein dard aur saans ki kami hai.,Hinglish,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0088,"Maa ko chest ka dard hai, saans lene mein dikkat hai.",Hinglish,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0089,Papa ko chest pain se saans lene mein problem ho rahi hai.,Hinglish,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0090,"Mummy ko chest mein dard hai, saans bilkul nahi aa rahi.",Hinglish,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0091,"Dadi ko chest pain hai, saans lene mein bahut mushkil ho rahi hai.",Hinglish,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0092,Mere bhai ko chest ka dard hai aur saans chhoti ho gayi.,Hinglish,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0093,"Maa ko severe chest pain hai, saans ruk rahi hai.",Hinglish,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0094,"Papa ko chest mein dard hai, saans lene mein bahut takleef hai.",Hinglish,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0095,"Mummy ko chest pain hai, saans bahut kam ho rahi hai.",Hinglish,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0096,"Dada ko chest ka dard hai, saans lene mein problem hai.",Hinglish,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0097,"Mere bhai ko chest pain hai, saans lene mein dikkat ho rahi hai.",Hinglish,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0098,"Maa ko chest mein dard hai, saans bilkul nahi aa rahi.",Hinglish,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0099,"Papa ko chest pain hai, saans lene mein bahut mushkil ho rahi hai.",Hinglish,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0100,"Mummy ko chest ka dard hai, saans chhoti ho gayi.",Hinglish,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0101,"Dadi ko chest pain hai, saans lene mein takleef ho rahi hai.",Hinglish,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0102,"Mere bhai ko severe chest pain hai, saans nahi aa rahi.",Hinglish,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0103,"Maa ko chest pain hai, saans lene mein problem ho rahi hai.",Hinglish,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0104,"Papa ko chest mein dard hai, saans bahut kam ho rahi hai.",Hinglish,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0105,Mummy ko chest pain se saans lene mein dikkat ho rahi hai.,Hinglish,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0106,"Dada ko chest ka dard hai, saans lene mein mushkil ho rahi hai.",Hinglish,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0107,"Mere bhai ko chest pain hai, saans bilkul nahi aa rahi.",Hinglish,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0108,"Maa ko chest mein dard hai, saans lene mein takleef hai.",Hinglish,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0109,"Papa ko severe chest pain hai, saans lene mein problem ho rahi hai.",Hinglish,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0110,"Mummy ko chest ka dard hai, saans bahut kam ho rahi hai.",Hinglish,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0111,"Mere bhai ko chest mein dard hai, saans chhoti ho gayi.",Hinglish,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0112,"Maa ko chest pain hai, saans lene mein takleef ho rahi hai.",Hinglish,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0113,"Papa ko chest pain hai, saans bilkul nahi aa rahi.",Hinglish,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0114,"Mummy ko chest mein dard hai, saans lene mein problem ho rahi hai.",Hinglish,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0115,"Dada ko chest pain hai, saans bahut kam ho rahi hai.",Hinglish,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0116,"Mere bhai ko severe chest pain hai, saans lene mein takleef hai.",Hinglish,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0117,"Maa ko chest ka dard hai, saans nahi aa rahi.",Hinglish,emergency_112,emergency,chest_pain;breathlessness,synthetic_llm
+AUG_0118,Can someone visit for a home injection prescribed by the doctor?,English,home_nursing,same_day,,synthetic_llm
+AUG_0119,"My dadi needs a bedsore dressing at home, please send a nurse.",English,home_nursing,same_day,,synthetic_llm
+AUG_0120,Papa requires insulin shots; can a nurse come over?,English,home_nursing,same_day,,synthetic_llm
+AUG_0121,We need wound dressing at home after my mom's surgery.,English,home_nursing,same_day,,synthetic_llm
+AUG_0122,Grandma's pressure ulcer needs a dressing change at our house.,English,home_nursing,same_day,,synthetic_llm
+AUG_0123,Need a nurse for insulin injection for my elderly father.,English,home_nursing,same_day,,synthetic_llm
+AUG_0124,Please arrange a home visit for a doctor‑ordered injection.,English,home_nursing,same_day,,synthetic_llm
+AUG_0125,"Mummy has a sore that needs dressing, can you send help?",English,home_nursing,same_day,,synthetic_llm
+AUG_0126,Father needs insulin shots; home nursing required urgently.,English,home_nursing,same_day,,synthetic_llm
+AUG_0127,Home nurse needed for dressing my grandma's bedsore.,English,home_nursing,same_day,,synthetic_llm
+AUG_0128,Can a nurse come for my dad's insulin injection today?,English,home_nursing,same_day,,synthetic_llm
+AUG_0129,Need a professional to dress my grandmother's wound at home.,English,home_nursing,same_day,,synthetic_llm
+AUG_0130,Please send someone for a home injection as prescribed.,English,home_nursing,same_day,,synthetic_llm
+AUG_0131,My elderly mother needs a wound dressing at home after operation.,English,home_nursing,same_day,,synthetic_llm
+AUG_0132,"Dadi's bedsore needs a fresh dressing, send a nurse please.",English,home_nursing,same_day,,synthetic_llm
+AUG_0133,Looking for home nursing to give insulin to my papa.,English,home_nursing,same_day,,synthetic_llm
+AUG_0134,Require a nurse for a doctor‑ordered injection at our residence.,English,home_nursing,same_day,,synthetic_llm
+AUG_0135,"Grandma's ulcer needs dressing, can you arrange a visit?",English,home_nursing,same_day,,synthetic_llm
+AUG_0136,Help needed for insulin injection for my senior father at home.,English,home_nursing,same_day,,synthetic_llm
+AUG_0137,Need a home nurse for wound dressing post‑surgery for mum.,English,home_nursing,same_day,,synthetic_llm
+AUG_0138,Can you send a nurse for my dad's insulin shot?,English,home_nursing,same_day,,synthetic_llm
+AUG_0139,"My grandmother's bedsore requires dressing, need home care.",English,home_nursing,same_day,,synthetic_llm
+AUG_0140,Urgent home visit for insulin injection for my elderly dad.,English,home_nursing,same_day,,synthetic_llm
+AUG_0141,Need a nurse to change dressing on my mom's surgical wound.,English,home_nursing,same_day,,synthetic_llm
+AUG_0142,Please arrange a home injection for my father's prescription.,English,home_nursing,same_day,,synthetic_llm
+AUG_0143,"Dadi's pressure sore needs dressing, send a caregiver.",English,home_nursing,same_day,,synthetic_llm
+AUG_0144,Home nursing required for insulin shots for my papa.,English,home_nursing,same_day,,synthetic_llm
+AUG_0145,"Mummy's post‑op wound needs dressing at home, please help.",English,home_nursing,same_day,,synthetic_llm
+AUG_0146,Father needs insulin injection; can a nurse come today?,English,home_nursing,same_day,,synthetic_llm
+AUG_0147,"Grandma's bedsore dressing needed at home, urgent.",English,home_nursing,same_day,,synthetic_llm
+AUG_0148,Need a nurse for home injection as per doctor's order.,English,home_nursing,same_day,,synthetic_llm
+AUG_0149,My dad's insulin injection help required at home.,English,home_nursing,same_day,,synthetic_llm
+AUG_0150,Please send a nurse for my grandmother's wound dressing.,English,home_nursing,same_day,,synthetic_llm
+AUG_0151,Home nurse needed for insulin injection for elderly father.,English,home_nursing,same_day,,synthetic_llm
+AUG_0152,"Dadi's ulcer dressing required, can you send help?",English,home_nursing,same_day,,synthetic_llm
+AUG_0153,Need a professional for home injection for my papa.,English,home_nursing,same_day,,synthetic_llm
+AUG_0154,"Mummy's surgical wound needs dressing, need home nurse.",English,home_nursing,same_day,,synthetic_llm
+AUG_0155,"Father requires insulin shots, need home nursing service.",English,home_nursing,same_day,,synthetic_llm
+AUG_0156,Grandma's bedsore needs fresh dressing at home.,English,home_nursing,same_day,,synthetic_llm
+AUG_0157,Urgent: need a nurse for insulin injection for my dad.,English,home_nursing,same_day,,synthetic_llm
+AUG_0158,Need home wound dressing for my mother's post‑surgery care.,English,home_nursing,same_day,,synthetic_llm
+AUG_0159,घर पर मेरे पापा को इंसुलिन लगवाना है,Hindi,home_nursing,same_day,,synthetic_llm
+AUG_0160,मम्मी को घर पर इन्जेक्शन चाहिए,Hindi,home_nursing,same_day,,synthetic_llm
+AUG_0161,दादी को घाव की ड्रेसिंग घर पर चाहिए,Hindi,home_nursing,same_day,,synthetic_llm
+AUG_0162,"भाभी का पट्टी बदलवाना है, कृपया घर पर आएँ",Hindi,home_nursing,same_day,,synthetic_llm
+AUG_0163,घर में मेरे बेटे को इन्जेक्शन लगवाना है,Hindi,home_nursing,same_day,,synthetic_llm
+AUG_0164,नाना को घर पर इन्सुलिन लगवाना है,Hindi,home_nursing,same_day,,synthetic_llm
+AUG_0165,घर पर मेरी पत्नी की पट्टी बदलवानी है,Hindi,home_nursing,same_day,,synthetic_llm
+AUG_0166,"डॉक्टर ने लिखा है, घर पर इन्जेक्शन आ सकता है",Hindi,home_nursing,same_day,,synthetic_llm
+AUG_0167,पापा को घर पर इन्जेक्शन लगवाना है,Hindi,home_nursing,same_day,,synthetic_llm
+AUG_0168,मम्मी को घर पर इन्सुलिन लगवाना है,Hindi,home_nursing,same_day,,synthetic_llm
+AUG_0169,दादी को घर पर ड्रेसिंग चाहिए,Hindi,home_nursing,same_day,,synthetic_llm
+AUG_0170,"भाई की चोट पर पट्टी बदलवानी है, घर पर",Hindi,home_nursing,same_day,,synthetic_llm
+AUG_0171,घर पर मेरे बेटे को इन्सुलिन लगवाना है,Hindi,home_nursing,same_day,,synthetic_llm
+AUG_0172,नानी को घर पर इन्जेक्शन चाहिए,Hindi,home_nursing,same_day,,synthetic_llm
+AUG_0173,पत्नी को घर पर पट्टी बदलवानी है,Hindi,home_nursing,same_day,,synthetic_llm
+AUG_0174,"डॉक्टर ने लिखा है, घर पर इन्सुलिन लगवाना है",Hindi,home_nursing,same_day,,synthetic_llm
+AUG_0175,पापा को घर पर इन्सुलिन लगवाना है,Hindi,home_nursing,same_day,,synthetic_llm
+AUG_0176,मम्मी को घर पर इन्जेक्शन लगवाना है,Hindi,home_nursing,same_day,,synthetic_llm
+AUG_0177,दादी को घर पर घाव की ड्रेसिंग चाहिए,Hindi,home_nursing,same_day,,synthetic_llm
+AUG_0178,भाभी को घर पर पट्टी बदलवानी है,Hindi,home_nursing,same_day,,synthetic_llm
+AUG_0179,घर पर मेरे बेटे को इन्जेक्शन लगवाना है,Hindi,home_nursing,same_day,,synthetic_llm
+AUG_0180,पत्नी की ड्रेसिंग घर पर चाहिए,Hindi,home_nursing,same_day,,synthetic_llm
+AUG_0181,"डॉक्टर ने लिखा है, घर पर इन्जेक्शन आना चाहिए",Hindi,home_nursing,same_day,,synthetic_llm
+AUG_0182,पापा को घर पर इन्जेक्शन चाहिए,Hindi,home_nursing,same_day,,synthetic_llm
+AUG_0183,भाई को घर पर पट्टी बदलवानी है,Hindi,home_nursing,same_day,,synthetic_llm
+AUG_0184,पत्नी को घर पर इन्सुलिन लगवाना है,Hindi,home_nursing,same_day,,synthetic_llm
+AUG_0185,"डॉक्टर ने लिखा है, घर पर इन्सुलिन चाहिए",Hindi,home_nursing,same_day,,synthetic_llm
+AUG_0186,पापा को घर पर इन्सुलिन चाहिए,Hindi,home_nursing,same_day,,synthetic_llm
+AUG_0187,दादी को घर पर इन्सुलिन लगवाना है,Hindi,home_nursing,same_day,,synthetic_llm
+AUG_0188,भाभी को घर पर ड्रेसिंग चाहिए,Hindi,home_nursing,same_day,,synthetic_llm
+AUG_0189,घर पर मेरे बेटे को पट्टी बदलवानी है,Hindi,home_nursing,same_day,,synthetic_llm
+AUG_0190,नाना को घर पर इन्जेक्शन लगवाना है,Hindi,home_nursing,same_day,,synthetic_llm
+AUG_0191,पत्नी की इन्जेक्शन घर पर चाहिए,Hindi,home_nursing,same_day,,synthetic_llm
+AUG_0192,"डॉक्टर ने लिखा है, घर पर ड्रेसिंग आनी चाहिए",Hindi,home_nursing,same_day,,synthetic_llm
+AUG_0193,मम्मी को घर पर इन्सुलिन चाहिए,Hindi,home_nursing,same_day,,synthetic_llm
+AUG_0194,दादी को घर पर इन्जेक्शन लगवाना है,Hindi,home_nursing,same_day,,synthetic_llm
+AUG_0195,भाई को घर पर इन्सुलिन चाहिए,Hindi,home_nursing,same_day,,synthetic_llm
+AUG_0196,"Doctor ne likha hai insulin injection, koi nurse ghar pe aayegi?",Hinglish,home_nursing,same_day,,synthetic_llm
+AUG_0197,"Mummy ko insulin ki injection chahiye, ghar par nurse bula sakte hain?",Hinglish,home_nursing,same_day,,synthetic_llm
+AUG_0198,"Papa ko subah subah injection lagwana hai, koi home nurse available?",Hinglish,home_nursing,same_day,,synthetic_llm
+AUG_0199,Dadi ko injection dene ke liye koi nurse ghar aayegi?,Hinglish,home_nursing,same_day,,synthetic_llm
+AUG_0200,"Doctor ne likha hai IM injection, ghar pe nurse se karwana hai",Hinglish,home_nursing,same_day,,synthetic_llm
+AUG_0201,"Mere dad ko insulin shot chahiye, ghar pe nurse kaun laa sakta?",Hinglish,home_nursing,same_day,,synthetic_llm
+AUG_0202,Mummy ko injection lagane ke liye home nursing service chahiye,Hinglish,home_nursing,same_day,,synthetic_llm
+AUG_0203,"Papa ko doctor ne injection prescribe kiya, ghar pe nurse se karwana hai",Hinglish,home_nursing,same_day,,synthetic_llm
+AUG_0204,"Dadi ko injection ki zaroorat hai, koi nurse ghar aayegi?",Hinglish,home_nursing,same_day,,synthetic_llm
+AUG_0205,"Doctor ne likha hai injection, humare ghar pe nurse aayegi kya?",Hinglish,home_nursing,same_day,,synthetic_llm
+AUG_0206,"Mere papa ko insulin ki injection chahiye, ghar pe nurse se?",Hinglish,home_nursing,same_day,,synthetic_llm
+AUG_0207,"Mummy ke liye insulin injection ghar pe karwana hai, koi nurse?",Hinglish,home_nursing,same_day,,synthetic_llm
+AUG_0208,"Dad ko IM injection lagana hai, home nurse available?",Hinglish,home_nursing,same_day,,synthetic_llm
+AUG_0209,"Dadi ko doctor ne injection likha, ghar pe nurse se karwana hai",Hinglish,home_nursing,same_day,,synthetic_llm
+AUG_0210,"Doctor ne injection prescribe kiya, humare ghar pe nurse aayegi?",Hinglish,home_nursing,same_day,,synthetic_llm
+AUG_0211,"Mummy ko subah insulin injection chahiye, ghar pe nurse?",Hinglish,home_nursing,same_day,,synthetic_llm
+AUG_0212,Papa ko injection lagane ke liye home nursing chahiye,Hinglish,home_nursing,same_day,,synthetic_llm
+AUG_0213,"Dadi ko injection ki zaroorat, koi nurse ghar aayegi?",Hinglish,home_nursing,same_day,,synthetic_llm
+AUG_0214,"Doctor ne likha hai injection, humare ghar pe nurse aane ki request",Hinglish,home_nursing,same_day,,synthetic_llm
+AUG_0215,"Mere dad ko insulin injection chahiye, ghar pe nurse se karwana",Hinglish,home_nursing,same_day,,synthetic_llm
+AUG_0216,"Mummy ke liye injection lagwana hai, home nurse available?",Hinglish,home_nursing,same_day,,synthetic_llm
+AUG_0217,"Papa ko doctor ne injection likha, ghar pe nurse se karwana",Hinglish,home_nursing,same_day,,synthetic_llm
+AUG_0218,"Dadi ko injection lagana hai, koi home nurse aayegi?",Hinglish,home_nursing,same_day,,synthetic_llm
+AUG_0219,"Mere mummy ko insulin shot chahiye, ghar pe nurse?",Hinglish,home_nursing,same_day,,synthetic_llm
+AUG_0220,"Dad ko injection lagwana hai, home nursing service chahiye",Hinglish,home_nursing,same_day,,synthetic_llm
+AUG_0221,"Dadi ko doctor ne injection prescribe kiya, ghar pe nurse?",Hinglish,home_nursing,same_day,,synthetic_llm
+AUG_0222,"Doctor ne injection likha, humare ghar pe nurse aane ki soch rahe hain",Hinglish,home_nursing,same_day,,synthetic_llm
+AUG_0223,"Mummy ko insulin injection chahiye, koi home nurse?",Hinglish,home_nursing,same_day,,synthetic_llm
+AUG_0224,"Papa ko injection lagana hai, ghar pe nurse se?",Hinglish,home_nursing,same_day,,synthetic_llm
+AUG_0225,"Dadi ko injection ki zaroorat hai, home nurse available?",Hinglish,home_nursing,same_day,,synthetic_llm
+AUG_0226,"Doctor ne likha hai injection, humare ghar pe nurse aayegi?",Hinglish,home_nursing,same_day,,synthetic_llm
+AUG_0227,"Mere dad ko insulin ki injection chahiye, ghar pe nurse?",Hinglish,home_nursing,same_day,,synthetic_llm
+AUG_0228,"Mummy ke liye injection lagwana hai, koi home nurse?",Hinglish,home_nursing,same_day,,synthetic_llm
+AUG_0229,"Papa ko doctor ne injection prescribe kiya, ghar pe nurse?",Hinglish,home_nursing,same_day,,synthetic_llm
+AUG_0230,Dadi ko injection lagane ke liye home nursing chahiye,Hinglish,home_nursing,same_day,,synthetic_llm
+AUG_0231,"Doctor ne injection likha, humare ghar pe nurse aane ki request",Hinglish,home_nursing,same_day,,synthetic_llm
+AUG_0232,"Mummy ko insulin injection chahiye, ghar pe nurse se karwana",Hinglish,home_nursing,same_day,,synthetic_llm
+AUG_0233,"Dad ko injection lagana hai, home nurse available?",Hinglish,home_nursing,same_day,,synthetic_llm
+AUG_0234,"Dadi ko doctor ne injection likha, ghar pe nurse se?",Hinglish,home_nursing,same_day,,synthetic_llm
+AUG_0235,"Mere papa ko insulin injection chahiye, koi home nurse?",Hinglish,home_nursing,same_day,,synthetic_llm
+AUG_0236,"Mummy ke liye doctor ne injection likha, ghar pe nurse?",Hinglish,home_nursing,same_day,,synthetic_llm
+AUG_0237,Can you schedule a full body checkup with home sample collection?,English,lab_test_home,scheduled,,synthetic_llm
+AUG_0238,I need a CBC and thyroid panel collected at my house.,English,lab_test_home,scheduled,,synthetic_llm
+AUG_0239,Please arrange a blood sugar test at home tomorrow morning.,English,lab_test_home,scheduled,,synthetic_llm
+AUG_0240,Book a complete health screening with a technician coming to my home.,English,lab_test_home,scheduled,,synthetic_llm
+AUG_0241,"My dad wants a CBC done at home, please arrange.",English,lab_test_home,scheduled,,synthetic_llm
+AUG_0242,"Mummy requires a thyroid test, can the sample be taken at home?",English,lab_test_home,scheduled,,synthetic_llm
+AUG_0243,Need a fasting blood sugar test at home early tomorrow.,English,lab_test_home,scheduled,,synthetic_llm
+AUG_0244,Arrange a full body lab checkup with home collection for me.,English,lab_test_home,scheduled,,synthetic_llm
+AUG_0245,Could you send someone for a CBC and thyroid test to my house?,English,lab_test_home,scheduled,,synthetic_llm
+AUG_0246,I want a blood glucose test at home first thing tomorrow.,English,lab_test_home,scheduled,,synthetic_llm
+AUG_0247,"Papa needs a complete blood count, home collection preferred.",English,lab_test_home,scheduled,,synthetic_llm
+AUG_0248,Please book a home visit for a full body health check.,English,lab_test_home,scheduled,,synthetic_llm
+AUG_0249,Need a thyroid profile collected at home today.,English,lab_test_home,scheduled,,synthetic_llm
+AUG_0250,Schedule a home blood sugar test for tomorrow morning.,English,lab_test_home,scheduled,,synthetic_llm
+AUG_0251,"Dadi wants a full body checkup, sample collection at home.",English,lab_test_home,scheduled,,synthetic_llm
+AUG_0252,Can you send a phlebotomist for a CBC to my residence?,English,lab_test_home,scheduled,,synthetic_llm
+AUG_0253,I require a home collection for a blood sugar test tomorrow.,English,lab_test_home,scheduled,,synthetic_llm
+AUG_0254,Book a home lab visit for a comprehensive health check.,English,lab_test_home,scheduled,,synthetic_llm
+AUG_0255,"Mummy asks for a thyroid test, please collect sample at home.",English,lab_test_home,scheduled,,synthetic_llm
+AUG_0256,Need a fasting glucose test at home early tomorrow.,English,lab_test_home,scheduled,,synthetic_llm
+AUG_0257,Arrange a home collection for a full body lab panel.,English,lab_test_home,scheduled,,synthetic_llm
+AUG_0258,"My papa needs a CBC, can it be done at home?",English,lab_test_home,scheduled,,synthetic_llm
+AUG_0259,Please schedule a home visit for a thyroid and CBC test.,English,lab_test_home,scheduled,,synthetic_llm
+AUG_0260,"I want a blood sugar test at home tomorrow morning, urgent.",English,lab_test_home,scheduled,,synthetic_llm
+AUG_0261,"Dadi requires a full body health check, home sample collection.",English,lab_test_home,scheduled,,synthetic_llm
+AUG_0262,Can a technician come for a CBC and thyroid test at my house?,English,lab_test_home,scheduled,,synthetic_llm
+AUG_0263,Need a home blood sugar test first thing tomorrow.,English,lab_test_home,scheduled,,synthetic_llm
+AUG_0264,Book a home lab service for a complete health screening.,English,lab_test_home,scheduled,,synthetic_llm
+AUG_0265,"Mummy wants a thyroid test, arrange home collection.",English,lab_test_home,scheduled,,synthetic_llm
+AUG_0266,Please arrange a fasting blood sugar test at home tomorrow.,English,lab_test_home,scheduled,,synthetic_llm
+AUG_0267,"Papa needs a full body checkup, sample collection at home.",English,lab_test_home,scheduled,,synthetic_llm
+AUG_0268,"I need a CBC done at home, please schedule.",English,lab_test_home,scheduled,,synthetic_llm
+AUG_0269,Can you send someone for a home thyroid test today?,English,lab_test_home,scheduled,,synthetic_llm
+AUG_0270,Need a home collection for blood glucose tomorrow morning.,English,lab_test_home,scheduled,,synthetic_llm
+AUG_0271,Arrange a home visit for a comprehensive lab checkup.,English,lab_test_home,scheduled,,synthetic_llm
+AUG_0272,"Dadi wants a CBC and thyroid test, home collection please.",English,lab_test_home,scheduled,,synthetic_llm
+AUG_0273,Please book a home blood sugar test for early tomorrow.,English,lab_test_home,scheduled,,synthetic_llm
+AUG_0274,"Mummy requires a full body health check, home sample collection.",English,lab_test_home,scheduled,,synthetic_llm
+AUG_0275,Schedule a home phlebotomy for a fasting glucose test tomorrow.,English,lab_test_home,scheduled,,synthetic_llm
+AUG_0276,"Mummy ko CBC aur thyroid test chahiye, sample ghar se collect karwana hai.",Hinglish,lab_test_home,scheduled,,synthetic_llm
+AUG_0277,Papa ke liye blood sugar test subah ghar pe karwana hai.,Hinglish,lab_test_home,scheduled,,synthetic_llm
+AUG_0278,"Dadi ko CBC test ki zaroorat hai, sample ko aapke ghar se le lo.",Hinglish,lab_test_home,scheduled,,synthetic_llm
+AUG_0279,Kal subah mere liye sugar test ghar pe arrange karo.,Hinglish,lab_test_home,scheduled,,synthetic_llm
+AUG_0280,"Mere bhai ko thyroid test chahiye, sample ghar se hi le lo.",Hinglish,lab_test_home,scheduled,,synthetic_llm
+AUG_0281,Maa ke liye CBC aur sugar test dono ghar pe karwana hai.,Hinglish,lab_test_home,scheduled,,synthetic_llm
+AUG_0282,"Papa ko fasting blood sugar test chahiye, subah ghar se sample dena.",Hinglish,lab_test_home,scheduled,,synthetic_llm
+AUG_0283,"Dadi ke liye thyroid aur CBC test, sample aapke ghar se le lo.",Hinglish,lab_test_home,scheduled,,synthetic_llm
+AUG_0284,"Kal raat ko sugar test ghar pe karwana hai, please schedule karo.",Hinglish,lab_test_home,scheduled,,synthetic_llm
+AUG_0285,"Mummy ko CBC test chahiye, sample ko ghar se collect karna hai.",Hinglish,lab_test_home,scheduled,,synthetic_llm
+AUG_0286,Mere liye thyroid test aur CBC dono ghar se sample ke saath chahiye.,Hinglish,lab_test_home,scheduled,,synthetic_llm
+AUG_0287,Papa ke liye subah subah sugar test ghar pe arrange karo.,Hinglish,lab_test_home,scheduled,,synthetic_llm
+AUG_0288,"Dadi ko fasting sugar test chahiye, sample ghar se le lo.",Hinglish,lab_test_home,scheduled,,synthetic_llm
+AUG_0289,"Maa ke liye CBC test, sample ko ghar se hi le lo.",Hinglish,lab_test_home,scheduled,,synthetic_llm
+AUG_0290,Kal subah mummy ka thyroid test ghar pe karwana hai.,Hinglish,lab_test_home,scheduled,,synthetic_llm
+AUG_0291,Mere bhai ko CBC aur sugar test dono ghar se collect karwana hai.,Hinglish,lab_test_home,scheduled,,synthetic_llm
+AUG_0292,"Papa ko thyroid test chahiye, sample ghar pe hi dena.",Hinglish,lab_test_home,scheduled,,synthetic_llm
+AUG_0293,Dadi ke liye blood sugar test subah ghar pe karwana hai.,Hinglish,lab_test_home,scheduled,,synthetic_llm
+AUG_0294,"Mummy ko fasting sugar test chahiye, sample ghar se le lo.",Hinglish,lab_test_home,scheduled,,synthetic_llm
+AUG_0295,"Maa ke liye thyroid test, sample ghar se collect karna hai.",Hinglish,lab_test_home,scheduled,,synthetic_llm
+AUG_0296,Kal subah mere liye CBC test ghar pe karwana hai.,Hinglish,lab_test_home,scheduled,,synthetic_llm
+AUG_0297,Papa ke liye CBC aur sugar test dono ghar se sample ke saath chahiye.,Hinglish,lab_test_home,scheduled,,synthetic_llm
+AUG_0298,Dadi ko subah subah thyroid test ghar pe arrange karo.,Hinglish,lab_test_home,scheduled,,synthetic_llm
+AUG_0299,"Mummy ko blood sugar test chahiye, sample ghar se le lo.",Hinglish,lab_test_home,scheduled,,synthetic_llm
+AUG_0300,Mere liye fasting sugar test ghar pe kal subah karwana hai.,Hinglish,lab_test_home,scheduled,,synthetic_llm
+AUG_0301,"Papa ko CBC test chahiye, sample ghar se hi le lo.",Hinglish,lab_test_home,scheduled,,synthetic_llm
+AUG_0302,"Dadi ke liye thyroid test, sample ghar se collect karwana hai.",Hinglish,lab_test_home,scheduled,,synthetic_llm
+AUG_0303,Maa ke liye subah subah sugar test ghar pe karwana hai.,Hinglish,lab_test_home,scheduled,,synthetic_llm
+AUG_0304,Mummy ko CBC test aur thyroid test dono ghar se sample ke saath chahiye.,Hinglish,lab_test_home,scheduled,,synthetic_llm
+AUG_0305,Kal subah papa ka blood sugar test ghar pe arrange karo.,Hinglish,lab_test_home,scheduled,,synthetic_llm
+AUG_0306,"Mere bhai ko thyroid test chahiye, sample ghar se le lo.",Hinglish,lab_test_home,scheduled,,synthetic_llm
+AUG_0307,"Papa ko fasting sugar test ghar pe karwana hai, kal subah.",Hinglish,lab_test_home,scheduled,,synthetic_llm
+AUG_0308,"Dadi ke liye CBC test, sample ghar se hi le lo.",Hinglish,lab_test_home,scheduled,,synthetic_llm
+AUG_0309,Maa ko subah subah thyroid test ghar pe karwana hai.,Hinglish,lab_test_home,scheduled,,synthetic_llm
+AUG_0310,"Mummy ko sugar test chahiye, sample ghar se collect karna hai.",Hinglish,lab_test_home,scheduled,,synthetic_llm
+AUG_0311,Kal subah mere liye thyroid test ghar pe arrange karo.,Hinglish,lab_test_home,scheduled,,synthetic_llm
+AUG_0312,Papa ke liye CBC test aur sugar test dono ghar se sample ke saath chahiye.,Hinglish,lab_test_home,scheduled,,synthetic_llm
+AUG_0313,Dadi ko fasting blood sugar test ghar pe karwana hai.,Hinglish,lab_test_home,scheduled,,synthetic_llm
+AUG_0314,"Maa ke liye CBC test, sample ghar se le lo.",Hinglish,lab_test_home,scheduled,,synthetic_llm
+AUG_0315,Mummy ko subah subah thyroid test ghar pe karwana hai.,Hinglish,lab_test_home,scheduled,,synthetic_llm
+AUG_0316,"Mere bhai ko sugar test chahiye, sample ghar se hi le lo.",Hinglish,lab_test_home,scheduled,,synthetic_llm
+AUG_0317,Papa ko thyroid test aur CBC dono ghar pe arrange karo.,Hinglish,lab_test_home,scheduled,,synthetic_llm
+AUG_0318,"My papa's been running a fever and coughing for two days, need a paramedic at home",English,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0319,"Father has fever and cough for 48 hrs, please send a paramedic to our house",English,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0320,"Dad's got a fever and cough for the past couple of days, need home visit",English,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0321,"Papa is feverish and coughing for two days, can a paramedic come over?",English,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0322,"My dad has had a fever and cough for 2 days, need a home check",English,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0323,"Father’s temperature is high and he’s coughing for 2 days, request a home paramedic",English,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0324,"Dad’s fever and cough have lasted two days, please send help to our home",English,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0325,"Papa’s fever and cough started two days ago, need a paramedic visit",English,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0326,"My father’s been feverish and coughing for two days, need home assistance",English,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0327,"Dad has a fever and cough for the last 48 hours, need a paramedic at home",English,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0328,"My dad’s fever and cough have persisted for two days, please send a paramedic",English,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0329,"Father is feverish and coughing for two days, need home visit",English,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0330,"Papa’s fever and cough have been ongoing for 2 days, request a paramedic",English,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0331,"Dad’s fever and cough for 2 days, need a home paramedic",English,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0332,"My father has fever and cough for two days, need a paramedic at home",English,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0333,"Grandfather is weak, not eating, need a home check-up",English,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0334,"Grandpa feels weak and refuses food, please send a paramedic to our house",English,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0335,"My dadi is weak and not eating, need a home visit from a paramedic",English,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0336,"Granddad is frail, not taking meals, request a home paramedic",English,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0337,"Grandfather is very weak, not eating anything, need a paramedic at home",English,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0338,"Grandpa is weak, not eating, please send a paramedic for home check",English,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0339,"Dadi is weak and refusing food, need a paramedic home visit",English,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0340,"Granddad feels weak, not eating, need a home paramedic",English,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0341,"Grandfather is weak, not taking food, request a paramedic visit",English,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0342,"Grandpa is weak and not eating, need a paramedic at home",English,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0343,"My grandfather is weak and not eating, please send a paramedic",English,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0344,"Granddad is weak, not eating, need a home paramedic urgently",English,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0345,"Grandfather is weak, not eating, need a paramedic home visit",English,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0346,"Grandma is weak and not eating, need a paramedic at home",English,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0347,"Grandma feels weak, not eating, request a home paramedic",English,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0348,Need someone to check my mother’s BP and sugar at home,English,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0349,Please send a paramedic to check mum’s blood pressure and sugar levels,English,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0350,"Mummy needs BP and sugar check at home, can a paramedic come?",English,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0351,"Mom’s blood pressure and sugar need checking at home, request paramedic",English,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0352,Need home visit for mother’s BP and glucose check,English,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0353,Require a paramedic to check my mom’s BP and sugar at home,English,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0354,Please send a paramedic to check my mother’s BP and sugar at home,English,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0355,"Mummy’s BP and sugar need a home check, need paramedic",English,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0356,"Mom needs BP and sugar monitoring at home, send paramedic",English,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0357,Need a paramedic for mother’s blood pressure and sugar check at home,English,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0358,"Mummy’s blood pressure and sugar need checking at home, please send help",English,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0359,Mom’s BP and sugar need a home visit from a paramedic,English,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0360,Please arrange a paramedic to check mum’s BP and sugar at home,English,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0361,"Mummy’s BP and sugar need checking, need a paramedic at home",English,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0362,"Mom’s blood pressure and sugar need a home check, send paramedic",English,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0363,मम्मी का ब्लड प्रेशर और शुगर घर में जांच चाहिए,Hindi,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0364,"पापा को दो दिन से बुखार और खांसी है, डॉक्टर भेजें",Hindi,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0365,"दादी को कमजोरी लग रही है, घर पर जांच की जरूरत है",Hindi,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0366,"पापा को लगातार बुखर और खांसी है, घर पर देखभाल चाहिए",Hindi,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0367,माँ का ब्लड प्रेशर और शुगर रीडिंग घर पर चाहिए,Hindi,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0368,"पापा को दो दिन से तेज बुखार और खांसी है, तुरंत मदद चाहिए",Hindi,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0369,"दादाजी को थकान है, घर पर मेडिकल चेकअप चाहिए",Hindi,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0370,"मम्मी का बीपी और शुगर चेक करवाना है, घर पर ही",Hindi,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0371,"पापा को बुखार है और खांसी भी, घर पर डॉक्टर भेजें",Hindi,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0372,"दादी को कमजोरी महसूस हो रही है, घर पर जांच चाहिए",Hindi,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0373,"पापा को दो दिन से बुखार है, खांसी भी है, मदद चाहिए",Hindi,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0374,"दादाजी को थकावट है, घर पर जांच की जरूरत है",Hindi,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0375,"मम्मी का बीपी और शुगर चेक करवाना है, कृपया भेजें",Hindi,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0376,"पापा को बुखार और खांसी है, दो दिन से, घर पर देखभाल चाहिए",Hindi,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0377,"दादी को कमजोरी लग रही है, घर पर डॉक्टर की जरूरत है",Hindi,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0378,माँ का बीपी और शुगर घर पर जांच करवाना है,Hindi,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0379,"पापा को लगातार बुखार और खांसी है, घर पर डॉक्टर भेजें",Hindi,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0380,"दादाजी को थकान है, घर पर मेडिकल जांच चाहिए",Hindi,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0381,मम्मी का ब्लड प्रेशर और शुगर घर में चेक करवाना है,Hindi,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0382,"पापा को दो दिन से बुखर और खांसी है, तुरंत मदद चाहिए",Hindi,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0383,"माँ का बीपी और शुगर घर पर चेक करवाना है, जल्दी भेजें",Hindi,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0384,"पापा को बुखार और खांसी है, दो दिन से, घर पर डॉक्टर चाहिए",Hindi,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0385,"दादाजी को थकावट लग रही है, घर पर जांच की जरूरत है",Hindi,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0386,मम्मी का बीपी और शुगर घर पर चेक करवाना है,Hindi,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0387,"पापा को बुखर और खांसी है, दो दिन से, कृपया मदद भेजें",Hindi,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0388,"दादी को कमजोरी है, घर पर मेडिकल चेकअप चाहिए",Hindi,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0389,माँ का ब्लड प्रेशर और शुगर घर पर जांच करवाना है,Hindi,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0390,"पापा को लगातार बुखार और खांसी है, घर पर डॉक्टर चाहिए",Hindi,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0391,"दादाजी को थकान लग रही है, घर पर जांच की जरूरत है",Hindi,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0392,मम्मी का बीपी और शुगर घर में चेक करवाना है,Hindi,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0393,"पापा को दो दिन से बुखार है और खांसी भी, मदद चाहिए",Hindi,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0394,"दादी को कमजोरी लग रही है, घर पर डॉक्टर भेजें",Hindi,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0395,"पापा को बुखर और खांसी है, दो दिन से, घर पर देखभाल चाहिए",Hindi,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0396,"दादाजी को थकावट है, घर पर मेडिकल जांच चाहिए",Hindi,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0397,मम्मी का ब्लड प्रेशर और शुगर घर पर चेक करवाना है,Hindi,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0398,Mummy ka BP aur sugar ghar pe check karwana hai,Hinglish,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0399,"Papa ko do din se bukhar aur khaansi hai, doctor bulao",Hinglish,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0400,"Dadi ko thodi weakness lag rahi hai, ghar pe checkup chahiye",Hinglish,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0401,"Papa ka BP high lag raha hai, ghar pe hi check karwa do",Hinglish,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0402,"Mummy ko sugar level check karna hai, paramedic ko bulao",Hinglish,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0403,"Dadaji ko thand lag rahi hai, unka BP aur temperature dekh lo",Hinglish,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0404,"Mummy ka BP normal nahi hai, ghar pe hi check karwana hai",Hinglish,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0405,"Papa ko raat se bukhar hai, ghar pe doctor bhejo",Hinglish,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0406,"Dadi ko sugar ka test chahiye, ghar pe hi karwa do",Hinglish,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0407,"Dadaji ko BP aur sugar dono check karna hai, please",Hinglish,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0408,"Mummy ko thodi fever hai, ghar pe hi doctor aao",Hinglish,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0409,"Papa ko khaansi ke saath bukhar hai, paramedic ko bulao",Hinglish,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0410,"Dadi ko weakness feel ho rahi hai, ghar pe checkup chahiye",Hinglish,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0411,Mummy ka BP aur sugar dono hi ghar pe check karwana hai,Hinglish,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0412,"Papa ko do din se bukhar hai, ghar pe doctor aao",Hinglish,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0413,"Dadaji ko BP high lag raha hai, ghar pe hi check karwa lo",Hinglish,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0414,"Mummy ko sugar level ka doubt hai, ghar pe hi test karwa do",Hinglish,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0415,"Papa ko thodi fever aur cough hai, paramedic ko bulao",Hinglish,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0416,"Dadi ko BP low lag raha hai, ghar pe check karwana hai",Hinglish,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0417,"Mummy ko BP aur sugar dono ka report chahiye, ghar pe hi",Hinglish,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0418,"Papa ko bukhar hai, thodi khaansi bhi, ghar pe doctor bhejo",Hinglish,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0419,"Dadaji ko weakness aur thakan hai, ghar pe checkup karwa lo",Hinglish,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0420,"Mummy ka BP normal nahi, sugar bhi check karna hai",Hinglish,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0421,"Papa ko fever hai, ghar pe hi doctor aana chahiye",Hinglish,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0422,"Dadi ko BP aur sugar dono check karwana hai, please",Hinglish,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0423,"Mummy ko bukhar hai, ghar pe paramedic aao",Hinglish,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0424,"Papa ko BP high lag raha hai, sugar bhi check kar do",Hinglish,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0425,"Dadaji ko thodi fever hai, ghar pe hi doctor bulao",Hinglish,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0426,"Mummy ko BP aur sugar dono ka test chahiye, ghar pe",Hinglish,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0427,"Papa ko khaansi ke saath bukhar hai, ghar pe doctor bhejo",Hinglish,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0428,"Dadi ko weakness hai, BP check karwana hai",Hinglish,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0429,"Papa ko do din se fever hai, ghar pe doctor aao",Hinglish,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0430,"Dadaji ko BP low hai, sugar bhi check karna hai",Hinglish,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0431,"Mummy ko thodi fever hai, ghar pe hi doctor bulao",Hinglish,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0432,"Papa ko bukhar aur cough hai, paramedic ko bhejo",Hinglish,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0433,"Dadi ko BP high lag raha hai, ghar pe check karwana hai",Hinglish,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0434,"Papa ko fever hai, thodi khaansi bhi, ghar pe doctor aao",Hinglish,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0435,"Dadaji ko weakness lag rahi hai, BP aur sugar dono check karna hai",Hinglish,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0436,"Mummy ko BP high lag raha hai, sugar bhi test kar do",Hinglish,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0437,"Papa ko bukhar hai, ghar pe hi paramedic aao",Hinglish,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0438,"Dadi ko thodi fever hai, BP check karwana hai",Hinglish,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0439,"Mummy ko sugar level ka doubt hai, ghar pe doctor bulao",Hinglish,paramedic_home_visit,same_day,,synthetic_llm
+AUG_0440,"I’ve had mild acidity and gas since this morning, need a doctor’s advice",English,teleconsultation,same_day,,synthetic_llm
+AUG_0441,"Feeling some acidity and bloating today, can I get a teleconsult?",English,teleconsultation,same_day,,synthetic_llm
+AUG_0442,"Got a bit of heartburn and gas early today, want a doctor’s opinion",English,teleconsultation,same_day,,synthetic_llm
+AUG_0443,"Acidity and gas started this morning, looking for a quick consult",English,teleconsultation,same_day,,synthetic_llm
+AUG_0444,"Mild sour stomach and gas, please connect me with a doctor",English,teleconsultation,same_day,,synthetic_llm
+AUG_0445,Need a doctor for mild acidity and gas that began today,English,teleconsultation,same_day,,synthetic_llm
+AUG_0446,Can I speak to a doctor about my morning acidity and gas?,English,teleconsultation,same_day,,synthetic_llm
+AUG_0447,"Experiencing light acidity and gas since sunrise, need teleconsultation",English,teleconsultation,same_day,,synthetic_llm
+AUG_0448,"Acidity and gas bothering me since morning, want a doctor’s help",English,teleconsultation,same_day,,synthetic_llm
+AUG_0449,"Got mild acidity and gas today, please arrange a doctor call",English,teleconsultation,same_day,,synthetic_llm
+AUG_0450,I want to discuss my lab reports with a doctor,English,teleconsultation,same_day,,synthetic_llm
+AUG_0451,Need to talk to a doctor about my recent test reports,English,teleconsultation,same_day,,synthetic_llm
+AUG_0452,Can I get a doctor on call to review my reports?,English,teleconsultation,same_day,,synthetic_llm
+AUG_0453,Please connect me with a doctor to go over my reports,English,teleconsultation,same_day,,synthetic_llm
+AUG_0454,I have some reports I’d like a doctor to explain,English,teleconsultation,same_day,,synthetic_llm
+AUG_0455,Need a doctor’s help to understand my medical reports,English,teleconsultation,same_day,,synthetic_llm
+AUG_0456,Want a doctor to discuss my health reports,English,teleconsultation,same_day,,synthetic_llm
+AUG_0457,Looking for a doctor to review my recent reports,English,teleconsultation,same_day,,synthetic_llm
+AUG_0458,Can a doctor explain my test results to me?,English,teleconsultation,same_day,,synthetic_llm
+AUG_0459,Please arrange a teleconsult to talk about my reports,English,teleconsultation,same_day,,synthetic_llm
+AUG_0460,I need a second opinion on my child’s prescription,English,teleconsultation,same_day,,synthetic_llm
+AUG_0461,Seeking another doctor’s view on my kid’s meds,English,teleconsultation,same_day,,synthetic_llm
+AUG_0462,Can I get a second opinion for my baby’s prescription?,English,teleconsultation,same_day,,synthetic_llm
+AUG_0463,Need another doctor’s advice on my son’s medication,English,teleconsultation,same_day,,synthetic_llm
+AUG_0464,Looking for a second opinion on my daughter’s prescription,English,teleconsultation,same_day,,synthetic_llm
+AUG_0465,Please arrange a second opinion for my child’s meds,English,teleconsultation,same_day,,synthetic_llm
+AUG_0466,Want a different doctor’s take on my child’s prescription,English,teleconsultation,same_day,,synthetic_llm
+AUG_0467,Need a second medical opinion for my kid’s drug plan,English,teleconsultation,same_day,,synthetic_llm
+AUG_0468,Second opinion needed for my child’s prescription please,English,teleconsultation,same_day,,synthetic_llm
+AUG_0469,Can a doctor review my child’s prescription again?,English,teleconsultation,same_day,,synthetic_llm
+AUG_0470,Mummy’s test results need a doctor’s explanation,English,teleconsultation,same_day,,synthetic_llm
+AUG_0471,Dad’s recent reports need a doctor’s clarification,English,teleconsultation,same_day,,synthetic_llm
+AUG_0472,"Papa’s lab results, want a doctor to discuss",English,teleconsultation,same_day,,synthetic_llm
+AUG_0473,"Dadi’s health reports, need a doctor’s input",English,teleconsultation,same_day,,synthetic_llm
+AUG_0474,"Mummy’s prescription, need a second opinion",English,teleconsultation,same_day,,synthetic_llm
+AUG_0475,"Dad’s medication, looking for another doctor’s view",English,teleconsultation,same_day,,synthetic_llm
+AUG_0476,"Papa’s recent test reports, want a doctor’s advice",English,teleconsultation,same_day,,synthetic_llm
+AUG_0477,"Dadi’s prescription, need a second medical opinion",English,teleconsultation,same_day,,synthetic_llm
+AUG_0478,"Mummy’s blood work, need a doctor’s review",English,teleconsultation,same_day,,synthetic_llm
+AUG_0479,"Dad’s X‑ray results, want a teleconsult",English,teleconsultation,same_day,,synthetic_llm
+AUG_0480,"Need a doctor for mild acidity, gas started this morning",English,teleconsultation,same_day,,synthetic_llm
+AUG_0481,"Acidity and gas since early today, want a quick doctor chat",English,teleconsultation,same_day,,synthetic_llm
+AUG_0482,"Mild heartburn and gas, can I talk to a doctor now",English,teleconsultation,same_day,,synthetic_llm
+AUG_0483,"Got some acidity and gas, need a doctor’s guidance",English,teleconsultation,same_day,,synthetic_llm
+AUG_0484,"Acidity, gas, and mild sour stomach, please connect a doctor",English,teleconsultation,same_day,,synthetic_llm
+AUG_0485,"सुबह से मुझे एसिडिटी लग रही है, डॉक्टर से टेली कंसल्ट चाहिए",Hindi,teleconsultation,same_day,,synthetic_llm
+AUG_0486,"पापा को आज से एसिडिटी है, ऑनलाइन डॉक्टर से सलाह चाहिए",Hindi,teleconsultation,same_day,,synthetic_llm
+AUG_0487,"मम्मी को रात से एसिडिटी है, तुरंत डॉक्टर से बात करनी है",Hindi,teleconsultation,same_day,,synthetic_llm
+AUG_0488,"दादी को सुबह से पेट में जलन है, डॉक्टर से सलाह चाहिए",Hindi,teleconsultation,same_day,,synthetic_llm
+AUG_0489,"भाई को लगातार एसिडिटी है, टेलीफोन पर डॉक्टर से मिलना है",Hindi,teleconsultation,same_day,,synthetic_llm
+AUG_0490,"भतीजे को एसिडिटी की समस्या है, डॉक्टर से ऑनलाइन सलाह चाहिए",Hindi,teleconsultation,same_day,,synthetic_llm
+AUG_0491,"मेरे बेटे को एसिडिटी है, डॉक्टर से टेली कंसल्ट चाहिए",Hindi,teleconsultation,same_day,,synthetic_llm
+AUG_0492,"भतीजी को पेट में जलन है, डॉक्टर से तुरंत सलाह चाहिए",Hindi,teleconsultation,same_day,,synthetic_llm
+AUG_0493,"मैं सुबह से एसिडिटी से परेशान हूँ, डॉक्टर से टेली कंसल्ट चाहिए",Hindi,teleconsultation,same_day,,synthetic_llm
+AUG_0494,"पापा को पेट में जलन है, डॉक्टर से ऑनलाइन सलाह चाहिए",Hindi,teleconsultation,same_day,,synthetic_llm
+AUG_0495,"मम्मी को एसिडिटी है, डॉक्टर से टेलीफोन पर सलाह चाहिए",Hindi,teleconsultation,same_day,,synthetic_llm
+AUG_0496,"दादी को पेट में जलन है, डॉक्टर से तुरंत बात करनी है",Hindi,teleconsultation,same_day,,synthetic_llm
+AUG_0497,"भाई को एसिडिटी की शिकायत है, डॉक्टर से टेली कंसल्ट चाहिए",Hindi,teleconsultation,same_day,,synthetic_llm
+AUG_0498,"भतीजे को लगातार एसिडिटी है, डॉक्टर से ऑनलाइन सलाह चाहिए",Hindi,teleconsultation,same_day,,synthetic_llm
+AUG_0499,"मेरे बेटे को पेट में जलन है, डॉक्टर से टेली कंसल्ट चाहिए",Hindi,teleconsultation,same_day,,synthetic_llm
+AUG_0500,"भतीजी को एसिडिटी है, डॉक्टर से तुरंत सलाह चाहिए",Hindi,teleconsultation,same_day,,synthetic_llm
+AUG_0501,बच्चे की दवा पर दूसरा डॉक्टर का विचार चाहिए,Hindi,teleconsultation,same_day,,synthetic_llm
+AUG_0502,मेरे बेटे की दवा पर सेकंड ओपिनियन चाहिए,Hindi,teleconsultation,same_day,,synthetic_llm
+AUG_0503,बच्चे की दवा के बारे में दूसरा डॉक्टर से राय चाहिए,Hindi,teleconsultation,same_day,,synthetic_llm
+AUG_0504,बच्चे की दवा पर दोबारा डॉक्टर की सलाह चाहिए,Hindi,teleconsultation,same_day,,synthetic_llm
+AUG_0505,बच्चे की दवा पर दूसरा डॉक्टर की राय चाहिए,Hindi,teleconsultation,same_day,,synthetic_llm
+AUG_0506,मेरी बेटी की दवा पर सेकंड ओपिनियन चाहिए,Hindi,teleconsultation,same_day,,synthetic_llm
+AUG_0507,भाई की दवा पर डॉक्टर से दूसरा विचार चाहिए,Hindi,teleconsultation,same_day,,synthetic_llm
+AUG_0508,भतीजे की दवा पर दूसरा डॉक्टर का फीडबैक चाहिए,Hindi,teleconsultation,same_day,,synthetic_llm
+AUG_0509,बच्चे की दवा पर दो डॉक्टरों की राय चाहिए,Hindi,teleconsultation,same_day,,synthetic_llm
+AUG_0510,बच्चे की दवा पर दूसरा डॉक्टर से सलाह चाहिए,Hindi,teleconsultation,same_day,,synthetic_llm
+AUG_0511,मेरे बेटे की दवा पर दोबारा डॉक्टर की राय चाहिए,Hindi,teleconsultation,same_day,,synthetic_llm
+AUG_0512,भतीजी की दवा पर सेकंड ओपिनियन चाहिए,Hindi,teleconsultation,same_day,,synthetic_llm
+AUG_0513,बच्चे की दवा पर एक और डॉक्टर की राय चाहिए,Hindi,teleconsultation,same_day,,synthetic_llm
+AUG_0514,बच्चे की दवा पर दूसरा डॉक्टर से फीडबैक चाहिए,Hindi,teleconsultation,same_day,,synthetic_llm
+AUG_0515,मेरी रिपोर्ट पर डॉक्टर से चर्चा चाहिए,Hindi,teleconsultation,same_day,,synthetic_llm
+AUG_0516,रिपोर्ट देख कर डॉक्टर से सलाह चाहिए,Hindi,teleconsultation,same_day,,synthetic_llm
+AUG_0517,डॉक्टर से मेरी रिपोर्ट पर बात करनी है,Hindi,teleconsultation,same_day,,synthetic_llm
+AUG_0518,रिपोर्ट की जानकारी डॉक्टर को देनी है,Hindi,teleconsultation,same_day,,synthetic_llm
+AUG_0519,रिपोर्ट के बारे में डॉक्टर से टेली कंसल्ट चाहिए,Hindi,teleconsultation,same_day,,synthetic_llm
+AUG_0520,रिपोर्ट पर डॉक्टर से तुरंत बात करनी है,Hindi,teleconsultation,same_day,,synthetic_llm
+AUG_0521,मेरी मेडिकल रिपोर्ट पर डॉक्टर से सलाह चाहिए,Hindi,teleconsultation,same_day,,synthetic_llm
+AUG_0522,रिपोर्ट की समीक्षा के लिए डॉक्टर से बात करनी है,Hindi,teleconsultation,same_day,,synthetic_llm
+AUG_0523,डॉक्टर से रिपोर्ट की चर्चा टेलीफोन पर चाहिए,Hindi,teleconsultation,same_day,,synthetic_llm
+AUG_0524,कल सुबह पापा के लिए शुगर टेस्ट घर पर कराना है,Hindi,lab_test_home,scheduled,,synthetic_llm
+AUG_0525,मम्मी का फुल बॉडी चेकअप सैंपल घर से ले आओ,Hindi,lab_test_home,scheduled,,synthetic_llm
+AUG_0526,दादी को थायराइड और CBC टेस्ट घर पर चाहिए,Hindi,lab_test_home,scheduled,,synthetic_llm
+AUG_0527,भाई का ब्लड ग्रुप टेस्ट सुबह घर पर करवा दो,Hindi,lab_test_home,scheduled,,synthetic_llm
+AUG_0528,कल शाम माँ के लिए लिपिड प्रोफ़ाइल घर से सैंपल ले लो,Hindi,lab_test_home,scheduled,,synthetic_llm
+AUG_0529,पापा को फास्टिंग ब्लड शुगर टेस्ट घर पर चाहिए,Hindi,lab_test_home,scheduled,,synthetic_llm
+AUG_0530,दादी को फुल बॉडी चेकअप का सैंपल घर से भेजो,Hindi,lab_test_home,scheduled,,synthetic_llm
+AUG_0531,भाई के लिए कल सुबह HbA1c टेस्ट घर पर कराओ,Hindi,lab_test_home,scheduled,,synthetic_llm
+AUG_0532,मम्मी का कोलेस्ट्रॉल टेस्ट सुबह घर से सैंपल ले,Hindi,lab_test_home,scheduled,,synthetic_llm
+AUG_0533,पापा को कल रात CBC और थायराइड टेस्ट घर पर चाहिए,Hindi,lab_test_home,scheduled,,synthetic_llm
+AUG_0534,दादी के लिए फास्टिंग ब्लड शुगर टेस्ट घर से सैंपल दो,Hindi,lab_test_home,scheduled,,synthetic_llm
+AUG_0535,भाई को फुल बॉडी चेकअप का सैंपल घर पर ले आओ,Hindi,lab_test_home,scheduled,,synthetic_llm
+AUG_0536,मम्मी को कल सुबह लिवर फंक्शन टेस्ट घर पर कराओ,Hindi,lab_test_home,scheduled,,synthetic_llm
+AUG_0537,पापा के लिए कल शाम विटामिन डी टेस्ट घर से सैंपल भेजो,Hindi,lab_test_home,scheduled,,synthetic_llm
+AUG_0538,दादी को कल सुबह किडनी फंक्शन टेस्ट घर पर चाहिए,Hindi,lab_test_home,scheduled,,synthetic_llm
+AUG_0539,भाई का फास्टिंग ब्लड शुगर टेस्ट सुबह घर से सैंपल दो,Hindi,lab_test_home,scheduled,,synthetic_llm
+AUG_0540,मम्मी को फुल बॉडी चेकअप का सैंपल कल घर पर ले जाओ,Hindi,lab_test_home,scheduled,,synthetic_llm
+AUG_0541,पापा को कल रात थायराइड प्रोफ़ाइल घर से सैंपल लेवाओ,Hindi,lab_test_home,scheduled,,synthetic_llm
+AUG_0542,दादी के लिए कल सुबह CBC टेस्ट घर पर कराओ,Hindi,lab_test_home,scheduled,,synthetic_llm
+AUG_0543,भाई को कल शाम ब्लड प्रेशर टेस्ट घर से सैंपल दो,Hindi,lab_test_home,scheduled,,synthetic_llm
+AUG_0544,मम्मी का फास्टिंग ब्लड शुगर टेस्ट सुबह घर पर चाहिए,Hindi,lab_test_home,scheduled,,synthetic_llm
+AUG_0545,पापा को फुल बॉडी चेकअप का सैंपल कल घर से ले जाओ,Hindi,lab_test_home,scheduled,,synthetic_llm
+AUG_0546,दादी को कल रात कोलेस्ट्रॉल टेस्ट घर पर कराओ,Hindi,lab_test_home,scheduled,,synthetic_llm
+AUG_0547,भाई के लिए फास्टिंग ब्लड शुगर टेस्ट सुबह घर से सैंपल दो,Hindi,lab_test_home,scheduled,,synthetic_llm
+AUG_0548,मम्मी को कल सुबह थायराइड टेस्ट घर पर चाहिए,Hindi,lab_test_home,scheduled,,synthetic_llm
+AUG_0549,पापा को कल शाम CBC और लिपिड प्रोफ़ाइल घर से सैंपल दो,Hindi,lab_test_home,scheduled,,synthetic_llm
+AUG_0550,दादी को फुल बॉडी चेकअप का सैंपल कल सुबह घर पर ले जाओ,Hindi,lab_test_home,scheduled,,synthetic_llm
+AUG_0551,भाई को कल रात विटामिन B12 टेस्ट घर से सैंपल भेजो,Hindi,lab_test_home,scheduled,,synthetic_llm
+AUG_0552,मम्मी का फास्टिंग ब्लड शुगर टेस्ट कल सुबह घर पर कराओ,Hindi,lab_test_home,scheduled,,synthetic_llm
+AUG_0553,पापा को कल सुबह किडनी फंक्शन टेस्ट घर से सैंपल दो,Hindi,lab_test_home,scheduled,,synthetic_llm
+AUG_0554,दादी को कल शाम थायराइड और CBC टेस्ट घर पर चाहिए,Hindi,lab_test_home,scheduled,,synthetic_llm
+AUG_0555,भाई को फुल बॉडी चेकअप का सैंपल कल शाम घर से ले जाओ,Hindi,lab_test_home,scheduled,,synthetic_llm
+AUG_0556,मम्मी को कल रात लिवर फंक्शन टेस्ट घर पर कराओ,Hindi,lab_test_home,scheduled,,synthetic_llm
+AUG_0557,पापा को फास्टिंग ब्लड शुगर टेस्ट कल सुबह घर से सैंपल दो,Hindi,lab_test_home,scheduled,,synthetic_llm
+AUG_0558,दादी को कल सुबह विटामिन D टेस्ट घर पर चाहिए,Hindi,lab_test_home,scheduled,,synthetic_llm
+AUG_0559,भाई को कल शाम कोलेस्ट्रॉल टेस्ट घर से सैंपल दो,Hindi,lab_test_home,scheduled,,synthetic_llm
+AUG_0560,मम्मी का फुल बॉडी चेकअप कल सुबह घर से सैंपल भेजो,Hindi,lab_test_home,scheduled,,synthetic_llm
+AUG_0561,पापा को कल रात थायराइड प्रोफ़ाइल घर पर कराओ,Hindi,lab_test_home,scheduled,,synthetic_llm
+AUG_0562,दादी को फास्टिंग ब्लड शुगर टेस्ट कल शाम घर से सैंपल दो,Hindi,lab_test_home,scheduled,,synthetic_llm
+AUG_0563,भाई को कल सुबह CBC टेस्ट घर पर चाहिए,Hindi,lab_test_home,scheduled,,synthetic_llm
+AUG_0564,मम्मी को कल शाम फास्टिंग ब्लड शुगर टेस्ट घर से सैंपल दो,Hindi,lab_test_home,scheduled,,synthetic_llm
+AUG_0565,"Subah se acidity gas lag rahi hai, doctor se tele consult chahiye",Hinglish,teleconsultation,same_day,,synthetic_llm
+AUG_0566,"Mujhe subah se pet me gas aur acidity hai, online doctor se baat karni hai",Hinglish,teleconsultation,same_day,,synthetic_llm
+AUG_0567,"Acidity aur gas ka problem hai, papa ko teleconsultation chahiye",Hinglish,teleconsultation,same_day,,synthetic_llm
+AUG_0568,"Mummy ko subah se acidity ka issue hai, doctor se video consult chahiye",Hinglish,teleconsultation,same_day,,synthetic_llm
+AUG_0569,"Dadi ko gas aur acidity ka discomfort hai, doctor se phone pe discuss karna hai",Hinglish,teleconsultation,same_day,,synthetic_llm
+AUG_0570,"Acidity aur gas se pareshan hoon, doctor se tele advice chahiye",Hinglish,teleconsultation,same_day,,synthetic_llm
+AUG_0571,"Mere pet me subah se acidity aur gas hai, doctor se online consult chahiye",Hinglish,teleconsultation,same_day,,synthetic_llm
+AUG_0572,"Acidity gas ka problem hai, doctor se video call pe baat karna chahta hoon",Hinglish,teleconsultation,same_day,,synthetic_llm
+AUG_0573,"Mujhe subah se acidity aur gas ka problem hai, doctor se teleconsultation chahiye",Hinglish,teleconsultation,same_day,,synthetic_llm
+AUG_0574,"Acidity aur gas ki shikayat hai, doctor se online consult karna hai",Hinglish,teleconsultation,same_day,,synthetic_llm
+AUG_0575,"Mere papa ko acidity aur gas ka issue hai, doctor se tele consult chahiye",Hinglish,teleconsultation,same_day,,synthetic_llm
+AUG_0576,"Mummy ko subah se acidity ka problem hai, doctor se video consult chahiye",Hinglish,teleconsultation,same_day,,synthetic_llm
+AUG_0577,"Dadi ko acidity aur gas ka takleef hai, doctor se phone consult chahiye",Hinglish,teleconsultation,same_day,,synthetic_llm
+AUG_0578,"Acidity gas ka issue hai, doctor se tele consult karna chahta hoon",Hinglish,teleconsultation,same_day,,synthetic_llm
+AUG_0579,"Mujhe reports ke baare me doctor se baat karni hai, teleconsultation chahiye",Hinglish,teleconsultation,same_day,,synthetic_llm
+AUG_0580,"Mere blood reports aayi hain, doctor se online discuss karna hai",Hinglish,teleconsultation,same_day,,synthetic_llm
+AUG_0581,"Doctor se reports discuss karna hai, teleconsultation ke liye request",Hinglish,teleconsultation,same_day,,synthetic_llm
+AUG_0582,"Mere lab reports aayi hain, doctor se video call pe baat karna chahta hoon",Hinglish,teleconsultation,same_day,,synthetic_llm
+AUG_0583,Reports ke results aane ke baad doctor se tele consult chahiye,Hinglish,teleconsultation,same_day,,synthetic_llm
+AUG_0584,Mujhe apne reports ke baare me doctor se online baat karni hai,Hinglish,teleconsultation,same_day,,synthetic_llm
+AUG_0585,"Doctor se reports ki details discuss karni hain, teleconsultation chahiye",Hinglish,teleconsultation,same_day,,synthetic_llm
+AUG_0586,"Mere recent reports hain, doctor se video consult karna hai",Hinglish,teleconsultation,same_day,,synthetic_llm
+AUG_0587,Reports ke baare me doctor se phone pe baat karna chahta hoon,Hinglish,teleconsultation,same_day,,synthetic_llm
+AUG_0588,"Mere test reports aayi, doctor se teleconsultation chahiye",Hinglish,teleconsultation,same_day,,synthetic_llm
+AUG_0589,Mujhe reports ke interpretation ke liye doctor se online consult chahiye,Hinglish,teleconsultation,same_day,,synthetic_llm
+AUG_0590,"Bacche ki medicine pe second opinion chahiye, doctor se teleconsultation",Hinglish,teleconsultation,same_day,,synthetic_llm
+AUG_0591,"Mere bacche ki dawa ke baare me second opinion chahiye, online doctor se baat karna hai",Hinglish,teleconsultation,same_day,,synthetic_llm
+AUG_0592,"Doctor se bacche ki medication pe second opinion chahiye, tele consult karna hai",Hinglish,teleconsultation,same_day,,synthetic_llm
+AUG_0593,"Mere bachche ki medicine par second opinion chahiye, video call pe doctor se baat karna hai",Hinglish,teleconsultation,same_day,,synthetic_llm
+AUG_0594,"Bacche ki dawa ke liye second opinion chahiye, doctor se teleconsultation chahiye",Hinglish,teleconsultation,same_day,,synthetic_llm
+AUG_0595,"Mujhe bacche ki medicine pe second opinion chahiye, doctor se online consult karna hai",Hinglish,teleconsultation,same_day,,synthetic_llm
+AUG_0596,"Bacche ki prescription par second opinion chahiye, doctor se video consult chahiye",Hinglish,teleconsultation,same_day,,synthetic_llm
+AUG_0597,"Mere bacche ki dawa ke liye second opinion chahiye, teleconsultation karna chahta hoon",Hinglish,teleconsultation,same_day,,synthetic_llm
+AUG_0598,"Doctor se bacche ki medicine ke liye second opinion chahiye, online consult chahiye",Hinglish,teleconsultation,same_day,,synthetic_llm
+AUG_0599,"Mere bachche ki medication par second opinion chahiye, doctor se tele consult chahiye",Hinglish,teleconsultation,same_day,,synthetic_llm
+AUG_0600,"Bacche ki dawa ke liye second opinion chahiye, doctor se video call pe baat karna hai",Hinglish,teleconsultation,same_day,,synthetic_llm
+AUG_0601,"Mujhe bacche ki medicine pe second opinion chahiye, doctor se teleconsultation chahiye",Hinglish,teleconsultation,same_day,,synthetic_llm
+AUG_0602,"Mummy ko bacche ki dawa ke liye second opinion chahiye, doctor se online consult chahiye",Hinglish,teleconsultation,same_day,,synthetic_llm
+AUG_0603,"Papa ko bacche ki medicine pe second opinion chahiye, doctor se teleconsultation chahiye",Hinglish,teleconsultation,same_day,,synthetic_llm
+AUG_0604,"Dadi ko bacche ki prescription pe second opinion chahiye, doctor se video consult chahiye",Hinglish,teleconsultation,same_day,,synthetic_llm
+AUG_0605,"Mere bacche ki dawa par second opinion chahiye, doctor se phone pe baat karna hai",Hinglish,teleconsultation,same_day,,synthetic_llm
+AUG_0606,"Bacche ki medication ke liye second opinion chahiye, doctor se teleconsultation karna chahta hoon",Hinglish,teleconsultation,same_day,,synthetic_llm
+AUG_0607,"Mujhe bacche ki medicine pe second opinion chahiye, doctor se online baat karna hai",Hinglish,teleconsultation,same_day,,synthetic_llm

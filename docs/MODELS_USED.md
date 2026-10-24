@@ -41,6 +41,15 @@ This system is trained and benchmarked on the official dataset:
 
 ---
 
+## 3b. Supabase (Postgres + Auth) — chat history & bookings
+- **Service**: [Supabase](https://supabase.com) — hosted Postgres + GoTrue auth (JWT).
+- **What it stores**: `chat_sessions`, `chat_steps`, `bookings`, and a `caregivers` roster (schema in `supabase/schema.sql`).
+- **Keys**: `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` are read from environment variables only (never committed). `SUPABASE_JWT_SECRET` (or `SUPABASE_JWKS_URL`) verifies user tokens.
+- **Fallback**: when the env vars are absent, the backend **fails soft to SQLite** (no-key demo and tests run unchanged). `GET /health` reports the active store.
+- **Privacy**: the dataset is synthetic; the app stores only a first name, a masked contact phone, and a session summary for bookings — no real patient identifiers. RLS restricts users to their own rows; the service role filters by `user_id` itself.
+
+---
+
 ## 4. Machine Learning Architecture & Classification
 - **Feature Extraction**: `scikit-learn` Char N-Gram (2–5 grams) and Word N-Gram (1–2 grams) TF-IDF Vectorizer. Accurately handles Hindi-English code-mixing, phonetic vernacular variations (`bukhar`, `bukhaar`, `buhar`, `khasi`, `khansi`), and typographical errors without out-of-vocabulary penalties.
 - **Classifier**: Logistic Regression with `CalibratedClassifierCV` (sigmoid calibration) predicting canonical `care_type` labels:

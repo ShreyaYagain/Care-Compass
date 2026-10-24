@@ -23,7 +23,7 @@ HINGLISH_MARKERS = {
 
 NEGATION_WORDS = {
     "no", "not", "none", "without", "never",
-    "nahi", "nahin", "na", "bina", "mat"
+    "nahi", "nahin", "nahim", "na", "bina", "mat", "nhi"
 }
 
 
@@ -127,35 +127,51 @@ def is_phrase_negated(phrase: str, full_text: str, window_size: int = 4) -> bool
 
     emergency_negation_combos = {
         ("not", "stopping"), ("not", "breathing"), ("not", "responsive"),
-        ("not", "responding"), ("nahi", "ruk"), ("nahi", "aa")
+        ("not", "responding"), ("not", "stop"), ("not", "feed"), ("not", "feeding"),
+        ("not", "drink"), ("not", "drinking"), ("not", "pass"), ("not", "passed"),
+        ("not", "speak"), ("not", "talking"), ("not", "urine"), ("not", "been"),
+        ("nahi", "ruk"), ("nahi", "aa"), ("nahi", "pi"), ("nahi", "band"),
+        ("nahi", "bol"), ("nahi", "de"), ("nahi", "roka"),
+        ("nahim", "ruk"), ("nahim", "aa"), ("nahim", "pi"), ("nahim", "band"),
     }
+
+    # Words that start a new clause. A negation word after a clause boundary
+    # belongs to a different symptom/verb, not to this red-flag phrase.
+    clause_boundaries = {"and", "aur", "aura", "plus", "also", "ki", "lekin", "but",
+                         "fir", "phir", "phira", "toh", "or", "ya", "par", "lekin",
+                         "zzsepzzz"}
 
     for i in range(len(tokens) - n_p + 1):
         if tokens[i:i + n_p] == phrase_tokens:
             start_window = max(0, i - window_size)
             end_window = min(len(tokens), i + n_p + window_size)
 
-            # Check preceding tokens
+            # Check preceding tokens (scan backwards; stop at a clause boundary)
             preceding = tokens[start_window:i]
-            for idx, nw in enumerate(preceding):
+            for idx in range(len(preceding) - 1, -1, -1):
+                nw = preceding[idx]
+                if nw in clause_boundaries:
+                    break
                 if nw in NEGATION_WORDS:
-                    # Verify it's not part of an emergency phrase like 'not stopping'
                     abs_idx = start_window + idx
                     if abs_idx + 1 < len(tokens) and (nw, tokens[abs_idx + 1]) in emergency_negation_combos:
                         continue
                     return True
 
-            # Check succeeding tokens
+            # Check succeeding tokens (stop at a clause boundary)
             succeeding = tokens[i + n_p:end_window]
             for idx, nw in enumerate(succeeding):
+                if nw in clause_boundaries:
+                    break
                 if nw in NEGATION_WORDS:
                     abs_idx = (i + n_p) + idx
                     if abs_idx + 1 < len(tokens) and (nw, tokens[abs_idx + 1]) in emergency_negation_combos:
                         continue
-                    # If preceded by 'and' / 'aur' (e.g. 'unconscious and not breathing'), don't negate the first symptom
-                    if idx > 0 and succeeding[idx - 1] in {"and", "aur", "plus", "also"}:
-                        continue
                     return True
+
+            # First occurrence is not negated: stop (a later duplicate occurrence
+            # in combined_roman must not leak its negation window into this one).
+            return False
 
     return False
 

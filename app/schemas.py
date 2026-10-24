@@ -132,6 +132,8 @@ class TriageRequest(BaseModel):
     patient: Optional[PatientProfile] = None
     client_time: Optional[str] = None
     context_consent: Optional[bool] = False
+    session_id: Optional[str] = None
+    input_mode: Optional[str] = None
 
 
 class TriageResponse(BaseModel):
@@ -146,6 +148,7 @@ class TriageResponse(BaseModel):
     emergency_steps: list[str] = []
     context_used: Optional[dict[str, Any]] = None
     debug: Optional[dict[str, Any]] = None
+    session_id: Optional[str] = None
 
 
 # --- /match ---
@@ -192,16 +195,82 @@ class BookingRequest(BaseModel):
     user_name: str = ""
     phone: str = ""
     triage_summary: Optional[str] = None
+    # New optional fields (backward compatible)
+    care_type: Optional[str] = None
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
+    patient_name: Optional[str] = None
+    relation: Optional[str] = None
+    session_id: Optional[str] = None
+    address: Optional[str] = None
+    contact_phone: Optional[str] = None
 
 
 class BookingResponse(BaseModel):
     booking_id: str = ""
+    id: Optional[str] = None
     status: str = "confirmed"
     eta: Optional[str] = "30-45 mins"
     caregiver_id: str = ""
     slot: str = ""
     user_name: str = ""
     phone: str = ""
+    # New optional fields
+    care_type: Optional[str] = None
+    patient_name: Optional[str] = None
+    relation: Optional[str] = None
+    address: Optional[str] = None
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
+    contact_phone: Optional[str] = None
+    caregiver: Optional[dict[str, Any]] = None
+
+
+class HistorySessionItem(BaseModel):
+    id: str = ""
+    first_message: Optional[str] = None
+    care_type: Optional[str] = None
+    urgency: Optional[str] = None
+    emergency: bool = False
+    status: Optional[str] = None
+    created_at: Optional[str] = None
+
+
+class HistoryStepItem(BaseModel):
+    step_index: int = 0
+    kind: str = ""
+    payload: dict[str, Any] = {}
+    created_at: Optional[str] = None
+
+
+class HistoryDetailResponse(BaseModel):
+    id: str = ""
+    first_message: Optional[str] = None
+    language: Optional[str] = None
+    input_mode: Optional[str] = None
+    care_type: Optional[str] = None
+    urgency: Optional[str] = None
+    emergency: bool = False
+    red_flags: list[str] = []
+    reasoning: Optional[str] = None
+    status: Optional[str] = None
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+    steps: list[HistoryStepItem] = []
+    booking: Optional[dict[str, Any]] = None
+
+
+class BookingItem(BaseModel):
+    id: str = ""
+    care_type: Optional[str] = None
+    patient_name: Optional[str] = None
+    relation: Optional[str] = None
+    caregiver: Optional[dict[str, Any]] = None
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
+    address: Optional[str] = None
+    status: Optional[str] = None
+    reason: Optional[str] = None
 
 
 # --- /transcribe ---
@@ -217,3 +286,4 @@ class HealthResponse(BaseModel):
     status: str = "ok"
     model_version: str = "1.0.0"
     llm_available: bool = False
+    store: str = "sqlite"

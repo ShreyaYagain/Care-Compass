@@ -1,0 +1,29 @@
+"""Shared test fixtures.
+
+Forces the SQLite fallback (no Supabase) for every test and binds the store to a
+fresh, per-test SQLite database so history/booking tests are isolated and
+deterministic.
+"""
+import pytest
+
+
+@pytest.fixture(autouse=True)
+def _isolated_sqlite(tmp_path):
+    from app.config import settings
+    settings.SUPABASE_URL = ""
+    settings.SUPABASE_SERVICE_ROLE_KEY = ""
+    settings.GROQ_API_KEY = ""
+    settings.GEMINI_API_KEY = ""
+
+    import app.db.session as sess
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import sessionmaker
+
+    engine = create_engine(
+        f"sqlite:///{tmp_path / 'test.db'}",
+        connect_args={"check_same_thread": False},
+    )
+    sess.engine = engine
+    sess.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    sess.Base.metadata.create_all(engine)
+    yield

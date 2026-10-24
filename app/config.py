@@ -30,6 +30,14 @@ try:
         GEMINI_MODEL: str = "gemini-1.5-flash"
         LLM_TIMEOUT_SECONDS: float = 3.0
 
+        # Supabase (Postgres + Auth). Empty -> SQLite fallback (no-key demo/tests).
+        SUPABASE_URL: str = os.getenv("SUPABASE_URL", "")
+        SUPABASE_SERVICE_ROLE_KEY: str = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
+        SUPABASE_JWT_SECRET: str = os.getenv("SUPABASE_JWT_SECRET", "")
+        SUPABASE_JWKS_URL: str = os.getenv("SUPABASE_JWKS_URL", "")
+        ENV: str = os.getenv("ENV", "dev")
+        DEV_USER_ID: str = os.getenv("DEV_USER_ID", "")
+
         # Official Label sets (single source of truth)
         CARE_TYPES: list[str] = [
             "paramedic_home_visit",
@@ -106,6 +114,14 @@ except ImportError:
         GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
         GEMINI_MODEL: str = "gemini-1.5-flash"
         LLM_TIMEOUT_SECONDS: float = 3.0
+
+        # Supabase (Postgres + Auth). Empty -> SQLite fallback (no-key demo/tests).
+        SUPABASE_URL: str = os.getenv("SUPABASE_URL", "")
+        SUPABASE_SERVICE_ROLE_KEY: str = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
+        SUPABASE_JWT_SECRET: str = os.getenv("SUPABASE_JWT_SECRET", "")
+        SUPABASE_JWKS_URL: str = os.getenv("SUPABASE_JWKS_URL", "")
+        ENV: str = os.getenv("ENV", "dev")
+        DEV_USER_ID: str = os.getenv("DEV_USER_ID", "")
 
         CARE_TYPES: list[str] = [
             "paramedic_home_visit",

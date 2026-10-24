@@ -20,12 +20,21 @@ from app.core.intake import (
     select_follow_up_question,
     count_assistant_turns,
     enforce_question_bank,
+    get_question_by_id,
+    is_bank_question,
+    get_asked_ids,
+)
+from app.core.semantic_screen import (
+    screen_red_flags,
+    flag_question_id,
+    QUESTION_TO_FLAG,
+    NOT_SURE_AS_YES,
 )
 from app.core.triage_model import predict_triage
 from app.core.risk_modifiers import apply_risk_modifiers
 from app.core.matching import rank_caregivers
 from app.core.explain import build_reasoning
-from app.core.context import get_context
+from app.core.context import get_context, season_display
 from app.core.guardrails import (
     input_guard,
     output_guard,
@@ -36,6 +45,35 @@ from app.core.guardrails import (
 from app.db.models import AuditLog
 
 logger = logging.getLogger(__name__)
+
+_BARE_ANSWERS = {
+    "no", "nahi", "nahin", "nahim", "n", "na",
+    "yes", "haan", "ha", "han", "y", "ji haan",
+    "not sure", "pata nahi", "unsure", "malum nahi", "pakka nahi",
+    "nahi pata", "pata nahi hai", "not sure about", "sure nahi",
+}
+
+
+def _parse_semantic_answer(history_dicts: list[dict], user_input: str):
+    """If the current message answers a semantic-screen confirmation question,
+    return (flag, 'yes'|'no'|'unsure'), else None."""
+    last_qid = None
+    for m in reversed(history_dicts):
+        if m.get("role") == "assistant":
+            qid = is_bank_question(m.get("text") or m.get("content") or "")
+            if qid and qid in QUESTION_TO_FLAG:
+                last_qid = qid
+            break
+    if not last_qid:
+        return None
+    ans = (user_input or "").strip().lower()
+    if ans in {"yes", "haan", "ha", "han", "y", "ji haan", "haan ji", "han ji"}:
+        return QUESTION_TO_FLAG[last_qid], "yes"
+    if ans in {"no", "nahi", "nahin", "nahim", "n", "na", "nhi"}:
+        return QUESTION_TO_FLAG[last_qid], "no"
+    if ans in {"not sure", "pata nahi", "unsure", "malum nahi", "pakka nahi", "nahi pata"}:
+        return QUESTION_TO_FLAG[last_qid], "unsure"
+    return None
 
 
 def _get_emergency_steps(lang: str) -> list[str]:
@@ -56,6 +94,32 @@ def _get_emergency_steps(lang: str) -> list[str]:
         "Do not offer solid foods, water, or unprescribed medicines.",
         "Unlock the door for the medical response team.",
     ]
+
+
+def _context_summary_line(context: dict, lang: str) -> str:
+    """One-line localised weather/time/location summary for the result text."""
+    loc = context.get("location_name") or ""
+    temp = context.get("temperature_c")
+    aqi = context.get("aqi")
+    season = season_display(context.get("season", ""))
+    t_str = context.get("local_time_str") or ""
+
+    temp_s = f"{round(temp)}°C" if temp is not None else ""
+    aqi_s = f"AQI {round(aqi)}" if aqi is not None else ""
+    facts = [f for f in (loc, temp_s, aqi_s) if f]
+    facts_str = ", ".join(facts)
+
+    if lang == "hi":
+        base = f"अभी {facts_str} है" if facts else "स्थानीय मौसम उपलब्ध नहीं"
+        extra = f", {season} मौसम, समय {t_str}" if (season or t_str) else ""
+        return f"{base}{extra}।"
+    if lang == "hinglish":
+        base = f"Abhi {facts_str} hai" if facts else "Local weather available nahi hai"
+        extra = f", {season} season, time {t_str}" if (season or t_str) else ""
+        return f"{base}{extra}."
+    base = f"Right now: {facts_str}" if facts else "Local weather is unavailable"
+    extra = f", {season} season, {t_str}" if (season or t_str) else ""
+    return f"{base}{extra}."
 
 
 def run_triage_pipeline(
@@ -107,7 +171,18 @@ def run_triage_pipeline(
         lng = request.location.lng if request.location else None
         try:
             context = get_context(lat=lat, lng=lng, client_time_str=request.client_time)
-            reasons.append(f"Context gathered: season={context.get('season')}, tags={context.get('tags')}, temp={context.get('temperature_c')}")
+            # Weather/time/location are always shown with the result (not only
+            # when they change the decision). Escalation branches replace this.
+            context_used = {
+                "season": season_display(context.get("season", "")),
+                "weather": f"{round(context['temperature_c'])}°C" if context.get("temperature_c") is not None else "",
+                "aqi": context.get("aqi"),
+                "location": context.get("location_name") or None,
+                "time": context.get("local_time_str") or None,
+                "tags": context.get("tags", []),
+                "reason": "",
+            }
+            reasons.append(f"Context gathered: season={context.get('season')}, tags={context.get('tags')}, temp={context.get('temperature_c')}, loc={context.get('location_name')}")
         except Exception as e:
             logger.warning(f"Failed to gather context: {e}")
             context = None
@@ -147,6 +222,18 @@ def run_triage_pipeline(
         is_high_emergency = True
     if pregnancy_risk.is_pregnant and pregnancy_risk.reason:
         reasons.append(f"Pregnancy layer: {pregnancy_risk.reason}")
+
+    # 2.3 Semantic-screen confirmation answer: Yes (or Not-sure for the 7
+    # critical flags) escalates; No continues. Never lowers rule decisions.
+    semantic_answer = _parse_semantic_answer(history_dicts, user_input)
+    if semantic_answer:
+        s_flag, s_kind = semantic_answer
+        if s_kind == "yes" or (s_kind == "unsure" and s_flag in NOT_SURE_AS_YES):
+            high_flags = list(set(high_flags + [s_flag]))
+            is_high_emergency = True
+            reasons.append(f"Semantic screen: user confirmed red flag {s_flag} (answer={s_kind})")
+        else:
+            reasons.append(f"Semantic screen: user cleared red flag {s_flag} (answer={s_kind})")
 
     # Emergency branch (Immediate 112)
     if is_high_emergency:
@@ -286,6 +373,82 @@ def run_triage_pipeline(
             except Exception as e:
                 logger.warning(f"Failed to write audit log: {e}")
         return resp
+
+    # 2.4 SEMANTIC RED-FLAG SCREEN (after keyword rules, before follow-ups and
+    # the classifier). Meaning-based detection; a present flag becomes ONE
+    # confirmation question — the LLM never decides an emergency by itself.
+    semantic_flags: list[str] = []
+    if user_input.strip().lower() not in _BARE_ANSWERS:
+        try:
+            semantic_flags = screen_red_flags(user_input, lang)
+        except Exception as e:
+            logger.warning(f"Semantic red-flag screen failed: {e}")
+            semantic_flags = []
+    if semantic_flags:
+        asked_ids = get_asked_ids(history_dicts)
+        for s_flag in semantic_flags:
+            qid = flag_question_id(s_flag)
+            if qid and qid not in asked_ids:
+                q_text, q_options = get_question_by_id(qid, lang)
+                q_text = enforce_question_bank(q_text, lang)
+                guard_q = output_guard(q_text, lang=lang, is_emergency=False, care_type="teleconsultation", field_name="follow_up_question")
+                if not guard_q["ok"]:
+                    output_violations.extend(guard_q["violations"])
+                    template_replaced = True
+                q_text = guard_q["safe_text"]
+
+                debug_trace = {
+                    "red_flags_high": high_flags,
+                    "red_flags_medium": medium_flags,
+                    "model_probs": None,
+                    "calibrated_probabilities": None,
+                    "urgency_after_cost_matrix": None,
+                    "urgency_after_risk_modifiers": None,
+                    "urgency_after_confidence_fallback": None,
+                    "confidence": None,
+                    "slots": {},
+                    "final_care_type": None,
+                    "final_urgency": None,
+                    "context_info": context,
+                    "semantic_screen": {"flags": semantic_flags, "asked": qid},
+                    "guardrails": {
+                        "input_guard": input_guard_res,
+                        "output_violations": output_violations,
+                        "template_replaced": template_replaced,
+                    },
+                    "reasons": [f"Semantic screen detected candidate red flag(s) {semantic_flags}; asking confirmation ({qid})"],
+                }
+                resp = TriageResponse(
+                    follow_up_question=q_text,
+                    follow_up_options=q_options,
+                    care_type=None,
+                    urgency=None,
+                    red_flags=[],
+                    reasoning=None,
+                    confidence=None,
+                    matched_caregivers=[],
+                    emergency_steps=[],
+                    context_used=None,
+                    debug=debug_trace if debug else None,
+                )
+                if db:
+                    try:
+                        log = AuditLog(
+                            user_input=user_input,
+                            language=lang,
+                            red_flags=[],
+                            probabilities=None,
+                            care_type=None,
+                            urgency=None,
+                            confidence=None,
+                            reasoning=None,
+                            debug_trace=debug_trace,
+                        )
+                        db.add(log)
+                        db.commit()
+                    except Exception as e:
+                        logger.warning(f"Failed to write audit log: {e}")
+                return resp
 
     # 3. Intake slot extraction (on sanitized text)
     slots = extract_slots(norm_text, history_dicts)
@@ -520,9 +683,11 @@ def run_triage_pipeline(
                 is_emergency = True
                 context_reason = f"Given the extreme heat wave ({round(temp_c) if temp_c is not None else 40}°C) and patient's senior age, fever/discomfort requires urgent medical stabilization."
                 context_used = {
-                    "season": context.get("season"),
+                    "season": season_display(context.get("season", "")),
                     "weather": f"{round(temp_c)}°C" if temp_c is not None else "Heat wave",
                     "aqi": aqi_val,
+                    "location": context.get("location_name") or None,
+                    "time": context.get("local_time_str") or None,
                     "tags": tags,
                     "reason": context_reason,
                 }
@@ -533,9 +698,11 @@ def run_triage_pipeline(
                 is_emergency = True
                 context_reason = f"Hazardous air quality (AQI {round(aqi_val) if aqi_val else 200}) posing acute respiratory risk for known asthma."
                 context_used = {
-                    "season": context.get("season"),
+                    "season": season_display(context.get("season", "")),
                     "weather": context.get("summary", ""),
                     "aqi": aqi_val,
+                    "location": context.get("location_name") or None,
+                    "time": context.get("local_time_str") or None,
                     "tags": tags,
                     "reason": context_reason,
                 }
@@ -573,21 +740,24 @@ def run_triage_pipeline(
             and slots.get("age_group") != "child"
         ):
             final_care_type = "teleconsultation"
-            adj_reason = "Given night-time / inclement weather conditions, we recommend an immediate virtual teleconsultation; a home visit can be dispatched in the morning if needed."
-            context_reason = adj_reason
             temp_val = round(context["temperature_c"]) if context.get("temperature_c") is not None else None
-            if "rainy" in context.get("tags", []) and temp_val is not None:
-                weather_desc = f"{temp_val}°C rainy"
-            elif context.get("is_night") and temp_val is not None:
-                weather_desc = f"{temp_val}°C night"
-            elif context.get("summary"):
-                weather_desc = context["summary"]
+            precip = context.get("precipitation_mm") or 0
+            is_rainy = "rainy" in context.get("tags", []) or precip >= 1.0
+            if is_rainy:
+                rain_part = f"rain ({precip} mm)" if precip else "rain"
+                cond = f"Given {rain_part}" + (f" at {temp_val}°C" if temp_val is not None else "")
+                weather_desc = f"{temp_val}°C rainy" if temp_val is not None else "Rainy"
             else:
-                weather_desc = "Night-time"
+                cond = "Given night-time" + (f" at {temp_val}°C" if temp_val is not None else "")
+                weather_desc = f"{temp_val}°C night" if temp_val is not None else "Night-time"
+            adj_reason = f"{cond}, we recommend an immediate virtual teleconsultation; a home visit can be dispatched in the morning if needed."
+            context_reason = adj_reason
             context_used = {
-                "season": context.get("season"),
+                "season": season_display(context.get("season", "")),
                 "weather": weather_desc,
                 "aqi": context.get("aqi"),
+                "location": context.get("location_name") or None,
+                "time": context.get("local_time_str") or None,
                 "tags": context.get("tags", []),
                 "reason": adj_reason,
             }
@@ -606,7 +776,11 @@ def run_triage_pipeline(
 
     # 9. Explainability & Guardrail Enforcement
     if unclear_fallback:
-        unclear_msg = "We could not be sure what you need, so a doctor video consult is the safest first step."
+        unclear_msg = {
+            "en": "We could not be sure what you need, so a doctor video consult is the safest first step.",
+            "hinglish": "Hum samajh nahi paaye ki aapko kya chahiye, isliye doctor video consult sabse safe pehla kadam hai.",
+            "hi": "हम समझ नहीं पाए कि आपको क्या चाहिए, इसलिए डॉक्टर वीडियो परामर्श सबसे सुरक्षित पहला कदम है।",
+        }.get(lang, "We could not be sure what you need, so a doctor video consult is the safest first step.")
         escalation = get_escalation_line(lang)
         disclaimer = get_disclaimer(lang) if include_disclaimer else ""
         reasoning_parts = []
@@ -616,6 +790,13 @@ def run_triage_pipeline(
         reasoning_parts.append(escalation)
         reasoning = " ".join(reasoning_parts).strip()
     else:
+        # Weather/time/location summary accompanies every result (when consent
+        # was given). Escalations keep their own reason instead.
+        context_summary = None
+        if context and context_used is not None and not context_reason:
+            context_summary = _context_summary_line(context, lang)
+            context_used["reason"] = context_summary
+
         reasoning = build_reasoning(
             symptoms=slots.get("symptoms", []),
             duration=slots.get("duration"),
@@ -627,6 +808,7 @@ def run_triage_pipeline(
             modifiers=applied_modifiers,
             language=lang,
             context_reason=context_reason,
+            context_summary=context_summary,
             top_terms=top_terms,
             include_disclaimer=include_disclaimer,
         )

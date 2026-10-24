@@ -92,6 +92,33 @@ non-emergency rows. This is the point of the two-layer design: the deterministic
 rule layer (0.985 recall, 0 false alarms) is the safety floor, and the classifier
 handles care-type routing for non-emergency inputs.
 
+## 4b. Semantic red-flag screen (meaning-based safety net)
+
+Because the keyword rules miss fresh paraphrases (0.057 on the holdout), a second
+detector understands meaning: `app/core/semantic_screen.py` asks Groq (temperature 0,
+strict JSON) to assess each of the nine flags with an `evidence_quote` that must be a
+real substring of the message. A present flag becomes **one confirmation question** from
+the closed bank — the LLM never decides an emergency by itself and never lowers a
+rule decision. Yes (or "Not sure" for the 7 critical flags) → `emergency_112`; No → continue.
+
+Fresh-holdout results (`ml/data/redflag_holdout.csv`, 35 positives / 18 non-emergency):
+
+| mode | safety recall (positives) | false alarms (negatives) |
+|---|---|---|
+| rules only | 0.057 (2/35) | 0.000 |
+| semantic screen only (Groq) | **~0.94 (33/35)** | 0.000 |
+| local TF-IDF fallback (Groq down) | 0.029 (1/35) | 0.000 |
+| full pipeline (rules + semantic) | ~0.94 (33/35 caught via confirm) | 0.000 |
+
+- The **Groq screen is the layer that generalises** to unseen paraphrases
+  ("chest feels like someone is sitting on it", "blood soaking through three
+  towels", "he went limp") — 33/35 become confirmation questions.
+- The **local TF-IDF fallback** (trained on the 217-row set) also overfits and is
+  a weak stopgap; it keeps the app functional (ask, don't decide) when Groq is down,
+  but its recall on fresh text is low and is a known weakness to improve.
+- Re-run: `python ml/eval_semantic_screen.py` (with Groq enabled) and
+  `GROQ_API_KEY= python ml/eval_semantic_screen.py` (fallback).
+
 ## 6. Groq paraphrase augmentation (training only, PRELIMINARY)
 
 `ml/augment_synthetic.py` generates 40+ distinct Groq paraphrases per care type

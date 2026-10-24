@@ -186,7 +186,7 @@ class CareCompassUnitTest {
     @Test
     fun testCareService_fromCareType_mapsAllTypes() {
         assertEquals(CareService.HOME_NURSING, CareService.fromCareType("home_nursing"))
-        assertEquals(CareService.HOME_NURSING, CareService.fromCareType("paramedic_home_visit"))
+        assertEquals(CareService.DOCTOR_HOME_VISIT, CareService.fromCareType("paramedic_home_visit"))
         assertEquals(CareService.LAB_TEST_HOME, CareService.fromCareType("lab_test_home"))
         assertEquals(CareService.TELECONSULTATION, CareService.fromCareType("teleconsultation"))
         assertEquals(CareService.HOME_NURSING, CareService.fromCareType(null))

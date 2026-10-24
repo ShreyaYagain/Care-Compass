@@ -1,4 +1,5 @@
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 from app.schemas import TriageRequest, ChatMessage, Location
 from app.core.pipeline import run_triage_pipeline
@@ -137,33 +138,46 @@ class TestGuardrails(unittest.TestCase):
             self.assertNotIn(d, full_output)
 
     def test_disclaimer_and_escalation_line_appear(self):
+        # The card never carries the app disclaimer (it lives in the app's
+        # Settings/About); the safety line is mandatory on every
+        # non-emergency card, in the user's language.
         # 1. English non-emergency
         req_en = TriageRequest(user_input="papa ko do din se halka bukhar hai", language="en")
         resp_en = run_triage_pipeline(req_en, debug=True)
         self.assertIsNotNone(resp_en.reasoning)
-        # Disclaimer must be present
-        self.assertIn("This app helps you find the right care. It is not a doctor.", resp_en.reasoning)
-        # Escalation line must be present
-        self.assertIn("If it gets worse or you notice breathing trouble, chest pain, confusion, or bleeding, call 112 or tell us right away.", resp_en.reasoning)
+        # Disclaimer must NOT be on the card
+        self.assertNotIn("This app helps you find the right care", resp_en.reasoning)
+        # Safety line must be present
+        self.assertIn("Call 112 if", resp_en.reasoning)
+        self.assertIn("112", (resp_en.card_lines or {}).get("watch_for", ""))
+        # Disclaimer must exist in the API field (Settings/About + first run)
+        self.assertIsNotNone(resp_en.disclaimer)
+        self.assertIn("not a doctor", resp_en.disclaimer.lower())
 
         # 2. Hindi non-emergency
         req_hi = TriageRequest(user_input="ghar pe IM injection lagwana hai", language="hi")
         resp_hi = run_triage_pipeline(req_hi, debug=True)
         self.assertIsNotNone(resp_hi.reasoning)
-        self.assertIn("यह ऐप आपको सही देखभाल खोजने में मदद करता है। यह डॉक्टर नहीं है।", resp_hi.reasoning)
-        self.assertIn("यदि स्थिति बिगड़ती है या सांस लेने में तकलीफ, सीने में दर्द, बेहोशी या रक्तस्राव महसूस हो, तो तुरंत 112 पर कॉल करें।", resp_hi.reasoning)
+        self.assertNotIn("यह ऐप आपको सही देखभाल खोजने में मदद करता है", resp_hi.reasoning)
+        self.assertIn("112", resp_hi.reasoning)
+        self.assertIn("112", (resp_hi.card_lines or {}).get("watch_for", ""))
+        self.assertIsNotNone(resp_hi.disclaimer)
+        self.assertIn("डॉक्टर", resp_hi.disclaimer)
 
         # 3. Hinglish non-emergency
         req_hing = TriageRequest(user_input="ghar pe IM injection lagwana hai", language="hinglish")
         resp_hing = run_triage_pipeline(req_hing, debug=True)
         self.assertIsNotNone(resp_hing.reasoning)
-        self.assertIn("Yeh app aapko sahi dekhbhal khojne mein madad karta hai. Yeh doctor nahi hai.", resp_hing.reasoning)
-        self.assertIn("Agar tabiyat bigadti hai ya saans lene mein dikkat, seene mein dard, behoshi ya bleeding ho, toh turant 112 par call karein.", resp_hing.reasoning)
+        self.assertNotIn("Yeh app aapko sahi dekhbhal", resp_hing.reasoning)
+        self.assertIn("112", resp_hing.reasoning)
+        self.assertIn("112", (resp_hing.card_lines or {}).get("watch_for", ""))
+        self.assertIsNotNone(resp_hing.disclaimer)
+        self.assertIn("doctor", resp_hing.disclaimer.lower())
 
-        # 4. Multi-turn session: disclaimer shown only once per session
+        # 4. Multi-turn session: the disclaimer is never part of the card
         history = [
             ChatMessage(role="user", text="papa ko bukhar hai"),
-            ChatMessage(role="assistant", text="This app helps you find the right care. It is not a doctor. Paramedic home visit recommended. If it gets worse call 112.")
+            ChatMessage(role="assistant", text="Fever. A medic will visit you at home today. Call 112 if breathing trouble.")
         ]
         req_turn2 = TriageRequest(
             user_input="okay please arrange it",
@@ -172,8 +186,19 @@ class TestGuardrails(unittest.TestCase):
         )
         resp_turn2 = run_triage_pipeline(req_turn2, debug=True)
         if resp_turn2.reasoning:
-            # Should NOT duplicate disclaimer if already present in history
-            self.assertEqual(resp_turn2.reasoning.count("This app helps you find the right care. It is not a doctor."), 0)
+            # Should never contain the disclaimer
+            self.assertEqual(resp_turn2.reasoning.count("This app helps you find the right care"), 0)
+
+        # The disclaimer text also lives in the app's About/first-run string
+        # resources, so the client can render it without the backend.
+        strings_xml = (
+            Path(__file__).resolve().parent.parent
+            / "android" / "app" / "src" / "main" / "res" / "values" / "strings.xml"
+        )
+        self.assertTrue(strings_xml.exists(), "Android strings.xml missing")
+        strings_text = strings_xml.read_text(encoding="utf-8")
+        self.assertIn("medical_disclaimer_en", strings_text)
+        self.assertIn("does not give medical advice", strings_text)
 
 
 if __name__ == "__main__":

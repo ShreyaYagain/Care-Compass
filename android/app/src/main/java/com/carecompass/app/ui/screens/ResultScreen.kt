@@ -8,8 +8,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MedicalServices
 import androidx.compose.material3.*
@@ -20,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.carecompass.app.data.CardLines
 import com.carecompass.app.data.SecondaryOption
 import com.carecompass.app.ui.components.BigButton
 import com.carecompass.app.ui.components.CaregiverCard
@@ -28,6 +27,7 @@ import com.carecompass.app.ui.theme.GreenSafe
 import com.carecompass.app.ui.theme.PrimaryBlue
 import com.carecompass.app.viewmodel.TriageUiState
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ResultScreen(
     uiState: TriageUiState,
@@ -36,10 +36,11 @@ fun ResultScreen(
     modifier: Modifier = Modifier
 ) {
     val resp = uiState.latestResponse
-    val careType = resp?.careType ?: "paramedic_home_visit"
+    val careType = resp?.careType ?: "teleconsultation"
     val urgency = resp?.urgency ?: "same_day"
-    val reasoning = resp?.reasoning ?: "Fever with cough for 2 days, no breathing difficulty reported."
     val caregivers = resp?.matchedCaregivers ?: emptyList()
+    val isEmergency = careType == "emergency_112" || urgency == "emergency"
+    val lines: CardLines? = resp?.cardLines
 
     val (urgencyColor, urgencyBg, urgencyLabel) = when (urgency) {
         "scheduled" -> Triple(GreenSafe, GreenSafe.copy(alpha = 0.12f), "Scheduled")
@@ -53,41 +54,57 @@ fun ResultScreen(
         "home_nursing" -> "Home nursing"
         "lab_test_home" -> "Lab test at home"
         "teleconsultation" -> "Doctor video consult"
-        "emergency_112" -> "Emergency (112)"
-        else -> careType.replace("_", " ").capitalize()
+        "emergency_112" -> "Emergency"
+        else -> careType.replace("_", " ").replaceFirstChar { it.uppercase() }
     }
 
-    val contextInfo = resp?.contextUsed
-    var showContextDialog by remember { mutableStateOf(false) }
+    var showDetailsSheet by remember { mutableStateOf(false) }
 
-    if (showContextDialog && contextInfo != null) {
-        AlertDialog(
-            onDismissRequest = { showContextDialog = false },
-            icon = { Icon(Icons.Default.Info, contentDescription = null, tint = PrimaryBlue) },
-            title = { Text("Local & Seasonal Context") },
-            text = {
-                Column {
-                    Text(
-                        text = contextInfo.reason ?: "Context contributed to tailoring this recommendation.",
-                        fontSize = 15.sp,
-                        lineHeight = 22.sp,
-                        color = Color(0xFF333333)
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = "Safety Note: Context can never delay emergency care. If symptoms worsen, call 112 immediately.",
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFFB71C1C)
-                    )
+    if (showDetailsSheet) {
+        ModalBottomSheet(onDismissRequest = { showDetailsSheet = false }) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 8.dp)
+                    .padding(bottom = 28.dp)
+            ) {
+                Text(
+                    text = "How we got this result",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF212121)
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                val details = resp?.details
+                DetailRow("Symptoms used", (details?.symptoms ?: emptyList()).joinToString(", ").ifBlank { "—" })
+                if (details != null && details.answers.isNotEmpty()) {
+                    DetailRow("Your answers", details.answers.entries.joinToString(", ") { "${it.key}: ${it.value}" })
                 }
-            },
-            confirmButton = {
-                TextButton(onClick = { showContextDialog = false }) {
-                    Text("Got it")
+                val ctx = details?.contextUsed ?: resp?.contextUsed
+                val ctxText = listOfNotNull(
+                    ctx?.location, ctx?.weather, ctx?.aqi?.let { "AQI $it" },
+                    ctx?.season?.replace("_", " "), ctx?.time
+                ).joinToString(", ").ifBlank { null }
+                DetailRow("Context used", ctxText ?: "Not used")
+                DetailRow("Confidence", details?.confidence?.let { "${(it * 100).toInt()}%" } ?: "—")
+                DetailRow("Care type", details?.careType ?: careType)
+                DetailRow("Urgency", details?.urgency ?: urgency)
+                if (details != null && details.redFlags.isNotEmpty()) {
+                    DetailRow("Red flags", details.redFlags.joinToString(", ").replace("_", " "))
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(
+                    onClick = { showDetailsSheet = false },
+                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
+                ) {
+                    Text("Close", fontWeight = FontWeight.Bold, color = Color.White)
                 }
             }
-        )
+        }
     }
 
     Column(
@@ -97,14 +114,17 @@ fun ResultScreen(
             .padding(16.dp)
             .verticalScroll(rememberScrollState())
     ) {
-        // Triage Header Card
+        // Result card
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
+            colors = CardDefaults.cardColors(
+                containerColor = if (isEmergency) Color(0xFFFFEBEE) else Color.White
+            ),
             elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
         ) {
             Column(modifier = Modifier.padding(18.dp)) {
+                // Title + urgency badge
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -114,7 +134,7 @@ fun ResultScreen(
                         Icon(
                             imageVector = Icons.Default.MedicalServices,
                             contentDescription = "Care",
-                            tint = PrimaryBlue,
+                            tint = if (isEmergency) Color(0xFFD32F2F) else PrimaryBlue,
                             modifier = Modifier.size(28.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
@@ -125,216 +145,217 @@ fun ResultScreen(
                             color = Color(0xFF212121)
                         )
                     }
-
-                    // Urgency Chip
-                    Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = urgencyBg
-                    ) {
-                        Text(
-                            text = urgency.replace("_", "-").toUpperCase(),
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Black,
-                            color = urgencyColor,
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
-                        )
-                    }
-                }
-
-                // Subtle Context Chip Row (Tap opens explanation)
-                if (contextInfo != null) {
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { showContextDialog = true },
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        if (!contextInfo.location.isNullOrBlank()) {
-                            Surface(
-                                shape = RoundedCornerShape(12.dp),
-                                color = Color(0xFFE8F0FE)
-                            ) {
-                                Text(
-                                    text = contextInfo.location,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = PrimaryBlue,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                )
-                            }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = urgencyBg
+                        ) {
+                            Text(
+                                text = urgencyLabel.uppercase(),
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Black,
+                                color = urgencyColor,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                            )
                         }
-
-                        if (!contextInfo.season.isNullOrBlank()) {
-                            Surface(
-                                shape = RoundedCornerShape(12.dp),
-                                color = Color(0xFFE8F0FE)
-                            ) {
-                                Text(
-                                    // "post_monsoon" -> "Post-monsoon"; never show raw ids/underscores.
-                                    text = contextInfo.season
-                                        .replace("_", "-")
-                                        .split("-")
-                                        .joinToString("-") { part ->
-                                            part.replaceFirstChar { it.uppercase() }
-                                        },
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = PrimaryBlue,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                )
-                            }
-                        }
-
-                        if (!contextInfo.weather.isNullOrBlank()) {
-                            Surface(
-                                shape = RoundedCornerShape(12.dp),
-                                color = Color(0xFFF1F3F4)
-                            ) {
-                                Text(
-                                    text = contextInfo.weather,
-                                    fontSize = 12.sp,
-                                    color = Color(0xFF424242),
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                )
-                            }
-                        }
-
-                        if (contextInfo.aqi != null) {
-                            Surface(
-                                shape = RoundedCornerShape(12.dp),
-                                color = if (contextInfo.aqi >= 200) Color(0xFFFFEBEE) else Color(0xFFF1F3F4)
-                            ) {
-                                Text(
-                                    text = "AQI ${contextInfo.aqi.toInt()}",
-                                    fontSize = 12.sp,
-                                    fontWeight = if (contextInfo.aqi >= 200) FontWeight.Bold else FontWeight.Normal,
-                                    color = if (contextInfo.aqi >= 200) Color(0xFFC62828) else Color(0xFF424242),
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                )
-                            }
-                        }
-
-                        if (!contextInfo.time.isNullOrBlank()) {
-                            Surface(
-                                shape = RoundedCornerShape(12.dp),
-                                color = Color(0xFFF1F3F4)
-                            ) {
-                                Text(
-                                    text = contextInfo.time,
-                                    fontSize = 12.sp,
-                                    color = Color(0xFF424242),
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                )
-                            }
-                        }
-
+                        Spacer(modifier = Modifier.width(8.dp))
                         Icon(
                             imageVector = Icons.Default.Info,
                             contentDescription = "Details",
-                            tint = Color.Gray,
-                            modifier = Modifier.size(16.dp)
+                            tint = Color(0xFF757575),
+                            modifier = Modifier
+                                .size(20.dp)
+                                .clickable { showDetailsSheet = true }
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
-                // Plain Language Reasoning
-                Text(
-                    text = reasoning,
-                    fontSize = 17.sp,
-                    color = Color(0xFF424242),
-                    lineHeight = 24.sp
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        // Caregivers recommendation section
-        Text(
-            text = "Recommended Caregivers (Top Matches)",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFF212121)
-        )
-        Text(
-            text = "Ranked by proximity, slot availability, skill, and language",
-            fontSize = 14.sp,
-            color = Color(0xFF757575)
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        if (caregivers.isEmpty()) {
-            Text(
-                text = "No caregiver free right now. Try a doctor video consult.",
-                fontSize = 16.sp,
-                color = Color.Gray,
-                modifier = Modifier.padding(vertical = 16.dp)
-            )
-        } else {
-            caregivers.forEach { cg ->
-                CaregiverCard(
-                    caregiver = cg,
-                    onBookClick = { onBookCaregiver(cg.caregiverId) }
-                )
-            }
-        }
-
-
-        val secondary = resp?.secondaryOptions ?: emptyList()
-        if (secondary.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(24.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Other ways to see a doctor",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF212121)
-                )
-                Surface(
-                    color = Color(0xFFEEEEEE),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
+                if (isEmergency) {
+                    // Emergency card: big call-to-action + fixed steps.
                     Text(
-                        text = "demo data",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFF616161),
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                        text = "Call 112 now",
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Black,
+                        color = Color(0xFFD32F2F)
                     )
+                    if (!lines?.why.isNullOrBlank()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = lines?.why ?: "",
+                            fontSize = 17.sp,
+                            color = Color(0xFF424242),
+                            lineHeight = 24.sp
+                        )
+                    }
+                    resp?.emergencySteps?.takeIf { it.isNotEmpty() }?.let { steps ->
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = "First aid steps",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF212121)
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        steps.forEachIndexed { index, step ->
+                            Text(
+                                text = "${index + 1}. $step",
+                                fontSize = 15.sp,
+                                color = Color(0xFF424242),
+                                lineHeight = 22.sp
+                            )
+                        }
+                    }
+                } else {
+                    // Short lines, no passage.
+                    CardLine(label = "Why", text = lines?.why ?: (resp?.reasoning ?: ""))
+                    if (!lines?.contextLine.isNullOrBlank()) {
+                        CardLine(label = "", text = lines?.contextLine ?: "", highlight = true)
+                    }
+                    CardLine(label = "Next", text = lines?.next ?: "")
+                    if (!lines?.watchFor.isNullOrBlank()) {
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Text(
+                            text = "Watch for:",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFB71C1C)
+                        )
+                        Text(
+                            text = lines?.watchFor ?: "",
+                            fontSize = 15.sp,
+                            color = Color(0xFF424242),
+                            lineHeight = 22.sp
+                        )
+                    }
                 }
             }
+        }
+
+        // Caregiver list (never on emergency results)
+        if (!isEmergency) {
+            Spacer(modifier = Modifier.height(20.dp))
+
             Text(
-                text = "Hospital OPD appointments and doctors who visit home",
+                text = "Recommended Caregivers",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF212121)
+            )
+            Text(
+                text = "Ranked by proximity, slot availability, skill, and language",
                 fontSize = 14.sp,
                 color = Color(0xFF757575)
             )
-            Spacer(modifier = Modifier.height(10.dp))
-            secondary.forEach { opt ->
-                SecondaryDoctorCard(
-                    option = opt,
-                    onBookClick = { onBookCaregiver(opt.caregiverId) }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            if (caregivers.isEmpty()) {
+                Text(
+                    text = "No caregiver free right now. Try a doctor video consult.",
+                    fontSize = 16.sp,
+                    color = Color.Gray,
+                    modifier = Modifier.padding(vertical = 16.dp)
                 )
+            } else {
+                caregivers.forEach { cg ->
+                    CaregiverCard(
+                        caregiver = cg,
+                        onBookClick = { onBookCaregiver(cg.caregiverId) }
+                    )
+                }
             }
+
+            val secondary = resp?.secondaryOptions ?: emptyList()
+            if (secondary.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(24.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Other ways to see a doctor",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF212121)
+                    )
+                    Surface(
+                        color = Color(0xFFEEEEEE),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text(
+                            text = "demo data",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFF616161),
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                        )
+                    }
+                }
+                Text(
+                    text = "Hospital OPD appointments and doctors who visit home",
+                    fontSize = 14.sp,
+                    color = Color(0xFF757575)
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                secondary.forEach { opt ->
+                    SecondaryDoctorCard(
+                        option = opt,
+                        onBookClick = { onBookCaregiver(opt.caregiverId) }
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            BigButton(
+                text = "Return to Home",
+                onClick = onStartOver
+            )
         }
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        BigButton(
-            text = "Return to Home",
-            onClick = onStartOver
-        )
     }
 }
 
+@Composable
+private fun CardLine(label: String, text: String, highlight: Boolean = false) {
+    if (text.isBlank()) return
+    Spacer(modifier = Modifier.height(10.dp))
+    if (label.isNotBlank()) {
+        Text(
+            text = "$label:",
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+            color = if (highlight) PrimaryBlue else Color(0xFF212121)
+        )
+    }
+    Text(
+        text = text,
+        fontSize = if (label.isBlank()) 15.sp else 17.sp,
+        color = if (highlight) PrimaryBlue else Color(0xFF424242),
+        lineHeight = 24.sp,
+        fontWeight = if (label.isBlank()) FontWeight.Medium else FontWeight.Normal
+    )
+}
+
+@Composable
+private fun DetailRow(label: String, value: String) {
+    Column(modifier = Modifier.padding(vertical = 4.dp)) {
+        Text(
+            text = label,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF757575)
+        )
+        Text(
+            text = value,
+            fontSize = 15.sp,
+            color = Color(0xFF212121),
+            lineHeight = 20.sp
+        )
+    }
+}
 
 @Composable
 private fun SecondaryDoctorCard(

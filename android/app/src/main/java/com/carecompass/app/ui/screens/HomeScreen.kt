@@ -77,6 +77,13 @@ fun HomeScreen(
     var inputText by remember { mutableStateOf("") }
     var micState by remember { mutableStateOf(MicState.IDLE) }
     var userMessage by remember { mutableStateOf<String?>(null) }
+    var showAbout by remember { mutableStateOf(false) }
+
+    val aboutLine = when (uiState.selectedLanguage) {
+        "hi" -> stringResource(R.string.app_disclaimer_hi)
+        "hinglish" -> stringResource(R.string.app_disclaimer_hinglish)
+        else -> stringResource(R.string.app_disclaimer_en)
+    }
 
     val selectedSymptoms = remember { mutableStateListOf<String>() }
 
@@ -191,15 +198,38 @@ fun HomeScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "CareCompass",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.ExtraBold,
-                color = PrimaryBlue
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "CareCompass",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = PrimaryBlue
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = "About",
+                    tint = Color(0xFF757575),
+                    modifier = Modifier
+                        .size(18.dp)
+                        .clickable { showAbout = true }
+                )
+            }
             LanguageToggle(
                 selectedLanguage = uiState.selectedLanguage,
                 onLanguageSelected = { viewModel.setLanguage(it) }
+            )
+        }
+
+        if (showAbout) {
+            AlertDialog(
+                onDismissRequest = { showAbout = false },
+                icon = { Icon(Icons.Default.Info, contentDescription = null, tint = PrimaryBlue) },
+                title = { Text("About CareCompass") },
+                text = { Text(aboutLine) },
+                confirmButton = {
+                    TextButton(onClick = { showAbout = false }) { Text("Got it") }
+                }
             )
         }
 

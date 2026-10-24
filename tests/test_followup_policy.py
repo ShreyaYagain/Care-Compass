@@ -138,10 +138,16 @@ class TestFollowupPolicy(unittest.TestCase):
         self.assertIsNotNone(resp.care_type)
         self.assertEqual(resp.care_type, "teleconsultation")
         self.assertEqual(resp.urgency, "same_day")
-        self.assertIn(
-            "We could not be sure what you need, so a doctor video consult is the safest first step.",
-            resp.reasoning,
-        )
+        # The old long wording was split into short card lines; the fallback
+        # message is now the "why" line + a "next" line, so assert both.
+        self.assertIn("Could not be sure what you need.", resp.reasoning)
+        self.assertIn("video", (resp.card_lines or {}).get("next", "").lower())
+        # Low-confidence fallback must stay teleconsultation, never emergency,
+        # and never a "scheduled" (lowered) urgency.
+        self.assertNotEqual(resp.care_type, "emergency_112")
+        self.assertNotEqual(resp.urgency, "scheduled")
+        self.assertIsNotNone(resp.confidence)
+        self.assertLess(resp.confidence, 0.5, "unclear fallback must be low confidence")
 
     def test_trace_table_for_eight_earlier_inputs(self):
         inputs = [

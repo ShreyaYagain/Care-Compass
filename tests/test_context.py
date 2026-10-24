@@ -89,7 +89,15 @@ class TestContextIntegration(unittest.TestCase):
         self.assertEqual(resp.care_type, "teleconsultation")
         self.assertEqual(resp.urgency, "same_day")
         self.assertIsNotNone(resp.context_used)
-        self.assertIn("night", resp.context_used.get("reason", "").lower())
+        # Context is shown as one short localized sentence on the card, in the
+        # user's language (Hinglish here) — never the English word "night".
+        self.assertIsNotNone(resp.card_lines)
+        self.assertIn("raat ka time", (resp.card_lines.get("context_line") or "").lower())
+        self.assertIn("raat ka time", (resp.context_used.get("reason") or "").lower())
+        self.assertNotIn(" night ", resp.reasoning.lower())
+        # The soft adjustment must never LOWER urgency: paramedic (same_day)
+        # becomes teleconsultation (same_day), never "scheduled".
+        self.assertNotEqual(resp.urgency, "scheduled")
         self.assertIn("112", resp.reasoning)
 
     @patch("app.core.pipeline.get_context")
@@ -113,7 +121,7 @@ class TestContextIntegration(unittest.TestCase):
             location=Location(lat=28.54, lng=77.27),
             context_consent=True,
         )
-        resp = run_triage_pipeline(req)
+        resp = run_triage_pipeline(req, debug=True)
         # Weather/time/location always accompany a result, not only on escalation.
         self.assertIsNotNone(resp.context_used)
         self.assertEqual(resp.context_used.get("location"), "Noida, Uttar Pradesh")
@@ -121,9 +129,18 @@ class TestContextIntegration(unittest.TestCase):
         self.assertEqual(resp.context_used.get("weather"), "22°C")
         self.assertEqual(resp.context_used.get("season"), "Post-monsoon")
         self.assertEqual(resp.context_used.get("aqi"), 190)
-        self.assertIn("22°C", resp.reasoning)
-        self.assertIn("Noida", resp.reasoning)
-        self.assertIn("AQI 190", resp.reasoning)
+        # Weather/location/AQI never appear on the card text itself; they stay
+        # in context_used (API + debug) only.
+        self.assertNotIn("22°C", resp.reasoning)
+        self.assertNotIn("Noida", resp.reasoning)
+        self.assertNotIn("AQI 190", resp.reasoning)
+        # The same raw values are available in the debug trace.
+        self.assertIsNotNone(resp.debug)
+        ctx_info = resp.debug.get("context_info") or {}
+        self.assertEqual(ctx_info.get("temperature_c"), 22.0)
+        self.assertEqual(ctx_info.get("aqi"), 190)
+        self.assertEqual(ctx_info.get("local_time_str"), "10:30 PM")
+        self.assertEqual(ctx_info.get("location_name"), "Noida, Uttar Pradesh")
 
     def test_local_time_str_format(self):
         self.assertEqual(local_time_str(datetime(2026, 10, 24, 22, 30)), "10:30 PM")

@@ -102,6 +102,32 @@ class TestNoBannedQuestions(unittest.TestCase):
                     for word in BANNED_QUESTION_WORDS:
                         self.assertNotIn(word, resp.follow_up_question.lower())
 
+    def test_disclaimer_and_weather_never_on_result_card(self):
+        # The app disclaimer lives in Settings/About and the first-run screen,
+        # and the weather/location/AQI summary is API/debug-only: neither may
+        # ever appear on the result card text.
+        inputs = [
+            "papa ko do din se bukhar hai aur khansi bhi",
+            "I have a headache",
+            "sugar check karna hai subah",
+            "severe chest pain",
+            "ghar pe IM injection lagwana hai",
+        ]
+        for text in inputs:
+            for lang in ("en", "hi", "hinglish"):
+                req = TriageRequest(
+                    user_input=text, language=lang,
+                    location=Location(lat=28.54, lng=77.27),
+                )
+                resp = run_triage_pipeline(req)
+                if not resp.reasoning:
+                    continue
+                low = resp.reasoning.lower()
+                self.assertNotIn("this app helps", low, text)
+                self.assertNotIn("right now:", low, text)
+                self.assertNotIn("it is not a doctor", low, text)
+                self.assertNotIn("aqi", low, text)
+
     def test_hard_turn_cap_assistant_turns(self):
         # 0 and 1 assistant turns may still ask; 2+ assistant turns must decide.
         slot_sets = [

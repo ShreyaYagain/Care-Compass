@@ -115,10 +115,30 @@ rejected unless the extracted symptoms actually contain the module's trigger
 symptoms); and the semantic screen only flags unconsciousness when the
 message carries a real loss-of-consciousness indicator.
 
+### Result card (short lines, no passage)
+The result card is short lines only, each 6-12 words, in the user's language,
+at most 40 words total: title + urgency badge, `Why:` (canonical symptoms and
+validated slots only), `Next:` (one action sentence per care type),
+`Watch for:` (mandatory "Call 112 if ..." safety line), and a context sentence
+that appears only when context actually changed the decision (e.g. "Night
+time, so video consult first."). The app disclaimer ("This app helps you find
+the right care. It is not a doctor.") is removed from the card and shown as
+one small line in the first-run dialog and the About dialog; weather,
+location, AQI, season and time stay in `context_used` (API + debug + audit)
+but never on the card. The (i) icon opens a details sheet (symptoms used,
+answers given, context used, confidence). Emergency results show a big
+"Call 112 now" with the fixed first-aid steps and no caregiver list.
+`tests/test_result_card.py` asserts the 40-word cap over 30 samples in
+English, Hindi and Hinglish, one language per card, and the safety line on
+every non-emergency card; the banned-phrase test now also bans "This app
+helps" and "Right now:" from card text.
+
 ### Android screens
 The Android app renders the module follow-ups one question at a time (0-10
-slider with mild/moderate/severe bands, answer chips), the doctor summary on
-the booking confirmation screen, and the demo "Other ways to see a doctor"
-list after the triage result. Screenshots: `docs/android_module_card.png`,
-`docs/android_result_screen.png`, `docs/android_secondary_doctors.png`,
-`docs/android_booking_summary.png`.
+slider with mild/moderate/severe bands, answer chips), the short-lines result
+card, the doctor summary on the booking confirmation screen, and the demo
+"Other ways to see a doctor" list after the triage result. Before/after
+screenshots: `docs/android_result_before.png`, `docs/android_result_after.png`,
+`docs/android_details_sheet.png`, `docs/android_first_run.png`,
+`docs/android_emergency_after.png`, plus `docs/android_module_card.png`,
+`docs/android_secondary_doctors.png`, `docs/android_booking_summary.png`.

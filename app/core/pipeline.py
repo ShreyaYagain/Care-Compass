@@ -40,7 +40,7 @@ from app.core.semantic_screen import (
 from app.core.triage_model import predict_triage
 from app.core.risk_modifiers import apply_risk_modifiers
 from app.core.matching import rank_caregivers
-from app.core.explain import build_reasoning
+from app.core.explain import build_reasoning, build_card_lines, card_text, context_line
 from app.core.modules import (
     detect_module,
     llm_select_module,
@@ -49,6 +49,7 @@ from app.core.modules import (
     merge_answers_into_slots,
     module_next_question,
     MODULE_MAX_QUESTIONS,
+    summarize_answers,
 )
 from app.core.synthetic import secondary_doctor_options, adjust_by_doctor_availability
 from app.core.context import get_context, season_display
@@ -268,7 +269,7 @@ def run_triage_pipeline(
         reasons.append(f"Input guard flags: {input_guard_res['flags']}")
 
     context_used = None
-    context_reason = None
+    context_key = None
 
     # Context resolution (safe & optional)
     context = None
@@ -423,7 +424,16 @@ def run_triage_pipeline(
             urgency="emergency",
             modifiers=[],
             language=lang,
-            include_disclaimer=include_disclaimer,
+        )
+        card_lines = build_card_lines(
+            care_type="emergency_112",
+            urgency="emergency",
+            symptoms=[],
+            duration=None,
+            red_flags=high_flags,
+            language=lang,
+            chest_pain="chest_pain" in high_flags,
+            breathing_difficulty="breathlessness" in high_flags,
         )
 
         guard_res = output_guard(reasoning, lang=lang, is_emergency=True, care_type="emergency_112", field_name="reasoning")
@@ -465,6 +475,16 @@ def run_triage_pipeline(
             emergency_steps=emergency_steps,
             context_used=None,
             debug=debug_trace if debug else None,
+            card_lines=card_lines,
+            details={
+                "symptoms": [],
+                "answers": {},
+                "context_used": None,
+                "confidence": 1.0,
+                "care_type": "emergency_112",
+                "urgency": "emergency",
+                "red_flags": high_flags,
+            },
         )
 
         if db:
@@ -746,13 +766,31 @@ def run_triage_pipeline(
         # Doctor availability (synthetic roster) may refine paramedic vs
         # teleconsultation when both are viable.
         avail_dc, avail_note = adjust_by_doctor_availability(dc, du, request.location, lang)
+        ctx_key = None
         if avail_dc != dc:
             reasons.append(f"Availability routing: {dc} -> {avail_dc}")
+            ctx_key = "no_home_doctor"
             dc = avail_dc
 
         meds = request.module_answers.get("meds_used")
         meds_line = f" You used: {meds}." if meds and str(meds) != "None" else ""
         module_reason = f"{decision['reason']}{meds_line}{avail_note}"
+
+        why = summarize_answers(request.module_answers) or None
+        lines = build_card_lines(
+            care_type=dc, urgency=du, symptoms=slots.get("symptoms", []),
+            duration=None, red_flags=df, language=lang,
+            context_key=ctx_key, why_override=why,
+        )
+        details = {
+            "symptoms": slots.get("symptoms", []),
+            "answers": request.module_answers,
+            "context_used": context_used,
+            "confidence": 0.8 if dc != "emergency_112" else 1.0,
+            "care_type": dc,
+            "urgency": du,
+            "red_flags": df,
+        }
 
         if dc == "emergency_112":
             guard_res = output_guard(module_reason, lang=lang, is_emergency=True, care_type="emergency_112", field_name="reasoning")
@@ -761,6 +799,7 @@ def run_triage_pipeline(
                 reasoning=guard_res["safe_text"], emergency_steps=_get_emergency_steps(lang),
                 matched_caregivers=[], context_used=context_used,
                 debug={"module_id": module_id, "module_answers": request.module_answers} if debug else None,
+                card_lines=lines, details=details,
             )
 
         matched = rank_caregivers(care_type=dc, urgency=du, user_location=request.location, user_language=lang, user_text=cleaned_input, limit=3)
@@ -770,6 +809,7 @@ def run_triage_pipeline(
             confidence=0.8, matched_caregivers=matched, emergency_steps=[],
             context_used=context_used, secondary_options=secondary_doctor_options(dc, lang),
             debug={"module_id": module_id, "module_answers": request.module_answers} if debug else None,
+            card_lines=lines, details=details,
         )
 
     if module_id and request.module_answers is not None and module_id != "injury":
@@ -1087,7 +1127,7 @@ def run_triage_pipeline(
         if ("heat_wave" in tags or (temp_c is not None and temp_c >= 40.0)) and is_senior:
             if any(s in slots.get("symptoms", []) for s in ["fever", "restlessness", "headache", "dizziness"]):
                 is_emergency = True
-                context_reason = f"Given the extreme heat wave ({round(temp_c) if temp_c is not None else 40}°C) and patient's senior age, fever/discomfort requires urgent medical stabilization."
+                context_key = "heat_wave"
                 context_used = {
                     "season": season_display(context.get("season", "")),
                     "weather": f"{round(temp_c)}°C" if temp_c is not None else "Heat wave",
@@ -1095,14 +1135,14 @@ def run_triage_pipeline(
                     "location": context.get("location_name") or None,
                     "time": context.get("local_time_str") or None,
                     "tags": tags,
-                    "reason": context_reason,
+                    "reason": context_line(context_key, lang),
                 }
                 reasons.append("Context Escalation: Heat wave + senior + fever/restlessness escalated to emergency_112")
 
         if not is_emergency and ("poor_air" in tags or (aqi_val is not None and aqi_val >= 200)) and has_asthma:
             if any(s in slots.get("symptoms", []) for s in ["breathlessness", "cough", "saans"]):
                 is_emergency = True
-                context_reason = f"Hazardous air quality (AQI {round(aqi_val) if aqi_val else 200}) posing acute respiratory risk for known asthma."
+                context_key = "poor_air"
                 context_used = {
                     "season": season_display(context.get("season", "")),
                     "weather": context.get("summary", ""),
@@ -1110,7 +1150,7 @@ def run_triage_pipeline(
                     "location": context.get("location_name") or None,
                     "time": context.get("local_time_str") or None,
                     "tags": tags,
-                    "reason": context_reason,
+                    "reason": context_line(context_key, lang),
                 }
                 reasons.append("Context Escalation: Severe air pollution + asthma + respiratory symptom escalated to emergency_112")
 
@@ -1146,18 +1186,14 @@ def run_triage_pipeline(
             and slots.get("age_group") != "child"
         ):
             final_care_type = "teleconsultation"
+            context_key = "night_rain"
             temp_val = round(context["temperature_c"]) if context.get("temperature_c") is not None else None
             precip = context.get("precipitation_mm") or 0
             is_rainy = "rainy" in context.get("tags", []) or precip >= 1.0
             if is_rainy:
-                rain_part = f"rain ({precip} mm)" if precip else "rain"
-                cond = f"Given {rain_part}" + (f" at {temp_val}°C" if temp_val is not None else "")
                 weather_desc = f"{temp_val}°C rainy" if temp_val is not None else "Rainy"
             else:
-                cond = "Given night-time" + (f" at {temp_val}°C" if temp_val is not None else "")
                 weather_desc = f"{temp_val}°C night" if temp_val is not None else "Night-time"
-            adj_reason = f"{cond}, we recommend an immediate virtual teleconsultation; a home visit can be dispatched in the morning if needed."
-            context_reason = adj_reason
             context_used = {
                 "season": season_display(context.get("season", "")),
                 "weather": weather_desc,
@@ -1165,7 +1201,7 @@ def run_triage_pipeline(
                 "location": context.get("location_name") or None,
                 "time": context.get("local_time_str") or None,
                 "tags": context.get("tags", []),
-                "reason": adj_reason,
+                "reason": context_line(context_key, lang),
             }
             reasons.append("Context Soft Adjustment: Night/rain shifted paramedic_home_visit to immediate teleconsultation (same_day)")
 
@@ -1180,44 +1216,32 @@ def run_triage_pipeline(
         )
         reasons.append(f"Stage 8: Non-emergency routing: care_type={final_care_type}, urgency={final_urgency}")
 
-    # 9. Explainability & Guardrail Enforcement
+    # 9. Explainability & Guardrail Enforcement: the card is short lines only.
     if unclear_fallback:
-        unclear_msg = {
-            "en": "We could not be sure what you need, so a doctor video consult is the safest first step.",
-            "hinglish": "Hum samajh nahi paaye ki aapko kya chahiye, isliye doctor video consult sabse safe pehla kadam hai.",
-            "hi": "हम समझ नहीं पाए कि आपको क्या चाहिए, इसलिए डॉक्टर वीडियो परामर्श सबसे सुरक्षित पहला कदम है।",
-        }.get(lang, "We could not be sure what you need, so a doctor video consult is the safest first step.")
-        escalation = get_escalation_line(lang)
-        disclaimer = get_disclaimer(lang) if include_disclaimer else ""
-        reasoning_parts = []
-        if disclaimer:
-            reasoning_parts.append(disclaimer)
-        reasoning_parts.append(unclear_msg)
-        reasoning_parts.append(escalation)
-        reasoning = " ".join(reasoning_parts).strip()
+        unclear_why = {
+            "en": "Could not be sure what you need.",
+            "hinglish": "Samajh nahi aa paaya ki aapko kya chahiye.",
+            "hi": "समझ नहीं आया कि आपको क्या चाहिए।",
+        }.get(lang, "Could not be sure what you need.")
+        card_lines = build_card_lines(
+            care_type="teleconsultation", urgency="same_day", symptoms=[],
+            duration=None, red_flags=[], language=lang,
+            why_override=unclear_why,
+        )
+        reasoning = card_text(card_lines)
     else:
-        # Weather/time/location summary accompanies every result (when consent
-        # was given). Escalations keep their own reason instead.
-        context_summary = None
-        if context and context_used is not None and not context_reason:
-            context_summary = _context_summary_line(context, lang)
-            context_used["reason"] = context_summary
-
-        reasoning = build_reasoning(
-            symptoms=slots.get("symptoms", []),
-            duration=slots.get("duration"),
-            breathing_difficulty=slots.get("breathing_difficulty"),
-            chest_pain=slots.get("chest_pain"),
-            red_flags=high_flags,
+        card_lines = build_card_lines(
             care_type=final_care_type,
             urgency=final_urgency,
-            modifiers=applied_modifiers,
+            symptoms=slots.get("symptoms", []),
+            duration=slots.get("duration"),
+            red_flags=high_flags,
             language=lang,
-            context_reason=context_reason,
-            context_summary=context_summary,
-            top_terms=top_terms,
-            include_disclaimer=include_disclaimer,
+            context_key=context_key,
+            chest_pain=slots.get("chest_pain"),
+            breathing_difficulty=slots.get("breathing_difficulty"),
         )
+        reasoning = card_text(card_lines)
 
     guard_res = output_guard(reasoning, lang=lang, is_emergency=is_emergency, care_type=final_care_type, field_name="reasoning")
     if not guard_res["ok"]:
@@ -1299,6 +1323,17 @@ def run_triage_pipeline(
         context_used=context_used,
         secondary_options=secondary_doctor_options(final_care_type, lang),
         debug=debug_trace if debug else None,
+        card_lines=card_lines,
+        disclaimer=get_disclaimer(lang),
+        details={
+            "symptoms": slots.get("symptoms", []),
+            "answers": {},
+            "context_used": context_used,
+            "confidence": round(confidence, 2) if confidence else None,
+            "care_type": final_care_type,
+            "urgency": final_urgency,
+            "red_flags": high_flags,
+        },
     )
 
 

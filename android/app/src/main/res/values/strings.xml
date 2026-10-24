@@ -434,4 +434,8 @@
     <string name="summary_for_label_en">For:</string>
     <string name="summary_for_label_hi">के लिए:</string>
     <string name="summary_for_label_hinglish">For:</string>
+
+    <string name="app_disclaimer_en">This app helps you find the right care. It is not a doctor.</string>
+    <string name="app_disclaimer_hi">यह ऐप आपको सही देखभाल खोजने में मदद करता है। यह डॉक्टर नहीं है।</string>
+    <string name="app_disclaimer_hinglish">Yeh app aapko sahi dekhbhal khojne mein madad karta hai. Yeh doctor nahi hai.</string>
 </resources>

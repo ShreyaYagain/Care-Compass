@@ -156,6 +156,9 @@ class TriageResponse(BaseModel):
     session_id: Optional[str] = None
     module_card: Optional[dict[str, Any]] = None
     secondary_options: list[dict[str, Any]] = []
+    card_lines: Optional[dict[str, str]] = None
+    details: Optional[dict[str, Any]] = None
+    disclaimer: Optional[str] = None
 
 
 # --- /match ---

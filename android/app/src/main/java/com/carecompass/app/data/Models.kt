@@ -114,7 +114,26 @@ data class TriageResponse(
     @SerializedName("emergency") val emergency: EmergencyInfo? = null,
     @SerializedName("context_used") val contextUsed: ContextUsedInfo? = null,
     @SerializedName("module_card") val moduleCard: ModuleCard? = null,
-    @SerializedName("secondary_options") val secondaryOptions: List<SecondaryOption> = emptyList()
+    @SerializedName("secondary_options") val secondaryOptions: List<SecondaryOption> = emptyList(),
+    @SerializedName("card_lines") val cardLines: CardLines? = null,
+    @SerializedName("details") val details: ResultDetails? = null
+)
+
+data class CardLines(
+    @SerializedName("why") val why: String = "",
+    @SerializedName("next") val next: String = "",
+    @SerializedName("watch_for") val watchFor: String = "",
+    @SerializedName("context_line") val contextLine: String = ""
+)
+
+data class ResultDetails(
+    @SerializedName("symptoms") val symptoms: List<String> = emptyList(),
+    @SerializedName("answers") val answers: Map<String, String> = emptyMap(),
+    @SerializedName("context_used") val contextUsed: ContextUsedInfo? = null,
+    @SerializedName("confidence") val confidence: Double? = null,
+    @SerializedName("care_type") val careType: String? = null,
+    @SerializedName("urgency") val urgency: String? = null,
+    @SerializedName("red_flags") val redFlags: List<String> = emptyList()
 )
 
 data class CaregiverProfile(

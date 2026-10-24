@@ -225,9 +225,10 @@ def output_guard(
         if violations:
             logger.warning(f"Output guard violations found in {field_name}: {violations}")
             safe_text = get_deterministic_template(care_type, lang)
-            # If reasoning on non-emergency, attach escalation line
+            # The card never carries the app disclaimer (it lives in the app's
+            # Settings/About); only the safety line is attached.
             if field_name == "reasoning" and not is_emergency:
-                safe_text = f"{get_disclaimer(lang)} {safe_text} {get_escalation_line(lang)}"
+                safe_text = f"{safe_text} {get_escalation_line(lang)}"
             return {
                 "ok": False,
                 "violations": violations,
@@ -244,7 +245,7 @@ def output_guard(
         logger.critical(f"Output guard exception: {e}; falling back to deterministic template.")
         safe_text = get_deterministic_template(care_type, lang)
         if field_name == "reasoning" and not is_emergency:
-            safe_text = f"{get_disclaimer(lang)} {safe_text} {get_escalation_line(lang)}"
+            safe_text = f"{safe_text} {get_escalation_line(lang)}"
         return {
             "ok": False,
             "violations": [f"guard_exception:{e}"],

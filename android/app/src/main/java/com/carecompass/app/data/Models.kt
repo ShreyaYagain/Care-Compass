@@ -33,7 +33,10 @@ data class MatchedCaregiver(
     @SerializedName("rating") val rating: Double? = null,
     @SerializedName("free_from") val freeFrom: String? = null,
     @SerializedName("free_until") val freeUntil: String? = null,
-    @SerializedName("distance_km") val distanceKm: Double? = null
+    @SerializedName("distance_km") val distanceKm: Double? = null,
+    @SerializedName("venue") val venue: String? = null,
+    @SerializedName("department") val department: String? = null,
+    @SerializedName("facility_name") val facilityName: String? = null
 )
 
 data class EmergencyInfo(

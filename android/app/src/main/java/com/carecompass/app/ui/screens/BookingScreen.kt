@@ -19,6 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.carecompass.app.data.MatchedCaregiver
 import com.carecompass.app.ui.components.BigButton
 import com.carecompass.app.ui.theme.GreenSafe
 import com.carecompass.app.ui.theme.PrimaryBlue
@@ -95,12 +96,38 @@ fun BookingScreen(
     modifier: Modifier = Modifier
 ) {
     val matched = uiState.latestResponse?.matchedCaregivers?.find { it.caregiverId == caregiverId }
+        ?: uiState.latestResponse?.secondaryOptions?.find { it.caregiverId == caregiverId }?.let { opt ->
+            MatchedCaregiver(
+                caregiverId = opt.caregiverId,
+                score = 0.0,
+                reason = opt.qualification,
+                name = opt.name,
+                role = "doctor",
+                qualification = opt.qualification,
+                languages = opt.languages,
+                rating = opt.rating,
+                venue = opt.venue,
+                department = opt.department,
+                facilityName = opt.facilityName
+            )
+        }
     val caregiverName = matched?.name?.takeIf { it.isNotBlank() } ?: "Caregiver $caregiverId"
     val caregiverRole = when (matched?.role?.lowercase()) {
         "medic" -> "Medic"
         "doctor" -> "Doctor"
         "phlebotomist" -> "Lab technician"
         else -> matched?.role?.replaceFirstChar { it.uppercase() } ?: "Caregiver"
+    }
+    val venueLine = matched?.venue?.let { venue ->
+        val dept = matched.department
+            ?.replace("_", " ")
+            ?.replaceFirstChar { it.uppercase() }
+        when (venue) {
+            "home" -> listOfNotNull("Home consult", dept).joinToString(" · ")
+            "virtual" -> listOfNotNull("Video consult", dept).joinToString(" · ")
+            "hospital" -> listOfNotNull("Hospital OPD", dept, matched.facilityName).joinToString(" · ")
+            else -> null
+        }
     }
 
     val freeFrom = matched?.freeFrom ?: "09:00"
@@ -306,6 +333,14 @@ fun BookingScreen(
                             fontSize = 13.sp,
                             color = Color(0xFF555555)
                         )
+                        if (!venueLine.isNullOrBlank()) {
+                            Text(
+                                text = venueLine,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = PrimaryBlue
+                            )
+                        }
                     }
                 }
             }

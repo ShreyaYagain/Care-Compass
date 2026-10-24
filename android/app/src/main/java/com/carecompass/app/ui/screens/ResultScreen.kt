@@ -1,6 +1,7 @@
 package com.carecompass.app.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -318,7 +319,10 @@ fun ResultScreen(
             )
             Spacer(modifier = Modifier.height(10.dp))
             secondary.forEach { opt ->
-                SecondaryDoctorCard(opt)
+                SecondaryDoctorCard(
+                    option = opt,
+                    onBookClick = { onBookCaregiver(opt.caregiverId) }
+                )
             }
         }
 
@@ -335,6 +339,7 @@ fun ResultScreen(
 @Composable
 private fun SecondaryDoctorCard(
     option: SecondaryOption,
+    onBookClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -389,6 +394,22 @@ private fun SecondaryDoctorCard(
                     text = "Languages: " + option.languages.joinToString(", "),
                     fontSize = 12.sp,
                     color = Color(0xFF757575)
+                )
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+            OutlinedButton(
+                onClick = onBookClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(42.dp),
+                shape = RoundedCornerShape(10.dp),
+                border = BorderStroke(1.5.dp, PrimaryBlue),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = PrimaryBlue)
+            ) {
+                Text(
+                    text = if (option.venue == "hospital") "Select & Book OPD" else "Select & Book",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold
                 )
             }
         }

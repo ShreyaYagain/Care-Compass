@@ -226,6 +226,19 @@ def _ask_next_module_question(module_id: str, answers: dict, slots: dict, lang: 
         local_answers[field_id] = "__stated__"
 
 
+def _card_question_and_options(card: dict | None) -> tuple[str | None, list[str]]:
+    """The full question text + tappable choices for a module card, so
+    simpler clients can show something even without rendering the card.
+    Never a bare symptom label."""
+    fields = (card or {}).get("fields") or []
+    if not fields:
+        return None, []
+    field = fields[0]
+    question = field.get("question") or card.get("label") or ""
+    options = field.get("options") or [] if field.get("type") != "slider010" else []
+    return question or None, list(options)
+
+
 def run_triage_pipeline(
     request: TriageRequest,
     db: Session | None = None,
@@ -765,9 +778,11 @@ def run_triage_pipeline(
     if module_id and module_id == "injury" and request.module_answers is not None:
         next_field, next_card = _ask_next_module_question(module_id, request.module_answers, slots, lang, norm_text)
         if next_card is not None and history_turns < MODULE_MAX_QUESTIONS:
-            guard_q = output_guard(next_card["label"], lang=lang, is_emergency=False, care_type="teleconsultation", field_name="follow_up_question")
+            card_q, card_opts = _card_question_and_options(next_card)
+            guard_q = output_guard(card_q or next_card["label"], lang=lang, is_emergency=False, care_type="teleconsultation", field_name="follow_up_question")
+            safe_opts = [output_guard(o, lang=lang, is_emergency=False, care_type="teleconsultation", field_name="follow_up_options")["safe_text"] for o in card_opts]
             return TriageResponse(
-                follow_up_question=guard_q["safe_text"], follow_up_options=[],
+                follow_up_question=guard_q["safe_text"], follow_up_options=safe_opts,
                 care_type=None, urgency=None, red_flags=[], reasoning=None,
                 matched_caregivers=[], emergency_steps=[], context_used=None,
                 module_card=next_card,
@@ -831,9 +846,11 @@ def run_triage_pipeline(
         # then fold all answers into slots and continue the normal flow.
         next_field, next_card = _ask_next_module_question(module_id, request.module_answers, slots, lang, norm_text)
         if next_card is not None and history_turns < MODULE_MAX_QUESTIONS:
-            guard_q = output_guard(next_card["label"], lang=lang, is_emergency=False, care_type="teleconsultation", field_name="follow_up_question")
+            card_q, card_opts = _card_question_and_options(next_card)
+            guard_q = output_guard(card_q or next_card["label"], lang=lang, is_emergency=False, care_type="teleconsultation", field_name="follow_up_question")
+            safe_opts = [output_guard(o, lang=lang, is_emergency=False, care_type="teleconsultation", field_name="follow_up_options")["safe_text"] for o in card_opts]
             return TriageResponse(
-                follow_up_question=guard_q["safe_text"], follow_up_options=[],
+                follow_up_question=guard_q["safe_text"], follow_up_options=safe_opts,
                 care_type=None, urgency=None, red_flags=[], reasoning=None,
                 matched_caregivers=[], emergency_steps=[], context_used=None,
                 module_card=next_card,
@@ -843,6 +860,7 @@ def run_triage_pipeline(
 
     has_context = bool(
         slots.get("severity") or slots.get("duration") or slots.get("age_group")
+        or slots.get("fever_temp") is not None
         or (slots.get("patient_relation") not in (None, "self", ""))
         or slots.get("pregnancy") or slots.get("chronic_conditions")
     )
@@ -860,9 +878,11 @@ def run_triage_pipeline(
     if should_ask_module and request.module_answers is None:
         next_field, card = _ask_next_module_question(module_id, {}, slots, lang, norm_text)
         if card is not None and history_turns < MODULE_MAX_QUESTIONS:
-            guard_q = output_guard(card["label"], lang=lang, is_emergency=False, care_type="teleconsultation", field_name="follow_up_question")
+            card_q, card_opts = _card_question_and_options(card)
+            guard_q = output_guard(card_q or card["label"], lang=lang, is_emergency=False, care_type="teleconsultation", field_name="follow_up_question")
+            safe_opts = [output_guard(o, lang=lang, is_emergency=False, care_type="teleconsultation", field_name="follow_up_options")["safe_text"] for o in card_opts]
             return TriageResponse(
-                follow_up_question=guard_q["safe_text"], follow_up_options=[],
+                follow_up_question=guard_q["safe_text"], follow_up_options=safe_opts,
                 care_type=None, urgency=None, red_flags=[], reasoning=None,
                 matched_caregivers=[], emergency_steps=[], context_used=None,
                 module_card=card,
@@ -971,73 +991,6 @@ def run_triage_pipeline(
         top_terms, nearest_examples = [], []
 
     reasons.append(f"Stage 5 (Model Prediction): care_type={care_type}, urgency={urgency}, probs={probs}, conf={confidence}")
-
-    # 5.5 LLM second opinion (ML-first). Runs AFTER the ML decision and can only
-    # raise severity: agree -> confidence up; more severe -> ask ONE confirmation
-    # question (never decide); less severe -> ignored.
-    second_opinion = None
-    llm_opinion = run_second_opinion(user_input, lang)
-    recon = reconcile_second_opinion(care_type, list(set(high_flags + ml_red_flags)), llm_opinion)
-    if llm_opinion is not None:
-        second_opinion = {
-            "agrees": recon["agrees"],
-            "llm_care_type": recon["llm_care_type"],
-            "note": recon["note"],
-            "reason": llm_opinion.get("reason", ""),
-        }
-        reasons.append(f"Stage 5.5 (Second opinion): {recon['note']}")
-
-    if recon["agrees"]:
-        confidence = round(min(confidence + 0.05, 0.99), 4)
-    elif recon["ask"] and history_turns < settings.MAX_FOLLOWUPS:
-        # LLM more severe than ML: ask ONE confirmation question, never decide.
-        ask_flags = recon.get("ask_flags") or []
-        qid = flag_question_id(ask_flags[0]) if ask_flags else COMBINED_QUESTION_ID
-        q_text, q_options = get_question_by_id(qid, lang)
-        q_text = enforce_question_bank(q_text, lang)
-        guard_q = output_guard(q_text, lang=lang, is_emergency=False, care_type="teleconsultation", field_name="follow_up_question")
-        if not guard_q["ok"]:
-            output_violations.extend(guard_q["violations"])
-            template_replaced = True
-        q_text = guard_q["safe_text"]
-
-        debug_trace = {
-            "red_flags_high": high_flags,
-            "red_flags_medium": medium_flags,
-            "model_probs": probs,
-            "calibrated_probabilities": probs,
-            "urgency_after_cost_matrix": urgency,
-            "urgency_after_risk_modifiers": None,
-            "urgency_after_confidence_fallback": None,
-            "confidence": confidence,
-            "slots": slots,
-            "final_care_type": None,
-            "final_urgency": None,
-            "context_info": context,
-            "screen_status": screen_status,
-            "second_opinion": second_opinion,
-            "ml_red_flags": ml_red_flags,
-            "guardrails": {
-                "input_guard": input_guard_res,
-                "output_violations": output_violations,
-                "template_replaced": template_replaced,
-            },
-            "reasons": reasons + ["Second opinion more severe than ML; asking one confirmation question"],
-        }
-        return TriageResponse(
-            follow_up_question=q_text,
-            follow_up_options=q_options,
-            care_type=None,
-            urgency=None,
-            red_flags=[],
-            reasoning=None,
-            confidence=None,
-            matched_caregivers=[],
-            emergency_steps=[],
-            context_used=None,
-            second_opinion=second_opinion,
-            debug=debug_trace if debug else None,
-        )
 
     # Out-of-dataset mapping from LLM if model has low confidence
     if slots.get("unfamiliar_care_type_mapped") and confidence < 0.65:
@@ -1296,6 +1249,75 @@ def run_triage_pipeline(
             limit=3,
         )
         reasons.append(f"Stage 8: Non-emergency routing: care_type={final_care_type}, urgency={final_urgency}")
+
+    # 8.5 LLM second opinion (ML-first). Runs AFTER the ML decision is final
+    # (care_type is compared to care_type, flags to flags) and can only raise
+    # severity: agree -> confidence up; more severe -> ask ONE confirmation
+    # question (never decide); less severe -> ignored.
+    second_opinion = None
+    llm_opinion = run_second_opinion(user_input, lang)
+    recon = reconcile_second_opinion(final_care_type, list(set(high_flags + ml_red_flags)), llm_opinion)
+    if llm_opinion is not None:
+        second_opinion = {
+            "agrees": recon["agrees"],
+            "llm_care_type": recon["llm_care_type"],
+            "note": recon["note"],
+            "reason": llm_opinion.get("reason", ""),
+        }
+        reasons.append(f"Stage 8.5 (Second opinion): {recon['note']}")
+
+    if recon["agrees"]:
+        confidence = round(min(confidence + 0.05, 0.99), 4)
+    elif recon["ask"] and final_care_type != "emergency_112" and history_turns < settings.MAX_FOLLOWUPS:
+        # LLM more severe than the final ML decision: ask ONE confirmation
+        # question, never decide.
+        ask_flags = recon.get("ask_flags") or []
+        qid = flag_question_id(ask_flags[0]) if ask_flags else COMBINED_QUESTION_ID
+        q_text, q_options = get_question_by_id(qid, lang)
+        q_text = enforce_question_bank(q_text, lang)
+        guard_q = output_guard(q_text, lang=lang, is_emergency=False, care_type="teleconsultation", field_name="follow_up_question")
+        if not guard_q["ok"]:
+            output_violations.extend(guard_q["violations"])
+            template_replaced = True
+        q_text = guard_q["safe_text"]
+
+        debug_trace = {
+            "red_flags_high": high_flags,
+            "red_flags_medium": medium_flags,
+            "model_probs": probs,
+            "calibrated_probabilities": probs,
+            "urgency_after_cost_matrix": urgency,
+            "urgency_after_risk_modifiers": urgency_after_risk_modifiers,
+            "urgency_after_confidence_fallback": None,
+            "confidence": confidence,
+            "slots": slots,
+            "final_care_type": None,
+            "final_urgency": None,
+            "context_info": context,
+            "screen_status": screen_status,
+            "second_opinion": second_opinion,
+            "ml_red_flags": ml_red_flags,
+            "guardrails": {
+                "input_guard": input_guard_res,
+                "output_violations": output_violations,
+                "template_replaced": template_replaced,
+            },
+            "reasons": reasons + ["Second opinion more severe than ML; asking one confirmation question"],
+        }
+        return TriageResponse(
+            follow_up_question=q_text,
+            follow_up_options=q_options,
+            care_type=None,
+            urgency=None,
+            red_flags=[],
+            reasoning=None,
+            confidence=None,
+            matched_caregivers=[],
+            emergency_steps=[],
+            context_used=None,
+            second_opinion=second_opinion,
+            debug=debug_trace if debug else None,
+        )
 
     # 9. Explainability & Guardrail Enforcement: the card is short lines only.
     if unclear_fallback:

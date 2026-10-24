@@ -404,7 +404,21 @@ def merge_answers_into_slots(slots: dict, answers: dict) -> None:
         except Exception:
             pass
     if answers.get("duration") and not slots.get("duration"):
-        slots["duration"] = answers["duration"]
+        d = str(answers["duration"]).strip().lower()
+        if d in ("today", "aaj se", "आज से"):
+            slots["duration"] = "today"
+        elif d in ("2-3 days", "2-3 din se", "2-3 दिन"):
+            slots["duration"] = "2-3 days"
+        elif d in ("more than a week", "ek hafte se zyada", "एक हफ्ते से अधिक"):
+            slots["duration"] = "More than a week"
+        elif d in ("hours", "ghante", "घंटे"):
+            slots["duration"] = "today"
+        elif d in ("days", "din", "दिन"):
+            slots["duration"] = "2-3 days"
+        elif d in ("weeks", "hafte", "हफ्ते"):
+            slots["duration"] = "More than a week"
+        else:
+            slots["duration"] = answers["duration"]
     if answers.get("age_group") and not slots.get("age_group"):
         slots["age_group"] = str(answers["age_group"]).lower()
     if answers.get("temperature") and slots.get("fever_temp") is None:
@@ -416,14 +430,14 @@ def merge_answers_into_slots(slots: dict, answers: dict) -> None:
         else:
             slots["fever_temp"] = 101
         slots["fever_temp_unit"] = "F"
-    if answers.get("rash") in ("Yes", "हाँ") and "rash" not in slots.get("symptoms", []):
+    if _yes(answers.get("rash")) and "rash" not in slots.get("symptoms", []):
         slots.setdefault("symptoms", []).append("rash")
-    if answers.get("swelling") == "Yes":
+    if _yes(answers.get("swelling")):
         slots["swelling"] = True
-    if answers.get("vomiting") == "Yes":
+    if _yes(answers.get("vomiting")):
         if "vomiting" not in slots.get("symptoms", []):
             slots.setdefault("symptoms", []).append("vomiting")
-    if answers.get("breathing_difficulty") == "Yes":
+    if _yes(answers.get("breathing_difficulty")):
         slots["breathing_difficulty"] = True
     if answers.get("meds_used"):
         slots["meds_used"] = answers["meds_used"]

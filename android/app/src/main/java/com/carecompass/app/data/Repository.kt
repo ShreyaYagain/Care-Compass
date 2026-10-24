@@ -370,7 +370,45 @@ open class Repository(
     }
 
     open suspend fun triage(request: TriageRequest): Result<TriageResponse> {
-        return runCatching { apiService.triage(request) }
+        return try {
+            Result.success(apiService.triage(request))
+        } catch (e: Exception) {
+            // Parse/format failure: log the raw response for debugging, then
+            // fall back to the plain follow_up_question + options so the user
+            // never sees a silent blank screen.
+            var raw = ""
+            try {
+                raw = apiService.triageRaw(request).string()
+                android.util.Log.e("TriageParse", "Raw triage response: $raw")
+            } catch (rawErr: Exception) {
+                android.util.Log.e("TriageParse", "Raw triage fallback failed: ${rawErr.message}", rawErr)
+            }
+            val fallback = parseTriageFallback(raw)
+            if (fallback != null) Result.success(fallback) else Result.failure(e)
+        }
+    }
+
+    /** Lenient parse of the raw /triage body: keeps the follow-up question and
+     * options so older/simpler flows still render something tappable. Returns
+     * null when even that fails. */
+    internal fun parseTriageFallback(raw: String): TriageResponse? {
+        if (raw.isBlank()) return null
+        return try {
+            val obj = Gson().fromJson(raw, JsonObject::class.java) ?: return null
+            val q = obj.get("follow_up_question")?.takeUnless { it.isJsonNull }?.asString
+            val opts = obj.getAsJsonArray("follow_up_options")
+                ?.filter { it != null && it.isJsonPrimitive }
+                ?.map { it.asString } ?: emptyList()
+            if (q.isNullOrBlank() && opts.isEmpty()) return null
+            TriageResponse(
+                followUpQuestion = q,
+                followUpOptions = opts,
+                parseFallback = true
+            )
+        } catch (e: Exception) {
+            android.util.Log.e("TriageParse", "Fallback parse failed: ${e.message}", e)
+            null
+        }
     }
 
     suspend fun matchCaregivers(request: MatchRequest): Result<List<MatchedCaregiver>> {

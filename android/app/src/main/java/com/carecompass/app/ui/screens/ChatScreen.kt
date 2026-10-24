@@ -112,6 +112,25 @@ fun ChatScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween
     ) {
+        // Visible error banner (e.g. parse fallback) — never a silent blank.
+        val errorMessage = uiState.errorMessage
+        if (!errorMessage.isNullOrBlank()) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE))
+            ) {
+                Text(
+                    text = errorMessage,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFFB71C1C),
+                    modifier = Modifier.padding(12.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+        }
+
         // Question Header Card
         Card(
             modifier = Modifier.fillMaxWidth(),

@@ -37,7 +37,7 @@ modules:
         question_en: "Any swelling or bruising?"
         question_hi: "कोई सूजन या चोट के निशान?"
         question_hinglish: "Koi sujan ya chot ka nishaan?"
-        options: [{en: "Yes", hi: "हाँ", hinglish: "Yes"}, {en: "No", hi: "नहीं", hinglish: "No"}]
+        options: [{en: "Yes", hi: "हाँ", hinglish: "Haan"}, {en: "No", hi: "नहीं", hinglish: "Nahi"}]
         evidence: ["swelling", "swollen", "sujan", "soojan", "bruise", "neel"]
       - id: weight_bearing
         type: choice
@@ -46,7 +46,7 @@ modules:
         question_hi: "क्या आप उस पर वज़न डाल सकते हैं / हिला सकते हैं?"
         question_hinglish: "Us par weight daal sakte hain / hila sakte hain?"
         options:
-          - {en: "Yes, normally", hi: "हाँ, सामान्य रूप से", hinglish: "Yes, normally"}
+          - {en: "Yes, normally", hi: "हाँ, सामान्य रूप से", hinglish: "Haan, normal"}
           - {en: "With pain", hi: "दर्द के साथ", hinglish: "Dard ke saath"}
           - {en: "Not at all", hi: "बिल्कुल नहीं", hinglish: "Bilkul nahi"}
         evidence: ["cannot walk", "cant walk", "walk nahi", "khada nahi", "weight nahi", "move nahi", "hil nahi"]
@@ -56,7 +56,7 @@ modules:
         question_en: "Does the bone look bent, or is there an open wound / bone visible?"
         question_hi: "क्या हड्डी मुड़ी दिख रही है, या खुला घाव / हड्डी दिख रही है?"
         question_hinglish: "Haddi mudhi dikh rahi hai, ya khula ghaav / haddi dikh rahi hai?"
-        options: [{en: "Yes", hi: "हाँ", hinglish: "Yes"}, {en: "No", hi: "नहीं", hinglish: "No"}]
+        options: [{en: "Yes", hi: "हाँ", hinglish: "Haan"}, {en: "No", hi: "नहीं", hinglish: "Nahi"}]
         evidence: ["bone", "haddi", "bent", "mudhi", "open wound", "khula ghaav", "deformed"]
       - id: neuro_vascular
         type: choice
@@ -64,7 +64,7 @@ modules:
         question_en: "Is the foot/limb numb, tingling, cold or pale?"
         question_hi: "क्या पैर/अंग सुन्न, झुनझुनी, ठंडा या पीला है?"
         question_hinglish: "Kya pair/ang sunn, jhunjhuni, thanda ya peela hai?"
-        options: [{en: "Yes", hi: "हाँ", hinglish: "Yes"}, {en: "No", hi: "नहीं", hinglish: "No"}]
+        options: [{en: "Yes", hi: "हाँ", hinglish: "Haan"}, {en: "No", hi: "नहीं", hinglish: "Nahi"}]
         evidence: ["numb", "sun", "tingling", "jhunjhuni", "cold foot", "thanda", "pale"]
       - id: head_hit
         type: choice
@@ -72,7 +72,7 @@ modules:
         question_en: "Did you hit your head, faint, or are you very drowsy?"
         question_hi: "क्या सिर पर चोट लगी, बेहोशी हुई, या बहुत नींद आ रही है?"
         question_hinglish: "Sir par chot lagi, behoshi hui, ya bahut neend aa rahi hai?"
-        options: [{en: "Yes", hi: "हाँ", hinglish: "Yes"}, {en: "No", hi: "नहीं", hinglish: "No"}]
+        options: [{en: "Yes", hi: "हाँ", hinglish: "Haan"}, {en: "No", hi: "नहीं", hinglish: "Nahi"}]
         evidence: ["head", "sir", "faint", "behosh", "drowsy", "neend", "unconscious"]
       - id: meds_used
         type: choice_opt
@@ -101,8 +101,8 @@ modules:
         question_hi: "बुखार कितने समय से है?"
         question_hinglish: "Bukhar kitne samay se hai?"
         options:
-          - {en: "Today", hi: "आज से", hinglish: "Today"}
-          - {en: "2-3 days", hi: "2-3 दिन", hinglish: "2-3 din"}
+          - {en: "Today", hi: "आज से", hinglish: "Aaj se"}
+          - {en: "2-3 days", hi: "2-3 दिन", hinglish: "2-3 din se"}
           - {en: "More than a week", hi: "एक हफ्ते से अधिक", hinglish: "Ek hafte se zyada"}
         evidence: ["din", "days", "week", "hafte", "kal se"]
       - id: temperature
@@ -122,7 +122,7 @@ modules:
         question_en: "Is there any rash?"
         question_hi: "क्या कोई दाने हैं?"
         question_hinglish: "Koi daane hain?"
-        options: [{en: "Yes", hi: "हाँ", hinglish: "Yes"}, {en: "No", hi: "नहीं", hinglish: "No"}]
+        options: [{en: "Yes", hi: "हाँ", hinglish: "Haan"}, {en: "No", hi: "नहीं", hinglish: "Nahi"}]
         evidence: ["rash", "daane", "dane"]
       - id: age_group
         type: choice
@@ -131,9 +131,9 @@ modules:
         question_hi: "बुखार किसे है?"
         question_hinglish: "Bukhar kise hai?"
         options:
-          - {en: "Child", hi: "बच्चा", hinglish: "Child"}
-          - {en: "Adult", hi: "वयस्क", hinglish: "Adult"}
-          - {en: "Elderly (60+)", hi: "बुजुर्ग (60+)", hinglish: "Elderly (60+)"}
+          - {en: "Child", hi: "बच्चा", hinglish: "Bachcha"}
+          - {en: "Adult", hi: "वयस्क", hinglish: "Bade"}
+          - {en: "Elderly (60+)", hi: "बुजुर्ग (60+)", hinglish: "Buzurg (60+)"}
         evidence: ["bacha", "child", "buzurg", "elderly", "senior"]
 
   abdominal_pain:
@@ -160,7 +160,7 @@ modules:
         question_en: "Any vomiting?"
         question_hi: "क्या उल्टी हो रही है?"
         question_hinglish: "Kya ulti ho rahi hai?"
-        options: [{en: "Yes", hi: "हाँ", hinglish: "Yes"}, {en: "No", hi: "नहीं", hinglish: "No"}]
+        options: [{en: "Yes", hi: "हाँ", hinglish: "Haan"}, {en: "No", hi: "नहीं", hinglish: "Nahi"}]
         evidence: ["ulti", "vomit", "dast"]
       - id: pain_level
         type: slider010
@@ -197,8 +197,8 @@ modules:
         question_hi: "यह कितने समय से है?"
         question_hinglish: "Ye kitne samay se hai?"
         options:
-          - {en: "Today", hi: "आज से", hinglish: "Today"}
-          - {en: "2-3 days", hi: "2-3 दिन", hinglish: "2-3 din"}
+          - {en: "Today", hi: "आज से", hinglish: "Aaj se"}
+          - {en: "2-3 days", hi: "2-3 दिन", hinglish: "2-3 din se"}
           - {en: "More than a week", hi: "एक हफ्ते से अधिक", hinglish: "Ek hafte se zyada"}
         evidence: ["din", "days", "week", "hafte"]
       - id: breathing_difficulty
@@ -207,7 +207,7 @@ modules:
         question_en: "Any difficulty breathing?"
         question_hi: "सांस लेने में कोई दिक्कत?"
         question_hinglish: "Saans lene me koi dikkat?"
-        options: [{en: "Yes", hi: "हाँ", hinglish: "Yes"}, {en: "No", hi: "नहीं", hinglish: "No"}]
+        options: [{en: "Yes", hi: "हाँ", hinglish: "Haan"}, {en: "No", hi: "नहीं", hinglish: "Nahi"}]
         evidence: ["saans", "breath", "dikkat"]
       - id: fever
         type: choice
@@ -215,7 +215,7 @@ modules:
         question_en: "Any fever?"
         question_hi: "कोई बुखार?"
         question_hinglish: "Koi bukhar?"
-        options: [{en: "Yes", hi: "हाँ", hinglish: "Yes"}, {en: "No", hi: "नहीं", hinglish: "No"}]
+        options: [{en: "Yes", hi: "हाँ", hinglish: "Haan"}, {en: "No", hi: "नहीं", hinglish: "Nahi"}]
         evidence: ["bukhar", "fever"]
       - id: blood_sputum
         type: choice
@@ -223,5 +223,5 @@ modules:
         question_en: "Any blood in the sputum/phlegm?"
         question_hi: "क्या बलगम में खून है?"
         question_hinglish: "Kya balgam me khoon hai?"
-        options: [{en: "Yes", hi: "हाँ", hinglish: "Yes"}, {en: "No", hi: "नहीं", hinglish: "No"}]
+        options: [{en: "Yes", hi: "हाँ", hinglish: "Haan"}, {en: "No", hi: "नहीं", hinglish: "Nahi"}]
         evidence: ["khoon", "blood", "balgam"]

@@ -424,4 +424,67 @@ class CareCompassUnitTest {
         assertEquals("Painkiller", viewModel.uiState.value.lastModuleAnswers?.get("meds_used"))
     }
 
+    @Test
+    fun testSharedModuleCardSample_parsesWithGson() {
+        // The SAME JSON sample the backend contract test asserts on: both
+        // sides stay in sync (follow_up_question + options + module_card).
+        val raw = javaClass.classLoader!!.getResource("module_card_sample.json")!!.readText()
+        val resp = com.google.gson.Gson().fromJson(raw, TriageResponse::class.java)
+        assertNotNull(resp.moduleCard)
+        assertEquals("fever", resp.moduleCard?.moduleId)
+        assertTrue(!resp.followUpQuestion.isNullOrBlank())
+        assertTrue(resp.followUpQuestion == resp.moduleCard?.fields?.firstOrNull()?.question)
+        assertTrue(resp.followUpOptions.isNotEmpty())
+        assertFalse(resp.parseFallback)
+    }
+
+    @Test
+    fun testParseFallback_recoversQuestionAndOptions() {
+        val repo = Repository(ApiService.create())
+        val raw = """
+            {"follow_up_question":"Bukhar kitne samay se hai?",
+             "follow_up_options":["Aaj se","2-3 din se","Ek hafte se zyada"],
+             "module_card":{"module_id":"fever","label":"Bukhar","fields":[{"id":"duration","type":"choice","question":"Bukhar kitne samay se hai?","informational":false,"options":["Aaj se","2-3 din se","Ek hafte se zyada"]}]}}
+        """.trimIndent()
+        val fallback = repo.parseTriageFallback(raw)
+        assertNotNull(fallback)
+        assertEquals("Bukhar kitne samay se hai?", fallback?.followUpQuestion)
+        assertEquals(3, fallback?.followUpOptions?.size)
+        assertTrue(fallback?.parseFallback == true)
+
+        // Even broken JSON that still carries the two fields is recoverable.
+        val minimal = """{"follow_up_question":"Sir par chot lagi?","follow_up_options":["Haan","Nahi"]}"""
+        val minimalFallback = repo.parseTriageFallback(minimal)
+        assertEquals("Sir par chot lagi?", minimalFallback?.followUpQuestion)
+
+        // Unreadable body -> null (never a silent blank).
+        assertNull(repo.parseTriageFallback("not json at all"))
+        assertNull(repo.parseTriageFallback(""))
+    }
+
+    @Test
+    fun testParseFallback_responseKeepsChatFlowVisible() = runTest {
+        var captured: TriageRequest? = null
+        val repo = object : Repository(ApiService.create()) {
+            override suspend fun triage(request: TriageRequest): Result<TriageResponse> {
+                captured = request
+                return Result.success(
+                    TriageResponse(
+                        followUpQuestion = "Bukhar kitne samay se hai?",
+                        followUpOptions = listOf("Aaj se", "2-3 din se", "Ek hafte se zyada"),
+                        parseFallback = true
+                    )
+                )
+            }
+        }
+        val viewModel = TriageViewModel(repo)
+        viewModel.submitUserInput("mujhe bukhar hai")
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(ScreenDestination.Chat, viewModel.uiState.value.destination)
+        assertEquals("Bukhar kitne samay se hai?", viewModel.uiState.value.currentQuestion)
+        assertEquals(3, viewModel.uiState.value.currentOptions.size)
+        assertTrue(!viewModel.uiState.value.errorMessage.isNullOrBlank())
+    }
+
 }

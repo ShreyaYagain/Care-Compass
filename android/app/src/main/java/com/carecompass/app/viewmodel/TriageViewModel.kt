@@ -258,6 +258,11 @@ class TriageViewModel(
                 currentOptions = response.followUpOptions,
                 latestResponse = response,
                 moduleCard = response.moduleCard,
+                errorMessage = if (response.parseFallback) {
+                    "Could not fully read the response — showing the basic question instead."
+                } else {
+                    null
+                },
                 destination = if (isModule) ScreenDestination.ModuleCard else ScreenDestination.Chat
             )
             return

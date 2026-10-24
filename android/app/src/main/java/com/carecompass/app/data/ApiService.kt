@@ -16,6 +16,9 @@ interface ApiService {
     @POST("triage")
     suspend fun triage(@Body request: TriageRequest): TriageResponse
 
+    @POST("triage")
+    suspend fun triageRaw(@Body request: TriageRequest): okhttp3.ResponseBody
+
     @POST("match")
     suspend fun matchCaregivers(@Body request: MatchRequest): List<MatchedCaregiver>
 

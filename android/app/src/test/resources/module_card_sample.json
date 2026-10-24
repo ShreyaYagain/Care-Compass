@@ -1,0 +1,40 @@
+{
+  "follow_up_question": "Bukhar kitne samay se hai?",
+  "follow_up_options": [
+    "Aaj se",
+    "2-3 din se",
+    "Ek hafte se zyada"
+  ],
+  "care_type": null,
+  "urgency": null,
+  "red_flags": [],
+  "reasoning": null,
+  "confidence": null,
+  "matched_caregivers": [],
+  "emergency_steps": [],
+  "context_used": null,
+  "debug": null,
+  "session_id": null,
+  "module_card": {
+    "module_id": "fever",
+    "label": "Bukhar",
+    "fields": [
+      {
+        "id": "duration",
+        "type": "choice",
+        "question": "Bukhar kitne samay se hai?",
+        "informational": false,
+        "options": [
+          "Aaj se",
+          "2-3 din se",
+          "Ek hafte se zyada"
+        ]
+      }
+    ]
+  },
+  "secondary_options": [],
+  "card_lines": null,
+  "details": null,
+  "disclaimer": null,
+  "second_opinion": null
+}

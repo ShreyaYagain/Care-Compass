@@ -116,7 +116,8 @@ data class TriageResponse(
     @SerializedName("module_card") val moduleCard: ModuleCard? = null,
     @SerializedName("secondary_options") val secondaryOptions: List<SecondaryOption> = emptyList(),
     @SerializedName("card_lines") val cardLines: CardLines? = null,
-    @SerializedName("details") val details: ResultDetails? = null
+    @SerializedName("details") val details: ResultDetails? = null,
+    @Transient var parseFallback: Boolean = false
 )
 
 data class CardLines(

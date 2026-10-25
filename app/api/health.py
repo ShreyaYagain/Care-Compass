@@ -11,8 +11,9 @@ except ImportError:
 
 from app.config import settings
 from app.schemas import HealthResponse
-from app.core.llm import is_llm_available
+from app.core.llm import self_test
 from app.core.semantic_screen import get_screen_status
+from app.core.stt import stt_provider
 from app.db.supabase_client import active_store
 
 router = APIRouter(tags=["Health"])
@@ -20,10 +21,15 @@ router = APIRouter(tags=["Health"])
 
 @router.get("/health", response_model=HealthResponse)
 def get_health():
+    check = self_test()
     return HealthResponse(
         status="ok",
         model_version=settings.MODEL_VERSION,
-        llm_available=is_llm_available(),
+        llm_available=bool(check.get("available")),
+        llm_provider=check.get("provider"),
+        llm_model=check.get("model"),
+        llm_status=check.get("status"),
+        stt_provider=stt_provider(),
         store=active_store(),
         screen_status=get_screen_status(),
     )

@@ -21,13 +21,25 @@ try:
 
         # LLM Settings
         LLM_TIMEOUT_S: float = float(os.getenv("LLM_TIMEOUT_S", "3.0"))
-        SCREEN_TIMEOUT_S: float = float(os.getenv("SCREEN_TIMEOUT_S", "2.5"))
+        SCREEN_TIMEOUT_S: float = float(os.getenv("SCREEN_TIMEOUT_S", "4.0"))
 
-        # DeepSeek (OpenAI-compatible chat completions) — primary LLM.
+        # LLM Settings (provider-agnostic, OpenAI-compatible chat completions).
+        # Provider is "deepseek" | "groq"; the API key is read per provider.
+        LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "deepseek")
+        LLM_BASE_URL: str = os.getenv("LLM_BASE_URL", "")   # empty -> provider default
+        LLM_MODEL: str = os.getenv("LLM_MODEL", "deepseek-v4-pro")
+        LLM_FAST_MODEL: str = os.getenv("LLM_FAST_MODEL", "deepseek-flash")  # empty -> LLM_MODEL
         DEEPSEEK_API_KEY: str = os.getenv("DEEPSEEK_API_KEY", "")
+        GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
+
+        # Legacy names (kept so an existing .env keeps working).
         DEEPSEEK_MODEL: str = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
         DEEPSEEK_BASE_URL: str = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
         LLM_TIMEOUT_SECONDS: float = 3.0
+
+        # Speech-to-text provider: groq_whisper | local_whisper | android_only.
+        # Empty -> groq_whisper only if a Groq key is present, else android_only.
+        STT_PROVIDER: str = os.getenv("STT_PROVIDER", "")
 
         # LLM role in the decision pipeline (ML-first architecture).
         #   second_opinion (default): the LLM runs in parallel AFTER the ML
@@ -118,11 +130,23 @@ except ImportError:
         LLM_TIMEOUT_S: float = float(os.getenv("LLM_TIMEOUT_S", "3.0"))
         SCREEN_TIMEOUT_S: float = float(os.getenv("SCREEN_TIMEOUT_S", "2.5"))
 
-        # DeepSeek (OpenAI-compatible chat completions) — primary LLM.
+        # LLM Settings (provider-agnostic, OpenAI-compatible chat completions).
+        # Provider is "deepseek" | "groq"; the API key is read per provider.
+        LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "deepseek")
+        LLM_BASE_URL: str = os.getenv("LLM_BASE_URL", "")   # empty -> provider default
+        LLM_MODEL: str = os.getenv("LLM_MODEL", "deepseek-v4-pro")
+        LLM_FAST_MODEL: str = os.getenv("LLM_FAST_MODEL", "deepseek-flash")  # empty -> LLM_MODEL
         DEEPSEEK_API_KEY: str = os.getenv("DEEPSEEK_API_KEY", "")
+        GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
+
+        # Legacy names (kept so an existing .env keeps working).
         DEEPSEEK_MODEL: str = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
         DEEPSEEK_BASE_URL: str = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
         LLM_TIMEOUT_SECONDS: float = 3.0
+
+        # Speech-to-text provider: groq_whisper | local_whisper | android_only.
+        # Empty -> groq_whisper only if a Groq key is present, else android_only.
+        STT_PROVIDER: str = os.getenv("STT_PROVIDER", "")
 
         # LLM role in the decision pipeline (ML-first architecture).
         #   second_opinion (default): the LLM runs in parallel AFTER the ML

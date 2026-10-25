@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field, field_validator
 from pathlib import Path
 from app.config import settings
 from app.core.language import normalise_text, is_phrase_negated
-from app.core.llm import llm_json, is_llm_available
+from app.core.llm import llm_json, is_llm_available, llm_fast_model
 
 _SYMPTOMS_CONFIG: dict = {}
 
@@ -764,7 +764,7 @@ def extract_slots(text: str, history: list[dict] = None) -> dict:
             system=system_prompt,
             user=user_prompt,
             schema=SlotExtraction,
-            model=settings.DEEPSEEK_MODEL,
+            model=llm_fast_model(),
         )
         if llm_result:
             # Merge LLM extractions into slots. Every LLM-returned symptom is

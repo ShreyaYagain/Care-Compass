@@ -22,7 +22,7 @@ from pydantic import BaseModel, Field
 
 from app.config import settings
 from app.core.language import normalise_text
-from app.core.llm import llm_json, is_llm_available
+from app.core.llm import llm_json, is_llm_available, llm_model
 
 logger = logging.getLogger(__name__)
 
@@ -85,7 +85,7 @@ def run_second_opinion(text: str, lang: str = "en") -> Optional[dict]:
             system=SYSTEM_PROMPT,
             user=f"Patient message: \"{text}\"",
             schema=SecondOpinionOut,
-            model=settings.DEEPSEEK_MODEL,
+            model=llm_model(),
             timeout=settings.SCREEN_TIMEOUT_S,
             retries=1,
         )

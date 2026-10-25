@@ -317,5 +317,9 @@ class HealthResponse(BaseModel):
     status: str = "ok"
     model_version: str = "1.0.0"
     llm_available: bool = False
+    llm_provider: Optional[str] = None
+    llm_model: Optional[str] = None
+    llm_status: Optional[str] = None
+    stt_provider: Optional[str] = None
     store: str = "sqlite"
     screen_status: Optional[str] = None

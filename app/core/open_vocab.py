@@ -62,7 +62,13 @@ def fuzzy_match_token(token: str, candidates: list[str], threshold: float = _FUZ
 _EMBEDDER = None
 _EMBEDDER_LOCK = threading.Lock()
 _SYMPTOM_EMB_ARTIFACT = settings.ARTIFACTS_DIR / "symptom_embeddings.joblib"
-_EMBEDDING_THRESHOLD = 0.90  # high-precision; chosen on the training split (documented, not tuned on holdout)
+# High-precision threshold. Calibrated on the training split only (see
+# ml/calibrate_embedding_threshold.py): the argmax symptom is directionally
+# correct 90% of the time (47/52), but the cosine scores are compressed — the
+# correct-match median is 0.856 while pure noise ("blah blah") reaches 0.855, so
+# there is no clean threshold. We keep it conservative (never maps noise) and
+# rely on the DeepSeek mapper + buttons as the primary open-vocabulary resolvers.
+_EMBEDDING_THRESHOLD = 0.90
 
 
 def _load_embedder():

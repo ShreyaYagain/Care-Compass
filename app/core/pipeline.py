@@ -146,6 +146,125 @@ def _get_emergency_steps(lang: str) -> list[str]:
     ]
 
 
+def _emergency_response(
+    user_input: str,
+    high_flags: list[str],
+    medium_flags: list[str],
+    lang: str,
+    context,
+    reasons: list[str],
+    input_guard_res: dict,
+    output_violations: list[str],
+    template_replaced: bool,
+    db,
+    debug: bool,
+    screen_status: str = "skip",
+    one_shot: bool = False,
+) -> "TriageResponse":
+    """Builds the emergency_112 response (shared by the rule bypass and the
+    one-shot semantic-screen escalation)."""
+    emergency_steps = _get_emergency_steps(lang)
+    reasoning = build_reasoning(
+        symptoms=[],
+        duration=None,
+        breathing_difficulty=True if "breathlessness" in high_flags else None,
+        chest_pain=True if "chest_pain" in high_flags else None,
+        red_flags=high_flags,
+        care_type="emergency_112",
+        urgency="emergency",
+        modifiers=[],
+        language=lang,
+    )
+    card_lines = build_card_lines(
+        care_type="emergency_112",
+        urgency="emergency",
+        symptoms=[],
+        duration=None,
+        red_flags=high_flags,
+        language=lang,
+        chest_pain="chest_pain" in high_flags,
+        breathing_difficulty="breathlessness" in high_flags,
+    )
+
+    guard_res = output_guard(reasoning, lang=lang, is_emergency=True, care_type="emergency_112", field_name="reasoning")
+    if not guard_res["ok"]:
+        output_violations.extend(guard_res["violations"])
+        template_replaced = True
+    reasoning = guard_res["safe_text"]
+
+    reason = (
+        "One-shot escalation: semantic screen flagged a critical red flag; routed to emergency"
+        if one_shot
+        else "High-severity official red flag triggered immediate 112 emergency bypass"
+    )
+    debug_trace = {
+        "red_flags_high": high_flags,
+        "red_flags_medium": medium_flags,
+        "model_probs": {"emergency_112": 1.0},
+        "calibrated_probabilities": {"emergency_112": 1.0},
+        "urgency_after_cost_matrix": "emergency",
+        "urgency_after_risk_modifiers": "emergency",
+        "urgency_after_confidence_fallback": "emergency",
+        "confidence": 1.0,
+        "slots": {},
+        "final_care_type": "emergency_112",
+        "final_urgency": "emergency",
+        "context_info": context,
+        "screen_status": screen_status,
+        "one_shot_escalation": one_shot,
+        "guardrails": {
+            "input_guard": input_guard_res,
+            "output_violations": output_violations,
+            "template_replaced": template_replaced,
+        },
+        "reasons": [reason],
+    }
+
+    resp = TriageResponse(
+        follow_up_question=None,
+        follow_up_options=[],
+        care_type="emergency_112",
+        urgency="emergency",
+        red_flags=high_flags,
+        reasoning=reasoning,
+        confidence=1.0,
+        matched_caregivers=[],
+        emergency_steps=emergency_steps,
+        context_used=None,
+        debug=debug_trace if debug else None,
+        card_lines=card_lines,
+        details={
+            "symptoms": [],
+            "answers": {},
+            "context_used": None,
+            "confidence": 1.0,
+            "care_type": "emergency_112",
+            "urgency": "emergency",
+            "red_flags": high_flags,
+        },
+    )
+
+    if db:
+        try:
+            log = AuditLog(
+                user_input=user_input,
+                language=lang,
+                red_flags=high_flags,
+                probabilities={"emergency_112": 1.0},
+                care_type="emergency_112",
+                urgency="emergency",
+                confidence=1.0,
+                reasoning=reasoning,
+                debug_trace=debug_trace,
+            )
+            db.add(log)
+            db.commit()
+        except Exception as e:
+            logger.warning(f"Failed to write audit log: {e}")
+
+    return resp
+
+
 def _context_summary_line(context: dict, lang: str) -> str:
     """One-line localised weather/time/location summary for the result text."""
     loc = context.get("location_name") or ""
@@ -436,99 +555,10 @@ def run_triage_pipeline(
 
     # Emergency branch (Immediate 112)
     if is_high_emergency:
-        emergency_steps = _get_emergency_steps(lang)
-        reasoning = build_reasoning(
-            symptoms=[],
-            duration=None,
-            breathing_difficulty=True if "breathlessness" in high_flags else None,
-            chest_pain=True if "chest_pain" in high_flags else None,
-            red_flags=high_flags,
-            care_type="emergency_112",
-            urgency="emergency",
-            modifiers=[],
-            language=lang,
+        return _emergency_response(
+            user_input, high_flags, medium_flags, lang, context, reasons,
+            input_guard_res, output_violations, template_replaced, db, debug,
         )
-        card_lines = build_card_lines(
-            care_type="emergency_112",
-            urgency="emergency",
-            symptoms=[],
-            duration=None,
-            red_flags=high_flags,
-            language=lang,
-            chest_pain="chest_pain" in high_flags,
-            breathing_difficulty="breathlessness" in high_flags,
-        )
-
-        guard_res = output_guard(reasoning, lang=lang, is_emergency=True, care_type="emergency_112", field_name="reasoning")
-        if not guard_res["ok"]:
-            output_violations.extend(guard_res["violations"])
-            template_replaced = True
-        reasoning = guard_res["safe_text"]
-
-        debug_trace = {
-            "red_flags_high": high_flags,
-            "red_flags_medium": medium_flags,
-            "model_probs": {"emergency_112": 1.0},
-            "calibrated_probabilities": {"emergency_112": 1.0},
-            "urgency_after_cost_matrix": "emergency",
-            "urgency_after_risk_modifiers": "emergency",
-            "urgency_after_confidence_fallback": "emergency",
-            "confidence": 1.0,
-            "slots": {},
-            "final_care_type": "emergency_112",
-            "final_urgency": "emergency",
-            "context_info": context,
-            "guardrails": {
-                "input_guard": input_guard_res,
-                "output_violations": output_violations,
-                "template_replaced": template_replaced,
-            },
-            "reasons": ["High-severity official red flag triggered immediate 112 emergency bypass"],
-        }
-
-        resp = TriageResponse(
-            follow_up_question=None,
-            follow_up_options=[],
-            care_type="emergency_112",
-            urgency="emergency",
-            red_flags=high_flags,
-            reasoning=reasoning,
-            confidence=1.0,
-            matched_caregivers=[],
-            emergency_steps=emergency_steps,
-            context_used=None,
-            debug=debug_trace if debug else None,
-            card_lines=card_lines,
-            details={
-                "symptoms": [],
-                "answers": {},
-                "context_used": None,
-                "confidence": 1.0,
-                "care_type": "emergency_112",
-                "urgency": "emergency",
-                "red_flags": high_flags,
-            },
-        )
-
-        if db:
-            try:
-                log = AuditLog(
-                    user_input=user_input,
-                    language=lang,
-                    red_flags=high_flags,
-                    probabilities={"emergency_112": 1.0},
-                    care_type="emergency_112",
-                    urgency="emergency",
-                    confidence=1.0,
-                    reasoning=reasoning,
-                    debug_trace=debug_trace,
-                )
-                db.add(log)
-                db.commit()
-            except Exception as e:
-                logger.warning(f"Failed to write audit log: {e}")
-
-        return resp
 
     # If NO emergency was triggered, but input was disallowed (prompt injection / off-topic / abusive)
     if not input_guard_res["allowed"]:
@@ -624,6 +654,22 @@ def run_triage_pipeline(
             semantic_flags = list(set(semantic_flags + ml_red_flags))
         except Exception as e:
             logger.warning(f"ML red-flag model failed: {e}")
+
+    # One-shot mode (allow_followup=false): a critical flag from the semantic
+    # screen (LLM, evidence-validated) escalates to emergency_112 — the skipped
+    # confirmation question counts as "Not sure". Non-critical flags and
+    # quoteless flags still need corroboration and are dropped here.
+    if not request.allow_followup and not is_high_emergency:
+        screen_flags = list(screen_result.get("flags") or [])
+        critical = [f for f in screen_flags if f in NOT_SURE_AS_YES]
+        if critical:
+            high_flags = list(set(high_flags + critical))
+            reasons.append(f"One-shot escalation: semantic screen flagged {critical}")
+            return _emergency_response(
+                user_input, high_flags, medium_flags, lang, context, reasons,
+                input_guard_res, output_violations, template_replaced, db, debug,
+                screen_status=screen_status, one_shot=True,
+            )
 
     if semantic_flags and request.allow_followup:
         asked_ids = get_asked_ids(history_dicts)

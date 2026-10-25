@@ -159,3 +159,24 @@ Evaluated with the **live** DeepSeek provider (`deepseek-v4-pro` main / `deepsee
 - **Pipeline first-turn accuracy**: 0.586 among decided rows — lower than CV because the pipeline (rules + modules) deliberately asks a follow-up on ambiguous rows instead of guessing, and the official ground truth has many paraphrases.
 - **Pipeline with `allow_followup=false`**: 0.494 accuracy / 0.195 emergency recall — it must return a label for every row without asking, so emergency recall drops to the deterministic rules only ("never emergency without evidence"); this is the honest cost of suppressing follow-ups.
 - **Live DeepSeek latency**: semantic screen p50/p95 = 0.3 / 3184 ms; second opinion p50/p95 = 0.3 / 7046 ms (p50 is cache-dominated; p95 is the live API call).
+
+---
+
+### Figures (regenerated, leaky-old plots suffixed)
+
+Figures regenerated from the **exact-text grouped 5-fold CV** (out-of-fold predictions only, calibration fitted inside each fold with the calibration CV also grouped by exact text), using the **production feature input** `build_classifier_text(slots, norm_text)` (canonical symptoms + validated slots + raw normalised text). No LLM calls; no tuning on holdouts. Saved under `docs/figures/`; each entry: dataset / method / n / leaky.
+
+| Figure | Caption | Leaky |
+|---|---|---|
+| `docs/figures/confusion_grouped_cv_oof.png` | Model A classifier-only confusion (counts + row-normalised); exact-text grouped CV (OOF); official 301 | no |
+| `docs/figures/confusion_pipeline_oof.png` | Full pipeline (rules + ML + local screen) with a follow-up column; LLM cache-only (0 hits — see note); official 301 | no |
+| `docs/figures/confusion_unseen.png` | Model A classifier-only; `unseen_tests.csv`; 30 | no |
+| `docs/figures/confusion_redflag_holdout.png` | Model A classifier-only; `redflag_holdout.csv`; 53 | no |
+| `docs/figures/reliability_emergency_oof.png` | Reliability diagram for P(emergency_112) + histogram; OOF; 301; ECE 0.078, Brier 0.028 | no |
+| `docs/figures/reliability_per_class_oof.png` | Per-class one-vs-rest reliability (other 4 care types); OOF; 301 | no |
+| `docs/confusion_matrix_LEAKY_do_not_use.png` | Old confusion matrix (small-cluster grouped CV, exact duplicates in train) | **yes** |
+| `docs/calibration_plot_LEAKY_do_not_use.png` | Old reliability plot (full model evaluated in-sample on its own training data) | **yes** |
+
+**OOF headline numbers (n=301)**: accuracy 0.907, macro-F1 0.887, ECE 0.078, Brier 0.028. Emergency threshold 0.50 → recall 0.911, precision 0.962 (tp 51 / fp 2 / fn 5); 27 rows land in the 0.30–0.70 band (probabilities do **not** collapse to 0/1). Grouping the calibration CV by exact text vs. not changes ECE only 0.078 → 0.082, i.e. duplicates inside calibration folds are **not** the cause of any collapse.
+
+**Full-pipeline note**: the `ml/results/llm_cache.jsonl` on-disk keys no longer match the current cache-key format (an `effort=` component was added after those entries were written), so the cached-LLM full-pipeline run had **0 cache hits / 514 misses** and fell back to the deterministic rules+ML+local-screen path for every row. No new LLM calls were made.

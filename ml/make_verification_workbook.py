@@ -501,6 +501,31 @@ def _provenance_sheet(datasets):
     return rows
 
 
+def _images_sheet():
+    """One row per generated figure: dataset / method / n / leaky caption."""
+    header = ["figure", "dataset", "method", "n", "leaky", "caption"]
+    rows = [header]
+    rows += [
+        ["docs/figures/confusion_grouped_cv_oof.png", "official (301)", "classifier-only confusion (counts+norm), exact-text grouped CV OOF", 301, "no",
+         "Model A, exact-text grouped CV (out-of-fold), n=301"],
+        ["docs/figures/confusion_pipeline_oof.png", "official (301)", "full pipeline (rules+ML+local screen) with follow-up column, cached-LLM only", 301, "no",
+         "Full pipeline, n=301; LLM cache-only (0 hits -> deterministic fallback)"],
+        ["docs/figures/confusion_unseen.png", "unseen_tests.csv", "classifier-only confusion", 30, "no",
+         "Model A classifier-only, unseen_tests.csv, n=30"],
+        ["docs/figures/confusion_redflag_holdout.png", "redflag_holdout.csv", "classifier-only confusion", 53, "no",
+         "Model A classifier-only, redflag_holdout.csv, n=53"],
+        ["docs/figures/reliability_emergency_oof.png", "official (301)", "reliability diagram P(emergency_112) + histogram, ECE/Brier", 301, "no",
+         "Reliability: P(emergency_112), exact-text grouped CV (OOF), n=301, ECE 0.078, Brier 0.028"],
+        ["docs/figures/reliability_per_class_oof.png", "official (301)", "per-class one-vs-rest reliability", 301, "no",
+         "Per-class OVR reliability (other 4 care types), OOF, n=301"],
+        ["docs/confusion_matrix_LEAKY_do_not_use.png", "official (small-cluster CV)", "old confusion matrix (small clusters, exact dups in train)", "", "yes",
+         "LEAKY - do not use"],
+        ["docs/calibration_plot_LEAKY_do_not_use.png", "official (in-sample)", "old reliability (full model evaluated on its own training data)", "", "yes",
+         "LEAKY - do not use"],
+    ]
+    return rows
+
+
 def _second_opinion_sheet(predictions):
     out = _second_opinion(predictions)
     header = ["id", "text", "ml_care_type", "llm_care_type", "note", "llm_reason"]
@@ -606,6 +631,7 @@ def main():
         ("RedFlags", _redflags_sheet(predictions)),
         ("Features", _features_sheet()),
         ("Provenance", _provenance_sheet(datasets)),
+        ("Images", _images_sheet()),
     ]
     _s.DEEPSEEK_API_KEY = _orig_key
     _s.LLM_ROLE = "second_opinion"

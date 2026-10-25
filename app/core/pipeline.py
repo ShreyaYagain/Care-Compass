@@ -625,7 +625,7 @@ def run_triage_pipeline(
         except Exception as e:
             logger.warning(f"ML red-flag model failed: {e}")
 
-    if semantic_flags:
+    if semantic_flags and request.allow_followup:
         asked_ids = get_asked_ids(history_dicts)
         for s_flag in semantic_flags:
             qid = flag_question_id(s_flag)
@@ -697,7 +697,7 @@ def run_triage_pipeline(
     # ONE combined screening question from the closed bank — unless a red-flag
     # screening question was already answered this session. Never a silent
     # decision.
-    if combined_needed:
+    if combined_needed and request.allow_followup:
         red_flag_screen_ids = set(QUESTION_TO_FLAG.keys()) | {COMBINED_QUESTION_ID}
         asked_ids = get_asked_ids(history_dicts)
         if not medium_flags and not any(qid in red_flag_screen_ids for qid in asked_ids):
@@ -882,7 +882,7 @@ def run_triage_pipeline(
     if should_ask_module and module_id != "injury" and (has_context or len(slots.get("symptoms", [])) >= 2):
         should_ask_module = False
 
-    if should_ask_module and request.module_answers is None:
+    if should_ask_module and request.module_answers is None and request.allow_followup:
         next_field, card = _ask_next_module_question(module_id, {}, slots, lang, norm_text)
         if card is not None and history_turns < MODULE_MAX_QUESTIONS:
             card_q, card_opts = _card_question_and_options(card)
@@ -911,7 +911,7 @@ def run_triage_pipeline(
             )
 
     # 4. Check if follow-up question is needed
-    if needs_more_info(slots, history_turns, history_dicts):
+    if needs_more_info(slots, history_turns, history_dicts) and request.allow_followup:
         qid = _select_question_id(slots, history_dicts, context)
         q_text, q_options = select_follow_up_question(slots, lang, history_dicts, context)
         q_text = enforce_question_bank(q_text, lang)
@@ -1088,7 +1088,7 @@ def run_triage_pipeline(
         and care_type != "emergency_112"
         and confidence < settings.CONF_THRESHOLD
     ):
-        if needs_more_info(slots, history_turns, history_dicts):
+        if needs_more_info(slots, history_turns, history_dicts) and request.allow_followup:
             q_text, q_options = select_follow_up_question(slots, lang, history_dicts, context)
             q_text = enforce_question_bank(q_text, lang)
 
@@ -1301,7 +1301,7 @@ def run_triage_pipeline(
 
     if recon["agrees"]:
         confidence = round(min(confidence + 0.05, 0.99), 4)
-    elif recon["ask"] and final_care_type != "emergency_112" and history_turns < settings.MAX_FOLLOWUPS:
+    elif recon["ask"] and final_care_type != "emergency_112" and history_turns < settings.MAX_FOLLOWUPS and request.allow_followup:
         # LLM more severe than the final ML decision: ask ONE confirmation
         # question, never decide.
         ask_flags = recon.get("ask_flags") or []

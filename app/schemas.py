@@ -139,6 +139,7 @@ class TriageRequest(BaseModel):
     input_mode: Optional[str] = None
     module_id: Optional[str] = None
     module_answers: Optional[dict[str, Any]] = None
+    allow_followup: bool = True
 
 
 class TriageResponse(BaseModel):

@@ -22,6 +22,8 @@ try:
         # LLM Settings
         LLM_TIMEOUT_S: float = float(os.getenv("LLM_TIMEOUT_S", "3.0"))
         SCREEN_TIMEOUT_S: float = float(os.getenv("SCREEN_TIMEOUT_S", "4.0"))
+        # The second opinion runs on a tight budget so it never blocks the result.
+        SECOND_OPINION_TIMEOUT_S: float = float(os.getenv("SECOND_OPINION_TIMEOUT_S", "2.5"))
 
         # LLM Settings (provider-agnostic, OpenAI-compatible chat completions).
         # Provider is "deepseek" | "groq"; the API key is read per provider.

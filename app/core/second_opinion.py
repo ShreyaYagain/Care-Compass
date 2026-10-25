@@ -86,8 +86,8 @@ def run_second_opinion(text: str, lang: str = "en") -> Optional[dict]:
             user=f"Patient message: \"{text}\"",
             schema=SecondOpinionOut,
             model=llm_model(),
-            timeout=settings.SCREEN_TIMEOUT_S,
-            retries=1,
+            timeout=settings.SECOND_OPINION_TIMEOUT_S,
+            retries=0,
         )
         if out is None:
             return None

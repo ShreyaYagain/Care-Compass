@@ -27,6 +27,7 @@ from app.core.intake import (
     count_asked_id,
     build_classifier_text,
     _select_question_id,
+    has_informative_context,
 )
 from app.core.semantic_screen import (
     screen_red_flags,
@@ -946,7 +947,13 @@ def run_triage_pipeline(
         or (slots.get("patient_relation") not in (None, "self", ""))
         or slots.get("pregnancy") or slots.get("chronic_conditions")
     )
+    informative = has_informative_context(slots, norm_text)
     should_ask_module = module_id is not None and not is_high_emergency
+    # The injury/fall module always asks: head-hit / swelling / weight-bearing /
+    # neuro-vascular can never be answered from the message itself. Every other
+    # module is gated so an informative message decides directly.
+    if should_ask_module and module_id != "injury" and informative:
+        should_ask_module = False
     # Never ask a card when a red-flag answer (breathing/chest/consciousness/
     # bleeding) is already present in the conversation.
     if slots.get("breathing_difficulty") is True or slots.get("chest_pain") is True or \
@@ -1073,6 +1080,37 @@ def run_triage_pipeline(
         top_terms, nearest_examples = [], []
 
     reasons.append(f"Stage 5 (Model Prediction): care_type={care_type}, urgency={urgency}, probs={probs}, conf={confidence}")
+
+    # 5.1 Weighted ML+LLM care-type decision (DECISION_POLICY=weighted). The LLM
+    # call runs on the fast model with the same safety rules: it can pick a
+    # different NON-emergency type, but an emergency from a rule / nine-flag with
+    # evidence / semantic screen / the user's "Yes" is never lowered, and an
+    # LLM-picked emergency still needs a nine-flag with evidence.
+    decision_meta: dict = {"ml": {"care_type": care_type, "confidence": confidence},
+                           "llm": None, "agreed": False, "used": "ml"}
+    if settings.DECISION_POLICY == "weighted":
+        from app.core.care_decision import llm_care_decision, weighted_care_type
+        llm_decision = llm_care_decision(patient_text)
+        weighted_type, decision_meta = weighted_care_type(probs, llm_decision)
+        if weighted_type == "emergency_112" and not is_high_emergency:
+            # No nine-flag + evidence is active here (rules would have returned
+            # earlier, and screen flags become questions): keep the ML type and
+            # let Stage 8 decide emergency from the model probability + flag.
+            weighted_type = care_type
+            decision_meta["used"] = "ml"
+            decision_meta["llm_emergency_demoted"] = True
+            reasons.append("Stage 5.1 (weighted): LLM picked emergency_112 without a nine-flag; kept ML type")
+        if weighted_type != care_type:
+            reasons.append(
+                f"Stage 5.1 (weighted): care_type {care_type} -> {weighted_type} "
+                f"(ML conf={confidence:.3f}, LLM={llm_decision})"
+            )
+        care_type = weighted_type
+        urgency = settings.CARE_TO_URGENCY.get(care_type, "same_day")
+        if llm_decision and llm_decision.get("care_type"):
+            decision_meta["llm"] = {"care_type": llm_decision["care_type"],
+                                    "confidence": llm_decision.get("confidence"),
+                                    "reason": llm_decision.get("reason", "")}
 
     # Override audit trail: the pure model argmax first, then every stage that
     # changes the care_type afterwards (exposed as debug.overrides).
@@ -1492,6 +1530,7 @@ def run_triage_pipeline(
         "intake_error": slots.get("intake_error"),
         "red_flag_sources": red_flag_sources,
         "ml_red_flags": ml_red_flags,
+        "decision": decision_meta,
         "second_opinion": second_opinion,
         "overrides": overrides,
         "final_care_type": final_care_type,
@@ -1551,6 +1590,7 @@ def run_triage_pipeline(
             "urgency": final_urgency,
             "red_flags": high_flags,
             "red_flag_sources": red_flag_sources,
+            "decision": decision_meta,
             "ml_features": top_terms,
             "extraction_source": slots.get("extraction_source"),
             "intake_error": slots.get("intake_error"),

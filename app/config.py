@@ -50,6 +50,11 @@ try:
         #   off: the LLM is disabled for triage decisions (rules + ML only).
         LLM_ROLE: str = os.getenv("LLM_ROLE", "second_opinion")
 
+        # Care-type decision policy. Empty = existing hybrid (rules + ML argmax).
+        #   weighted: ML and a strict-JSON LLM care-type call are combined by
+        #     0.4*ML_prob + 0.6*LLM_confidence; ML wins if its top prob >= 0.90.
+        DECISION_POLICY: str = os.getenv("DECISION_POLICY", "")
+
         # Supabase (Postgres + Auth). Empty -> SQLite fallback (no-key demo/tests).
         SUPABASE_URL: str = os.getenv("SUPABASE_URL", "")
         SUPABASE_SERVICE_ROLE_KEY: str = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
@@ -156,6 +161,11 @@ except ImportError:
         #     never lower a decision.
         #   off: the LLM is disabled for triage decisions (rules + ML only).
         LLM_ROLE: str = os.getenv("LLM_ROLE", "second_opinion")
+
+        # Care-type decision policy. Empty = existing hybrid (rules + ML argmax).
+        #   weighted: ML and a strict-JSON LLM care-type call are combined by
+        #     0.4*ML_prob + 0.6*LLM_confidence; ML wins if its top prob >= 0.90.
+        DECISION_POLICY: str = os.getenv("DECISION_POLICY", "")
 
         # Supabase (Postgres + Auth). Empty -> SQLite fallback (no-key demo/tests).
         SUPABASE_URL: str = os.getenv("SUPABASE_URL", "")

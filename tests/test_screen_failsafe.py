@@ -93,7 +93,7 @@ class TestScreenFailsafePipeline(unittest.TestCase):
         self.assertTrue(resp.debug["semantic_screen"]["combined"])
 
     @patch("app.core.pipeline.screen_red_flags")
-    def test_combined_yes_asks_which_one_then_escalates(self, mock_screen):
+    def test_combined_yes_asks_which_one_then_routes_by_severity(self, mock_screen):
         mock_screen.return_value = _failsafe()
         r1 = run_triage_pipeline(TriageRequest(
             user_input="my dad feels weird and sweaty", language="en",
@@ -118,8 +118,12 @@ class TestScreenFailsafePipeline(unittest.TestCase):
                 ChatMessage(role="user", text="Yes"),
                 ChatMessage(role="assistant", text=WHICH_ONE_TEXT),
             ]))
-        self.assertEqual(r3.care_type, "emergency_112")
-        self.assertIn("breathlessness", r3.red_flags)
+        # Breathing difficulty (not stopped breathing) gets an immediate
+        # same-day doctor/medic visit, never emergency_112.
+        self.assertEqual(r3.care_type, "paramedic_home_visit")
+        self.assertEqual(r3.urgency, "same_day")
+        self.assertEqual(r3.red_flags, [])
+        self.assertEqual(r3.emergency_steps, [])
 
     @patch("app.core.pipeline.screen_red_flags")
     def test_combined_yes_with_named_symptom_escalates_directly(self, mock_screen):

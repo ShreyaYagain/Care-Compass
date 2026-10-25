@@ -131,8 +131,9 @@ class TestTriageLevels(unittest.TestCase):
         self.assertEqual(resp.red_flags, [])
         self.assertEqual(resp.emergency_steps, [])
 
-    def test_fever_breathing_answered_yes(self):
-        # "fever" + breathing question answered "Yes" -> emergency_112, emergency
+    def test_fever_breathing_answered_yes_gets_doctor_visit(self):
+        # "fever" + breathing difficulty answered "Yes" -> immediate same-day
+        # doctor/medic visit (stopped breathing remains emergency_112).
         hist = [
             ChatMessage(role="user", text="fever"),
             ChatMessage(role="assistant", text="Kya saans lene mein dikkat hai?"),
@@ -143,8 +144,22 @@ class TestTriageLevels(unittest.TestCase):
             conversation_history=hist,
         )
         resp = run_triage_pipeline(req)
+        self.assertEqual(resp.care_type, "paramedic_home_visit")
+        self.assertEqual(resp.urgency, "same_day")
+        self.assertIsNone(resp.follow_up_question)
+        self.assertEqual(resp.red_flags, [])
+        self.assertEqual(resp.emergency_steps, [])
+        self.assertTrue(len(resp.matched_caregivers) > 0)
+
+    def test_stopped_breathing_is_emergency(self):
+        req = TriageRequest(
+            user_input="papa ka saans ruk gaya hai",
+            location=self.default_loc,
+        )
+        resp = run_triage_pipeline(req)
         self.assertEqual(resp.care_type, "emergency_112")
         self.assertEqual(resp.urgency, "emergency")
+        self.assertIn("breathlessness", resp.red_flags)
         self.assertTrue(len(resp.emergency_steps) > 0)
         self.assertEqual(resp.matched_caregivers, [])
 

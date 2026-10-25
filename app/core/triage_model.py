@@ -61,10 +61,10 @@ def rule_based_predict(slots: dict, text: str) -> tuple[str, str, dict, float]:
     chest_pain = slots.get("chest_pain")
     text_norm = text.lower()
 
-    # 1. Emergency symptoms
+    # 1. Emergency symptoms. Stopped breathing / severe respiratory signs are
+    # caught by the high-severity breathlessness red flag before this point.
     if (
-        breathing is True
-        or chest_pain is True
+        chest_pain is True
         or slots.get("consciousness") == "unconscious"
         or slots.get("bleeding") is True
     ):
@@ -73,6 +73,14 @@ def rule_based_predict(slots: dict, text: str) -> tuple[str, str, dict, float]:
         probs = {c: 0.01 for c in settings.CARE_TYPES}
         probs["emergency_112"] = 0.96
         return care_type, urgency, probs, 0.96
+
+    # 1b. Breathing difficulty -> immediate same-day doctor/medic visit.
+    if breathing is True:
+        care_type = "paramedic_home_visit"
+        urgency = settings.CARE_TO_URGENCY["paramedic_home_visit"]
+        probs = {c: 0.01 for c in settings.CARE_TYPES}
+        probs["paramedic_home_visit"] = 0.94
+        return care_type, urgency, probs, 0.94
 
     # 2. Home nursing procedures
     nursing_keywords = ["injection", "im injection", "iv drip", "drip", "dressing", "patti", "catheter", "tanke", "stitches", "bedsore", "wound"]
@@ -148,10 +156,11 @@ def predict_triage(slots: dict, text: str) -> tuple[str, str, dict, float, list[
     top_terms: list[dict] = []
     nearest_examples: list[dict] = []
 
-    # Immediate red flag slots check
+    # Immediate red flag slots check (breathing difficulty is not an emergency
+    # here: the high-severity breathlessness red flag runs earlier, and milder
+    # difficulty is a same-day doctor visit).
     if (
-        slots.get("breathing_difficulty") is True
-        or slots.get("chest_pain") is True
+        slots.get("chest_pain") is True
         or slots.get("consciousness") == "unconscious"
         or slots.get("bleeding") is True
     ):

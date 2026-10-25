@@ -95,7 +95,12 @@ def _parse_semantic_answer(history_dicts: list[dict], user_input: str):
     last_qid = None
     for m in reversed(history_dicts):
         if m.get("role") == "assistant":
-            qid = is_bank_question(m.get("text") or m.get("content") or "")
+            q_text = m.get("text") or m.get("content") or ""
+            qid = is_bank_question(q_text)
+            if not qid:
+                # Older/verified rephrases: keyword fallback, same as get_asked_ids.
+                asked = get_asked_ids([{"role": "assistant", "text": q_text}])
+                qid = asked[0] if asked else None
             if qid:
                 last_qid = qid
             break
@@ -277,6 +282,145 @@ def _emergency_response(
     return resp
 
 
+_BREATHING_DIFFICULTY_WHY = {
+    "en": "Breathing difficulty needs a doctor visit today.",
+    "hinglish": "Saans lene mein dikkat hai, doctor visit aaj hi chahiye.",
+    "hi": "सांस लेने में दिक्कत है, आज ही डॉक्टर विज़िट चाहिए।",
+}
+
+
+def _breathing_difficulty_response(
+    user_input: str,
+    medium_flags: list[str],
+    lang: str,
+    context_used,
+    reasons: list[str],
+    input_guard_res: dict,
+    output_violations: list[str],
+    template_replaced: bool,
+    db,
+    debug: bool,
+    red_flag_sources: dict[str, Any] | None = None,
+    location=None,
+) -> "TriageResponse":
+    """Immediate same-day doctor/medic visit for breathing difficulty.
+
+    Stopped breathing and other severe respiratory signs are still handled by
+    the high-severity breathlessness red flag and route to emergency_112.
+    """
+    why = _BREATHING_DIFFICULTY_WHY.get(lang, _BREATHING_DIFFICULTY_WHY["en"])
+    card_lines = build_card_lines(
+        care_type="paramedic_home_visit",
+        urgency="same_day",
+        symptoms=["breathlessness"],
+        duration=None,
+        red_flags=[],
+        language=lang,
+        why_override=why,
+    )
+    reasoning = card_text(card_lines)
+    guard_res = output_guard(
+        reasoning, lang=lang, is_emergency=False,
+        care_type="paramedic_home_visit", field_name="reasoning",
+    )
+    if not guard_res["ok"]:
+        output_violations.extend(guard_res["violations"])
+        template_replaced = True
+    reasoning = guard_res["safe_text"]
+
+    matched = rank_caregivers(
+        care_type="paramedic_home_visit",
+        urgency="same_day",
+        user_location=location,
+        user_language=lang,
+        user_text=user_input,
+        limit=3,
+    )
+    for cg in matched:
+        if cg.reason:
+            cg_guard = output_guard(
+                cg.reason, lang=lang, is_emergency=False,
+                care_type="paramedic_home_visit", field_name="caregiver_reason",
+            )
+            if not cg_guard["ok"]:
+                output_violations.extend(cg_guard["violations"])
+                template_replaced = True
+            cg.reason = cg_guard["safe_text"]
+
+    reasons.append(
+        "Breathing difficulty rule: immediate same-day paramedic/doctor home visit "
+        "(not emergency; stopped breathing remains emergency_112)"
+    )
+    debug_trace = {
+        "red_flags_high": [],
+        "red_flags_medium": medium_flags,
+        "red_flag_sources": red_flag_sources or {},
+        "model_probs": {"paramedic_home_visit": 0.95},
+        "calibrated_probabilities": {"paramedic_home_visit": 0.95},
+        "urgency_after_cost_matrix": "same_day",
+        "urgency_after_risk_modifiers": "same_day",
+        "urgency_after_confidence_fallback": "same_day",
+        "confidence": 0.95,
+        "slots": {},
+        "final_care_type": "paramedic_home_visit",
+        "final_urgency": "same_day",
+        "context_info": context_used,
+        "screen_status": "skip",
+        "guardrails": {
+            "input_guard": input_guard_res,
+            "output_violations": output_violations,
+            "template_replaced": template_replaced,
+        },
+        "reasons": reasons,
+    }
+
+    resp = TriageResponse(
+        follow_up_question=None,
+        follow_up_options=[],
+        care_type="paramedic_home_visit",
+        urgency="same_day",
+        red_flags=[],
+        reasoning=reasoning,
+        confidence=0.95,
+        matched_caregivers=matched,
+        emergency_steps=[],
+        context_used=context_used,
+        secondary_options=secondary_doctor_options("paramedic_home_visit", lang),
+        debug=debug_trace if debug else None,
+        card_lines=card_lines,
+        details={
+            "symptoms": ["breathlessness"],
+            "answers": {},
+            "context_used": context_used,
+            "confidence": 0.95,
+            "care_type": "paramedic_home_visit",
+            "urgency": "same_day",
+            "red_flags": [],
+            "red_flag_sources": red_flag_sources or {},
+        },
+    )
+
+    if db:
+        try:
+            log = AuditLog(
+                user_input=user_input,
+                language=lang,
+                red_flags=[],
+                probabilities={"paramedic_home_visit": 0.95},
+                care_type="paramedic_home_visit",
+                urgency="same_day",
+                confidence=0.95,
+                reasoning=reasoning,
+                debug_trace=debug_trace,
+            )
+            db.add(log)
+            db.commit()
+        except Exception as e:
+            logger.warning(f"Failed to write audit log: {e}")
+
+    return resp
+
+
 def _context_summary_line(context: dict, lang: str) -> str:
     """One-line localised weather/time/location summary for the result text."""
     loc = context.get("location_name") or ""
@@ -322,6 +466,9 @@ def _apply_injury_sanity(care_type: str, urgency: str, slots: dict, patient) -> 
     Vulnerable patients (child/senior/pregnant/chronic/other-person) and
     severe pain keep the medic home visit."""
     symptoms = set(slots.get("symptoms") or [])
+    if slots.get("breathing_difficulty") is True:
+        # Breathing difficulty always keeps the same-day in-person doctor visit.
+        return care_type, urgency
     if not (symptoms & {"injury", "joint_pain"}):
         return care_type, urgency
     vulnerable = (
@@ -499,22 +646,38 @@ def run_triage_pipeline(
     # ONE "which one" clarification (only when the combined question was the
     # first question, so the flow never exceeds two questions). Never lowers
     # rule decisions.
+    breathing_difficulty_confirmed = False
     semantic_answer = _parse_semantic_answer(history_dicts, user_input)
     if semantic_answer:
         kind = semantic_answer[0]
         if kind == "flag_confirm":
             _, s_flag, s_kind = semantic_answer
             if s_kind == "yes" or (s_kind == "unsure" and s_flag in NOT_SURE_AS_YES):
-                high_flags = list(set(high_flags + [s_flag]))
-                is_high_emergency = True
-                red_flag_sources["semantic_screen"][s_flag] = user_input
-                reasons.append(f"Semantic screen: user confirmed red flag {s_flag} (answer={s_kind})")
+                if s_flag == "breathlessness":
+                    breathing_difficulty_confirmed = True
+                    red_flag_sources["semantic_screen"]["breathing_difficulty"] = user_input
+                    reasons.append(
+                        f"Semantic screen: user confirmed breathing difficulty (answer={s_kind}); "
+                        "routing to same-day doctor visit"
+                    )
+                else:
+                    high_flags = list(set(high_flags + [s_flag]))
+                    is_high_emergency = True
+                    red_flag_sources["semantic_screen"][s_flag] = user_input
+                    reasons.append(f"Semantic screen: user confirmed red flag {s_flag} (answer={s_kind})")
             else:
                 reasons.append(f"Semantic screen: user cleared red flag {s_flag} (answer={s_kind})")
         elif kind == "combined":
             _, c_kind, c_flag = semantic_answer
             if c_kind in ("yes", "unsure"):
-                if c_flag:
+                if c_flag == "breathlessness":
+                    breathing_difficulty_confirmed = True
+                    red_flag_sources["semantic_screen"]["breathing_difficulty"] = user_input
+                    reasons.append(
+                        f"Semantic screen: combined failsafe confirmed breathing difficulty "
+                        f"(answer={c_kind}); routing to same-day doctor visit"
+                    )
+                elif c_flag:
                     high_flags = list(set(high_flags + [c_flag]))
                     is_high_emergency = True
                     red_flag_sources["semantic_screen"][c_flag] = user_input
@@ -572,10 +735,18 @@ def run_triage_pipeline(
                 reasons.append(f"Semantic screen: combined failsafe cleared (answer={c_kind})")
         elif kind == "which_one":
             w_flag = semantic_answer[1]
-            high_flags = list(set(high_flags + [w_flag]))
-            is_high_emergency = True
-            red_flag_sources["semantic_screen"][w_flag] = user_input
-            reasons.append(f"Semantic screen: which-one answer mapped to red flag {w_flag}")
+            if w_flag == "breathlessness":
+                breathing_difficulty_confirmed = True
+                red_flag_sources["semantic_screen"]["breathing_difficulty"] = user_input
+                reasons.append(
+                    "Semantic screen: which-one answer mapped to breathing difficulty; "
+                    "routing to same-day doctor visit"
+                )
+            else:
+                high_flags = list(set(high_flags + [w_flag]))
+                is_high_emergency = True
+                red_flag_sources["semantic_screen"][w_flag] = user_input
+                reasons.append(f"Semantic screen: which-one answer mapped to red flag {w_flag}")
 
     # Emergency branch (Immediate 112)
     if is_high_emergency:
@@ -583,6 +754,17 @@ def run_triage_pipeline(
             user_input, high_flags, medium_flags, lang, context, reasons,
             input_guard_res, output_violations, template_replaced, db, debug,
             red_flag_sources=red_flag_sources,
+        )
+
+    # Breathing difficulty (but NOT stopped breathing / severe respiratory
+    # signs, which are high-severity flags handled above) gets an immediate
+    # same-day doctor/medic visit. No follow-up questions.
+    if "breathing_difficulty" in medium_flags or breathing_difficulty_confirmed:
+        return _breathing_difficulty_response(
+            user_input, medium_flags, lang, context_used, reasons,
+            input_guard_res, output_violations, template_replaced, db, debug,
+            red_flag_sources=red_flag_sources,
+            location=request.location,
         )
 
     # If NO emergency was triggered, but input was disallowed (prompt injection / off-topic / abusive)
@@ -682,13 +864,26 @@ def run_triage_pipeline(
         except Exception as e:
             logger.warning(f"ML red-flag model failed: {e}")
 
+    # A breathing-difficulty signal from the screen/ML with no other flag is
+    # still a same-day doctor visit — never an emergency and never a question.
+    if semantic_flags and set(semantic_flags) <= {"breathlessness"}:
+        red_flag_sources["semantic_screen"]["breathing_difficulty"] = user_input
+        reasons.append("Semantic screen/ML flagged breathing difficulty; routing to same-day doctor visit")
+        return _breathing_difficulty_response(
+            user_input, medium_flags, lang, context_used, reasons,
+            input_guard_res, output_violations, template_replaced, db, debug,
+            red_flag_sources=red_flag_sources,
+            location=request.location,
+        )
+
     # One-shot mode (allow_followup=false): a critical flag from the semantic
     # screen (LLM, evidence-validated) escalates to emergency_112 — the skipped
     # confirmation question counts as "Not sure". Non-critical flags and
     # quoteless flags still need corroboration and are dropped here.
+    # Breathing difficulty is handled above as a same-day doctor visit.
     if not request.allow_followup and not is_high_emergency:
         screen_flags = list(screen_result.get("flags") or [])
-        critical = [f for f in screen_flags if f in NOT_SURE_AS_YES]
+        critical = [f for f in screen_flags if f in NOT_SURE_AS_YES and f != "breathlessness"]
         if critical:
             high_flags = list(set(high_flags + critical))
             for f in critical:
@@ -1194,6 +1389,7 @@ def run_triage_pipeline(
         and slots.get("duration") not in ("More than a week", "एक हफ्ते से अधिक")
         and not (slots.get("fever_temp") is not None and float(slots.get("fever_temp") or 0) >= 103)
         and not high_flags
+        and slots.get("breathing_difficulty") is not True
     ):
         _prev_ambulatory = care_type
         care_type = "teleconsultation"
@@ -1294,10 +1490,10 @@ def run_triage_pipeline(
         else:
             reasons.append(f"Stage 7: Low confidence ({confidence:.2f}); proceeding with best prediction without service asking.")
 
-    # 8. Emergency check (Rule 2)
+    # 8. Emergency check (Rule 2). Breathing difficulty alone is NOT an
+    # emergency: it is routed to a same-day doctor visit by the rules above.
     user_answered_yes_high = (
-        slots.get("breathing_difficulty") is True
-        or slots.get("chest_pain") is True
+        slots.get("chest_pain") is True
         or slots.get("consciousness") == "unconscious"
         or slots.get("bleeding") is True
     )
@@ -1306,8 +1502,7 @@ def run_triage_pipeline(
 
     has_red_flag_signal = bool(
         high_flags
-        or medium_flags
-        or slots.get("breathing_difficulty") is True
+        or [f for f in medium_flags if f != "breathing_difficulty"]
         or slots.get("chest_pain") is True
         or slots.get("consciousness") in ["unconscious", "drowsy"]
         or slots.get("bleeding") is True
@@ -1396,6 +1591,7 @@ def run_triage_pipeline(
             and final_urgency == "same_day"
             and (context.get("is_night") or "rainy" in context.get("tags", []) or (context.get("precipitation_mm") or 0) >= 1.0)
             and not high_flags
+            and slots.get("breathing_difficulty") is not True
             and slots.get("severity") != "severe"
             and slots.get("age_group") != "child"
         ):
@@ -1437,7 +1633,7 @@ def run_triage_pipeline(
     # severity: agree -> confidence up; more severe -> ask ONE confirmation
     # question (never decide); less severe -> ignored.
     second_opinion = None
-    llm_opinion = run_second_opinion(user_input, lang)
+    llm_opinion = None if slots.get("breathing_difficulty") is True else run_second_opinion(user_input, lang)
     recon = reconcile_second_opinion(final_care_type, list(set(high_flags + ml_red_flags)), llm_opinion)
     if llm_opinion is not None:
         second_opinion = {

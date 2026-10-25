@@ -12,24 +12,42 @@ _RED_FLAGS: list[dict] = []
 # ---------------------------------------------------------------------------
 
 _BREATH_FUZZY_PATTERNS = [
+    r"(?:stopped|stop|stopped)\s+(?:breath|breathe|brethe|brething|breathing)\b",
+    r"(?:not|isn t|isnt|no longer)\s+(?:breath|breathe|brethe|brething|breathing)\b",
     r"(?:cant|can t|cannot)\s+(?:breath|breathe|brethe|breth|breathing|brething|breating|breathin)\b",
     r"(?:not able to|unable to|struggling to)\s+(?:breath|breathe|brethe|breth|breathing|brething|breating|breathin)\b",
-    r"\b(?:breathing|brething|breating)\s+(?:problem|me problem|mein problem|difficulty|me dikkat|mein dikkat)\b",
-    r"\b(?:saans|sans)\s+(?:nahi aa|nahi le pa|phool|phul|atak|ruk)\s+\w+",
+    r"\b(?:saans|sans)\s+(?:nahi aa|nahi le pa|atak|ruk)\s+\w+",
     r"\b(?:dum|dam)\s+ghut\s+\w+",
 ]
 
+# Milder breathing complaints route to a same-day doctor/medic visit, not 112.
+_DIFFICULTY_FUZZY_PATTERNS = [
+    r"(?:difficulty|difficult|hard|trouble)\s+(?:in\s+|to\s+)?(?:breath|breathe|brethe|brething|breathing)\b",
+    r"\b(?:breathing|brething|breating)\s+(?:problem|difficulty|trouble)\b",
+    r"\b(?:saans|sans)\s+(?:lene\s+)?(?:me|mein)\s+(?:dikkat|takleef|problem|pareshani)\b",
+    r"\b(?:saans|sans)\s+(?:phool|phul)\s+\w+",
+]
 
-def _fuzzy_breathless(text: str) -> bool:
-    """Typo-tolerant breathlessness detection used as an extra matching surface
-    for the official breathlessness red flag."""
-    for pat in _BREATH_FUZZY_PATTERNS:
+
+def _matches_fuzzy(patterns: list[str], text: str) -> bool:
+    for pat in patterns:
         for m in re.finditer(pat, text):
             phrase = m.group(0)
             if is_phrase_negated(phrase, text):
                 continue
             return True
     return False
+
+
+def _fuzzy_breathless(text: str) -> bool:
+    """Typo-tolerant stopped/severe breathing detection used as an extra
+    matching surface for the official breathlessness red flag."""
+    return _matches_fuzzy(_BREATH_FUZZY_PATTERNS, text)
+
+
+def _fuzzy_breathing_difficulty(text: str) -> bool:
+    """Typo-tolerant detection of milder breathing difficulty."""
+    return _matches_fuzzy(_DIFFICULTY_FUZZY_PATTERNS, text)
 
 
 def _load_red_flags():
@@ -129,11 +147,15 @@ def check_red_flags(
                     matched_pat = pat
                     break
 
-        # 4. Fuzzy breathlessness surface (typo-tolerant, negation-aware)
+        # 4. Fuzzy surfaces (typo-tolerant, negation-aware)
         if not found and flag_id == "breathlessness":
             if _fuzzy_breathless(combined_roman):
                 found = True
                 matched_pat = "(fuzzy breathless)"
+        if not found and flag_id == "breathing_difficulty":
+            if _fuzzy_breathing_difficulty(combined_roman):
+                found = True
+                matched_pat = "(fuzzy breathing difficulty)"
 
         if found:
             if evidence is not None and flag_id not in evidence:

@@ -27,9 +27,18 @@ class TestRedFlags(unittest.TestCase):
         self.assertTrue(is_emergency)
 
     def test_breathlessness_hi(self):
-        flags, severity, is_emergency = check_red_flags("मरीज को सांस लेने में बहुत तकलीफ हो रही है")
+        flags, severity, is_emergency = check_red_flags("मरीज की सांस रुक गई है")
         self.assertIn("breathlessness", flags)
         self.assertTrue(is_emergency)
+
+    def test_breathing_difficulty_is_medium_not_emergency(self):
+        flags, medium, severity, is_emergency = check_red_flags(
+            "मरीज को सांस लेने में बहुत तकलीफ हो रही है", return_medium=True
+        )
+        self.assertEqual(flags, [])
+        self.assertIn("breathing_difficulty", medium)
+        self.assertEqual(severity, "medium")
+        self.assertFalse(is_emergency)
 
     def test_breathlessness_hinglish(self):
         flags, severity, is_emergency = check_red_flags("dadi ko saans nahi aa rahi hai")

@@ -271,9 +271,13 @@ def parse_age(text: str) -> Optional[int]:
     return None
 
 
-def build_classifier_text(slots: dict) -> str:
-    """Cleaned classifier input: canonical symptom names + validated slots only.
-    Raw user text (with noise tokens) is never fed to the classifier."""
+def build_classifier_text(slots: dict, raw_text: str = "") -> str:
+    """Classifier input: canonical symptom names + validated slots + the raw
+    normalised text. The raw text is kept because the production model was
+    trained on it and the canonical names alone drop the service words
+    (injection, dressing, blood test, nurse, sample, ...) that carry the
+    nursing/lab signal — that caused a routing drop. Noise tokens are harmless
+    here because the rule layer is authoritative for confident matches."""
     parts: list[str] = []
     for s in slots.get("symptoms", []) or []:
         parts.append(str(s).replace("_", " "))
@@ -295,6 +299,8 @@ def build_classifier_text(slots: dict) -> str:
         parts.append("chest pain")
     if slots.get("fever_temp") is not None:
         parts.append(f"temperature {slots['fever_temp']}{slots.get('fever_temp_unit') or ''}")
+    if raw_text and raw_text.strip():
+        parts.append(raw_text.strip())
     return " ".join(parts)
 
 

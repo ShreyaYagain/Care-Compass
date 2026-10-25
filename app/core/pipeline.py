@@ -987,7 +987,7 @@ def run_triage_pipeline(
     # Classifier input is a cleaned string built from canonical symptom names and
     # validated slots — never the raw text — so random noise tokens cannot shift
     # the prediction. The raw text is preserved only in the audit log.
-    patient_text = build_classifier_text(slots)
+    patient_text = build_classifier_text(slots, norm_text)
 
     # 5. Triage model prediction (predicts care_type; urgency derived from CARE_TO_URGENCY)
     pred_res = predict_triage(slots, patient_text)

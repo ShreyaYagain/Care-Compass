@@ -134,6 +134,27 @@ def llm_fast_model() -> str:
     return (settings.LLM_FAST_MODEL or "").strip() or llm_model()
 
 
+_FAILURE_STATE = {"consecutive": 0}
+_FAILURE_LOCK = threading.Lock()
+
+
+def consecutive_llm_failures() -> int:
+    """Number of consecutive failed/timed-out provider calls (for the eval
+    harness's stop-and-report rule)."""
+    with _FAILURE_LOCK:
+        return _FAILURE_STATE["consecutive"]
+
+
+def _record_failure() -> None:
+    with _FAILURE_LOCK:
+        _FAILURE_STATE["consecutive"] += 1
+
+
+def _record_success() -> None:
+    with _FAILURE_LOCK:
+        _FAILURE_STATE["consecutive"] = 0
+
+
 def _chat_completion(
     system: str,
     user: str,
@@ -164,15 +185,19 @@ def _chat_completion(
         )
         if resp.status_code >= 400:
             logger.warning(f"LLM call HTTP {resp.status_code}: {resp.text[:200]}")
+            _record_failure()
             return None, resp.status_code
         data = resp.json()
         content = ((data.get("choices") or [{}])[0].get("message") or {}).get("content") or ""
+        _record_success()
         return content.strip(), resp.status_code
     except requests.exceptions.Timeout:
         logger.warning("LLM call timed out")
+        _record_failure()
         return None, 408
     except Exception as e:
         logger.warning(f"LLM call failed: {e}")
+        _record_failure()
         return None, 0
 
 

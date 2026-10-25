@@ -20,7 +20,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from app.config import settings
 from app.core.intake import build_classifier_text, rule_based_extract
-from app.core.llm import llm_model, llm_provider
+from app.core.llm import consecutive_llm_failures, llm_model, llm_provider
 from app.core.red_flags import check_red_flags
 from app.core.redflag_model import predict_flags
 from app.core.second_opinion import reconcile, run_second_opinion
@@ -141,6 +141,11 @@ def main():
             opinion_lat.append(oms)
             screen_mode[status] = screen_mode.get(status, 0) + 1
             done += 1
+            if consecutive_llm_failures() >= 3:
+                print("STOP: provider failed 3 consecutive calls; aborting.", flush=True)
+                for f in futs:
+                    f.cancel()
+                break
             if done % PROGRESS_EVERY == 0 or done == len(all_rows):
                 el = time.time() - t_start
                 eta = el / done * (len(all_rows) - done)

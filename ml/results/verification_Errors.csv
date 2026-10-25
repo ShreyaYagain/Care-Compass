@@ -1,0 +1,219 @@
+id,text,true_care_type,predicted_care_type,source_dataset
+S0008,wo achanak gir gaye response nahi de rahe,emergency_112,home_nursing,official_train
+S0016,papa ko tej sine men drd hai aur sans nhin aa rhi,emergency_112,paramedic_home_visit,official_train
+S0065,papa ko tej sine men drd hai aur sans nhin aa rhi,emergency_112,paramedic_home_visit,official_train
+S0092,vo achank gir ge aur jvab nhin de rhe,emergency_112,home_nursing,official_train
+S0094,papa ko tej sine men drd hai aur sans nhin aa rhi,emergency_112,paramedic_home_visit,official_train
+S0106,vo achank gir ge aur jvab nhin de rhe,emergency_112,home_nursing,official_train
+S0111,vo achank gir ge aur jvab nhin de rhe,emergency_112,home_nursing,official_train
+S0118,vo achank gir ge aur jvab nhin de rhe,emergency_112,home_nursing,official_train
+S0127,eksident ke bad khun nhin ruk rha,emergency_112,teleconsultation,official_train
+S0131,papa ko tej sine men drd hai aur sans nhin aa rhi,emergency_112,paramedic_home_visit,official_train
+S0132,papa ko tej sine men drd hai aur sans nhin aa rhi,emergency_112,paramedic_home_visit,official_train
+S0134,papa ko tej sine men drd hai aur sans nhin aa rhi,emergency_112,paramedic_home_visit,official_train
+S0146,papa ko tej sine men drd hai aur sans nhin aa rhi,emergency_112,paramedic_home_visit,official_train
+S0196,vo achank gir ge aur jvab nhin de rhe,emergency_112,home_nursing,official_train
+S0221,wo achanak gir gaye response nahi de rahe,emergency_112,home_nursing,official_train
+S0249,vo achank gir ge aur jvab nhin de rhe,emergency_112,home_nursing,official_train
+S0258,papa ko tej sine men drd hai aur sans nhin aa rhi,emergency_112,paramedic_home_visit,official_train
+S0270,eksident ke bad khun nhin ruk rha,emergency_112,teleconsultation,official_train
+S0275,vo achank gir ge aur jvab nhin de rhe,emergency_112,home_nursing,official_train
+S0283,vo achank gir ge aur jvab nhin de rhe,emergency_112,home_nursing,official_train
+S0291,papa ko tej sine men drd hai aur sans nhin aa rhi,emergency_112,paramedic_home_visit,official_train
+S0296,wo achanak gir gaye response nahi de rahe,emergency_112,home_nursing,official_train
+S0310,vo achank gir ge aur jvab nhin de rhe,emergency_112,home_nursing,official_train
+S0313,wo achanak gir gaye response nahi de rahe,emergency_112,home_nursing,official_train
+S0337,eksident ke bad khun nhin ruk rha,emergency_112,teleconsultation,official_train
+SYN_0041,sine men tej drd aur psina aa rha hai,emergency_112,teleconsultation,official_train
+SYN_0048,accident ke baad heavy bleeding ruk nahi rahi,emergency_112,home_nursing,official_train
+SYN_0050,khun bhna bnd nhin ho rha bhut jyada khun nikl rha hai,emergency_112,teleconsultation,official_train
+SYN_0053,lkva mar gya aavaj ld khd a rhi hai chehra tedh a,emergency_112,teleconsultation,official_train
+SYN_0057,2 mahine ke bachhe ko 104 fever hai,emergency_112,paramedic_home_visit,official_train
+SYN_0058,newborn baby high fever 104 degrees lethargic,emergency_112,teleconsultation,official_train
+SYN_0059,nvjat shishu ko tej fever hai aur sust hai,emergency_112,paramedic_home_visit,official_train
+SYN_0062,jan dena chahta hu khudkushi ka vichar,emergency_112,teleconsultation,official_train
+SYN_0065,pani ki gnbhir kmi aankhen dhns gee peshab nhin aa rha,emergency_112,teleconsultation,official_train
+S0004,accident ke baad bleeding ruk nahi rahi,emergency_112,home_nursing,official_val
+S0015,accident ke baad bleeding ruk nahi rahi,emergency_112,home_nursing,official_val
+S0047,accident ke baad bleeding ruk nahi rahi,emergency_112,home_nursing,official_val
+S0085,accident ke baad bleeding ruk nahi rahi,emergency_112,home_nursing,official_val
+S0091,accident ke baad bleeding ruk nahi rahi,emergency_112,home_nursing,official_val
+S0120,accident ke baad bleeding ruk nahi rahi,emergency_112,home_nursing,official_val
+S0141,accident ke baad bleeding ruk nahi rahi,emergency_112,home_nursing,official_val
+S0201,accident ke baad bleeding ruk nahi rahi,emergency_112,home_nursing,official_val
+S0212,accident ke baad bleeding ruk nahi rahi,emergency_112,home_nursing,official_val
+S0243,accident ke baad bleeding ruk nahi rahi,emergency_112,home_nursing,official_val
+S0253,accident ke baad bleeding ruk nahi rahi,emergency_112,home_nursing,official_val
+S0254,accident ke baad bleeding ruk nahi rahi,emergency_112,home_nursing,official_val
+S0278,accident ke baad bleeding ruk nahi rahi,emergency_112,home_nursing,official_val
+HLD_001,my chest feels like someone is sitting on it,emergency_112,teleconsultation,redflag_holdout
+HLD_002,there is a stabbing sensation in the middle of my chest,emergency_112,teleconsultation,redflag_holdout
+HLD_003,मेरे सीने में चुभन हो रही है और बायां हाथ दर्द कर रहा है,emergency_112,teleconsultation,redflag_holdout
+HLD_004,chhati me ajeeb sa bhaari pan hai aur paseena aa raha hai,emergency_112,teleconsultation,redflag_holdout
+HLD_005,I ran out of air just climbing one flight of stairs,emergency_112,paramedic_home_visit,redflag_holdout
+HLD_006,she keeps opening her mouth but air is not going in,emergency_112,teleconsultation,redflag_holdout
+HLD_007,"साँस अटक रही है, छाती में सीटी जैसी आवाज है",emergency_112,teleconsultation,redflag_holdout
+HLD_008,"saans andar ja hi nahi rahi, ghut raha hai",emergency_112,teleconsultation,redflag_holdout
+HLD_011,मेरी माँ खाना खाते समय अचानक गिर गईं और अब कुछ नहीं बोल रहीं,emergency_112,teleconsultation,redflag_holdout
+HLD_012,"there is a pool of blood where my father is standing, the cut will not close",emergency_112,paramedic_home_visit,redflag_holdout
+HLD_013,my son fell off the cycle and the blood is soaking through three towels,emergency_112,home_nursing,redflag_holdout
+HLD_014,दुर्घटना के बाद घुटने से खून की धार बह रही है,emergency_112,teleconsultation,redflag_holdout
+HLD_015,khoon itna beh raha hai ki towel laal ho gaya hai,emergency_112,teleconsultation,redflag_holdout
+HLD_016,my uncle cannot smile on one side of his face since this morning,emergency_112,teleconsultation,redflag_holdout
+HLD_017,she is speaking gibberish and her left arm keeps dropping,emergency_112,teleconsultation,redflag_holdout
+HLD_018,मेरे पिता का चेहरा एक तरफ लटक गया है और आँख बंद नहीं हो रही,emergency_112,teleconsultation,redflag_holdout
+HLD_019,bolne par awaz ajeeb aa rahi hai aur ek haath kaam nahi kar raha,emergency_112,teleconsultation,redflag_holdout
+HLD_020,my daughter's body went stiff and then started shaking for a minute,emergency_112,teleconsultation,redflag_holdout
+HLD_021,he bit his tongue during the shaking episode and is confused now,emergency_112,teleconsultation,redflag_holdout
+HLD_022,बच्ची की आँखें ऊपर चढ़ गईं और पूरा शरीर झटकने लगा,emergency_112,teleconsultation,redflag_holdout
+HLD_023,pair haath akad gaye aur muh se safed jhaag nikla,emergency_112,teleconsultation,redflag_holdout
+HLD_024,my six-week-old baby feels like a furnace and is not crying normally,emergency_112,teleconsultation,redflag_holdout
+HLD_025,the newborn's forehead is burning hot and she is breathing fast,emergency_112,teleconsultation,redflag_holdout
+HLD_026,डेढ़ महीने के बच्चे का शरीर तवे जैसा गर्म है,emergency_112,teleconsultation,redflag_holdout
+HLD_027,naya janma bacha bilkul sust hai aur garam hai,emergency_112,teleconsultation,redflag_holdout
+HLD_028,my brother said goodbye to everyone and wrote a note,emergency_112,teleconsultation,redflag_holdout
+HLD_029,she keeps saying everyone would be better off without her,emergency_112,teleconsultation,redflag_holdout
+HLD_030,भाई ने कहा कि अब और नहीं झेल पाएगा और सबको अलविदा कह दिया,emergency_112,teleconsultation,redflag_holdout
+HLD_031,raat ko sabko thank you bol raha tha jaise jaane wala ho,emergency_112,teleconsultation,redflag_holdout
+HLD_032,my grandmother has not made urine since yesterday and her lips are cracked,emergency_112,teleconsultation,redflag_holdout
+HLD_033,the baby's soft spot is deeply sunken and she cries without tears,emergency_112,teleconsultation,redflag_holdout
+HLD_034,दादी की जीभ सूख गई है और तीन दिन से पेशाब नहीं हुआ,emergency_112,home_nursing,redflag_holdout
+HLD_035,dast ke baad se aankhen andar dhans gayi hain,emergency_112,teleconsultation,redflag_holdout
+S0009,ghr pr injekshn lgvana hai,home_nursing,teleconsultation,official_train
+S0014,i want to book something for my mother,follow_up,paramedic_home_visit,official_train
+S0018,mdd chahie,follow_up,teleconsultation,official_train
+S0019,ma ke lie kuchh buk krna hai,follow_up,teleconsultation,official_train
+S0021,cbc aur thyroid test ghar se sample lekar,lab_test_home,teleconsultation,official_train
+S0023,subah se acidity gas hai doctor se consult karna hai,teleconsultation,home_nursing,official_train
+S0024,doctor chahiye,follow_up,teleconsultation,official_train
+S0029,kl subh shugr test ghr pr,lab_test_home,teleconsultation,official_train
+S0030,papa ko insulin lgvana hai,home_nursing,paramedic_home_visit,official_train
+S0035,phul b di chekap ghr se sainpl,lab_test_home,teleconsultation,official_train
+S0037,ghr pr injekshn lgvana hai,home_nursing,teleconsultation,official_train
+S0041,kl subh shugr test ghr pr,lab_test_home,teleconsultation,official_train
+S0042,grandfather is weak and not eating want a home check up,paramedic_home_visit,teleconsultation,official_train
+S0044,help chahiye,follow_up,teleconsultation,official_train
+S0045,i need help,follow_up,teleconsultation,official_train
+S0052,cbc aur thyroid test ghar se sample lekar,lab_test_home,teleconsultation,official_train
+S0057,i want to book something for my mother,follow_up,paramedic_home_visit,official_train
+S0059,hi is anyone there,follow_up,teleconsultation,official_train
+S0061,phul b di chekap ghr se sainpl,lab_test_home,teleconsultation,official_train
+S0076,i need help,follow_up,teleconsultation,official_train
+S0082,i need help,follow_up,teleconsultation,official_train
+S0084,doctor chahiye,follow_up,teleconsultation,official_train
+S0093,hi is anyone there,follow_up,teleconsultation,official_train
+S0098,sibisi aur thayraid test ghr se sainpl lekr,lab_test_home,teleconsultation,official_train
+S0100,ghr pr injekshn lgvana hai,home_nursing,teleconsultation,official_train
+S0105,d ktr ne injekshn likha hai ghr koee aa skta hai,home_nursing,teleconsultation,official_train
+S0107,help chahiye,follow_up,teleconsultation,official_train
+S0112,ghr pr injekshn lgvana hai,home_nursing,teleconsultation,official_train
+S0113,d ktr ne injekshn likha hai ghr koee aa skta hai,home_nursing,teleconsultation,official_train
+S0119,ghr pr injekshn lgvana hai,home_nursing,teleconsultation,official_train
+S0121,phul b di chekap ghr se sainpl,lab_test_home,teleconsultation,official_train
+S0125,mdd chahie,follow_up,teleconsultation,official_train
+S0130,cbc aur thyroid test ghar se sample lekar,lab_test_home,teleconsultation,official_train
+S0137,cbc aur thyroid test ghar se sample lekar,lab_test_home,teleconsultation,official_train
+S0142,kl subh shugr test ghr pr,lab_test_home,teleconsultation,official_train
+S0144,d ktr ne injekshn likha hai ghr koee aa skta hai,home_nursing,teleconsultation,official_train
+S0148,d ktr ne injekshn likha hai ghr koee aa skta hai,home_nursing,teleconsultation,official_train
+S0149,d ktr ne injekshn likha hai ghr koee aa skta hai,home_nursing,teleconsultation,official_train
+S0152,mummy ke liye kuch book karna hai,follow_up,paramedic_home_visit,official_train
+S0153,phul b di chekap ghr se sainpl,lab_test_home,teleconsultation,official_train
+S0164,dadaji kmjor hain ghr pr janch chahie,paramedic_home_visit,teleconsultation,official_train
+S0165,grandfather is weak and not eating want a home check up,paramedic_home_visit,teleconsultation,official_train
+S0166,ghr pr injekshn lgvana hai,home_nursing,teleconsultation,official_train
+S0171,phul b di chekap ghr se sainpl,lab_test_home,teleconsultation,official_train
+S0175,hi is anyone there,follow_up,teleconsultation,official_train
+S0176,dadaji weak hain ghar pe checkup chahiye,paramedic_home_visit,lab_test_home,official_train
+S0178,i want to book something for my mother,follow_up,paramedic_home_visit,official_train
+S0180,hi is anyone there,follow_up,teleconsultation,official_train
+S0183,dadaji weak hain ghar pe checkup chahiye,paramedic_home_visit,lab_test_home,official_train
+S0185,phul b di chekap ghr se sainpl,lab_test_home,teleconsultation,official_train
+S0187,doctor chahiye,follow_up,teleconsultation,official_train
+S0190,doctor chahiye,follow_up,teleconsultation,official_train
+S0195,ghr pr injekshn lgvana hai,home_nursing,teleconsultation,official_train
+S0197,help chahiye,follow_up,teleconsultation,official_train
+S0208,grandfather is weak and not eating want a home check up,paramedic_home_visit,teleconsultation,official_train
+S0211,dadaji weak hain ghar pe checkup chahiye,paramedic_home_visit,lab_test_home,official_train
+S0217,mdd chahie,follow_up,teleconsultation,official_train
+S0222,doctor chahiye,follow_up,teleconsultation,official_train
+S0229,dadaji weak hain ghar pe checkup chahiye,paramedic_home_visit,lab_test_home,official_train
+S0233,cbc aur thyroid test ghar se sample lekar,lab_test_home,teleconsultation,official_train
+S0239,i want to book something for my mother,follow_up,paramedic_home_visit,official_train
+S0240,cbc aur thyroid test ghar se sample lekar,lab_test_home,teleconsultation,official_train
+S0242,help chahiye,follow_up,teleconsultation,official_train
+S0244,nmste koee hai,follow_up,teleconsultation,official_train
+S0267,hello koi hai,follow_up,teleconsultation,official_train
+S0272,kl subh shugr test ghr pr,lab_test_home,teleconsultation,official_train
+S0274,i want to book something for my mother,follow_up,paramedic_home_visit,official_train
+S0277,hello koi hai,follow_up,teleconsultation,official_train
+S0280,ghr pr injekshn lgvana hai,home_nursing,teleconsultation,official_train
+S0282,help chahiye,follow_up,teleconsultation,official_train
+S0288,d ktr ne injekshn likha hai ghr koee aa skta hai,home_nursing,teleconsultation,official_train
+S0289,d ktr ne injekshn likha hai ghr koee aa skta hai,home_nursing,teleconsultation,official_train
+S0292,dadaji kmjor hain ghr pr janch chahie,paramedic_home_visit,teleconsultation,official_train
+S0293,sibisi aur thayraid test ghr se sainpl lekr,lab_test_home,teleconsultation,official_train
+S0301,grandfather is weak and not eating want a home check up,paramedic_home_visit,teleconsultation,official_train
+S0304,hi is anyone there,follow_up,teleconsultation,official_train
+S0307,phul b di chekap ghr se sainpl,lab_test_home,teleconsultation,official_train
+S0317,i want to book something for my mother,follow_up,paramedic_home_visit,official_train
+S0319,sibisi aur thayraid test ghr se sainpl lekr,lab_test_home,teleconsultation,official_train
+S0320,cbc aur thyroid test ghar se sample lekar,lab_test_home,teleconsultation,official_train
+S0321,cbc aur thyroid test ghar se sample lekar,lab_test_home,teleconsultation,official_train
+S0324,papa ko insulin lgvana hai,home_nursing,paramedic_home_visit,official_train
+S0326,hi is anyone there,follow_up,teleconsultation,official_train
+S0330,grandfather is weak and not eating want a home check up,paramedic_home_visit,teleconsultation,official_train
+S0331,doctor chahiye,follow_up,teleconsultation,official_train
+S0335,i want to book something for my mother,follow_up,paramedic_home_visit,official_train
+S0338,kl subh shugr test ghr pr,lab_test_home,teleconsultation,official_train
+SYN_0005,elderly grandfather needs vitals monitoring and diabetes hypertension check at h,paramedic_home_visit,teleconsultation,official_train
+SYN_0008,bachhe ko fever hai aur badan dard ghar pe dekhna hai,paramedic_home_visit,teleconsultation,official_train
+SYN_0009,bedridden patient vitals check at home,paramedic_home_visit,teleconsultation,official_train
+SYN_0025,ghr pr khun ki janch ke lie sainpl klekshn bhejna hai,lab_test_home,teleconsultation,official_train
+SYN_0029,ghar aakar khoon ki jaanch ka sample le jayein,lab_test_home,teleconsultation,official_train
+SYN_0066,tabiyat theek nahi,follow_up,teleconsultation,official_train
+SYN_0067,kuch help chahiye,follow_up,teleconsultation,official_train
+SYN_0068,bimar hu,follow_up,teleconsultation,official_train
+SYN_0069,not feeling well,follow_up,teleconsultation,official_train
+SYN_0070,kripya madad karein,follow_up,teleconsultation,official_train
+SYN_0071,need assistance,follow_up,teleconsultation,official_train
+S0002,mild acidity and gas since morning want to consult a doctor,teleconsultation,home_nursing,official_val
+S0054,mild acidity and gas since morning want to consult a doctor,teleconsultation,home_nursing,official_val
+S0060,ptni ki ptti bdlvani hai ghr pr,home_nursing,teleconsultation,official_val
+S0064,d ktr chahie,follow_up,teleconsultation,official_val
+S0078,mild acidity and gas since morning want to consult a doctor,teleconsultation,home_nursing,official_val
+S0087,mild acidity and gas since morning want to consult a doctor,teleconsultation,home_nursing,official_val
+S0089,ma ka bipi aur shugr ghr pr chek krvana hai,paramedic_home_visit,teleconsultation,official_val
+S0099,ma ka bipi aur shugr ghr pr chek krvana hai,paramedic_home_visit,teleconsultation,official_val
+S0104,ptni ki ptti bdlvani hai ghr pr,home_nursing,teleconsultation,official_val
+S0136,ऑpreshn ke bad ghr pr dresing krvani hai,home_nursing,teleconsultation,official_val
+S0143,ma ka bipi aur shugr ghr pr chek krvana hai,paramedic_home_visit,teleconsultation,official_val
+S0151,d ktr chahie,follow_up,teleconsultation,official_val
+S0154,ऑpreshn ke bad ghr pr dresing krvani hai,home_nursing,teleconsultation,official_val
+S0158,ma ka bipi aur shugr ghr pr chek krvana hai,paramedic_home_visit,teleconsultation,official_val
+S0161,mild acidity and gas since morning want to consult a doctor,teleconsultation,home_nursing,official_val
+S0174,ऑpreshn ke bad ghr pr dresing krvani hai,home_nursing,teleconsultation,official_val
+S0230,ptni ki ptti bdlvani hai ghr pr,home_nursing,teleconsultation,official_val
+S0257,d ktr chahie,follow_up,teleconsultation,official_val
+S0261,mild acidity and gas since morning want to consult a doctor,teleconsultation,home_nursing,official_val
+S0266,ptni ki ptti bdlvani hai ghr pr,home_nursing,teleconsultation,official_val
+S0273,ptni ki ptti bdlvani hai ghr pr,home_nursing,teleconsultation,official_val
+S0279,mild acidity and gas since morning want to consult a doctor,teleconsultation,home_nursing,official_val
+S0285,mild acidity and gas since morning want to consult a doctor,teleconsultation,home_nursing,official_val
+S0302,ptni ki ptti bdlvani hai ghr pr,home_nursing,teleconsultation,official_val
+S0328,d ktr chahie,follow_up,teleconsultation,official_val
+S0332,mild acidity and gas since morning want to consult a doctor,teleconsultation,home_nursing,official_val
+S0333,ऑpreshn ke bad ghr pr dresing krvani hai,home_nursing,teleconsultation,official_val
+S0339,ऑpreshn ke bad ghr pr dresing krvani hai,home_nursing,teleconsultation,official_val
+HLD_036,"I do not have chest pain, my back hurts",teleconsultation,paramedic_home_visit,redflag_holdout
+HLD_037,"no trouble breathing, just a cold",teleconsultation,lab_test_home,redflag_holdout
+HLD_044,"seene me dard nahi hai, sirf acidity hai",teleconsultation,paramedic_home_visit,redflag_holdout
+HLD_048,a small cut on my finger with a band-aid,teleconsultation,home_nursing,redflag_holdout
+HLD_051,mild cough after a dusty day,teleconsultation,paramedic_home_visit,redflag_holdout
+UNS_007,dada ji ko subah se halka bukhar hai aur chalne me kamzori hai ghar aake checkup,paramedic_home_visit,lab_test_home,unseen_tests
+UNS_010,papa ko 2 din se tez bukhar aur khansi hai ghar par doctor checkup chahiye,paramedic_home_visit,lab_test_home,unseen_tests
+UNS_012,घुटने में अचानक भयानक मोच आ गई है और सूजन बढ़ रही है घर पर देखने आइए,paramedic_home_visit,teleconsultation,unseen_tests
+UNS_015,मरीज का यूरिनरी कैथेटर बदलना है घर पर ट्रेंड नर्स भेज दीजिए,home_nursing,teleconsultation,unseen_tests
+UNS_021,घर पर आकर पूरे परिवार का रूटीन ब्लड टेस्ट और लिवर फंक्शन टेस्ट करना है,lab_test_home,teleconsultation,unseen_tests
+UNS_022,Need phlebotomist for senior citizen kidney function and creatinine sample at ho,lab_test_home,teleconsultation,unseen_tests
+UNS_024,डॉक्टर ने विटामिन डी और बी12 का टेस्ट लिखा है घर से ब्लड सैंपल ले जाइए,lab_test_home,teleconsultation,unseen_tests

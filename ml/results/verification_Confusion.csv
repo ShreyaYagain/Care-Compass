@@ -1,0 +1,13 @@
+true\predicted,paramedic_home_visit,home_nursing,lab_test_home,teleconsultation,emergency_112
+paramedic_home_visit,38,0,6,15,0
+home_nursing,2,90,0,27,0
+lab_test_home,0,0,38,28,0
+teleconsultation,3,11,1,66,0
+emergency_112,13,29,0,38,44
+
+--- row-normalised ---,,,,,
+paramedic_home_visit,0.644,0.0,0.102,0.254,0.0
+home_nursing,0.017,0.756,0.0,0.227,0.0
+lab_test_home,0.0,0.0,0.576,0.424,0.0
+teleconsultation,0.037,0.136,0.012,0.815,0.0
+emergency_112,0.105,0.234,0.0,0.306,0.355

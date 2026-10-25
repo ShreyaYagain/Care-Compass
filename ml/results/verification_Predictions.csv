@@ -1,0 +1,495 @@
+id,text,language,true_care_type,predicted_care_type,P(paramedic_home_visit),P(home_nursing),P(lab_test_home),P(teleconsultation),P(emergency_112),correct,source_dataset
+S0001,doctor prescribed an injection can someone come home,English,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0003,grandmother has a bedsore that needs dressing,English,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0005,grandmother has a bedsore that needs dressing,English,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0006,subh se esiditi hai d ktr se slah chahie,Hindi,teleconsultation,teleconsultation,0.1,0.1,0.1,0.6,0.1,True,official_train
+S0007,insulin injection help needed for elderly father,English,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0008,wo achanak gir gaye response nahi de rahe,Hinglish,emergency_112,home_nursing,0.0595,0.6937,0.0839,0.0614,0.1015,False,official_train
+S0009,ghr pr injekshn lgvana hai,Hindi,home_nursing,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0011,mummy ka hypertension diabetes ghar pe check karwana hai,Hinglish,paramedic_home_visit,paramedic_home_visit,0.4492,0.2884,0.0843,0.0552,0.1229,True,official_train
+S0012,book a full body checkup home collection,English,lab_test_home,lab_test_home,0.02,0.02,0.92,0.02,0.02,True,official_train
+S0014,i want to book something for my mother,English,follow_up,paramedic_home_visit,0.4492,0.2884,0.0843,0.0552,0.1229,False,official_train
+S0016,papa ko tej sine men drd hai aur sans nhin aa rhi,Hindi,emergency_112,paramedic_home_visit,0.5734,0.2187,0.044,0.0269,0.137,False,official_train
+S0018,mdd chahie,Hindi,follow_up,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0019,ma ke lie kuchh buk krna hai,Hindi,follow_up,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0020,need wound dressing at home after surgery,English,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0021,cbc aur thyroid test ghar se sample lekar,Hinglish,lab_test_home,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0022,papa ko insulin injection chahiye ghar pe,Hinglish,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0023,subah se acidity gas hai doctor se consult karna hai,Hinglish,teleconsultation,home_nursing,0.0567,0.6866,0.0939,0.0825,0.0803,False,official_train
+S0024,doctor chahiye,Hinglish,follow_up,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0025,my father has had fever and cough for 2 days,English,paramedic_home_visit,paramedic_home_visit,0.88,0.03,0.03,0.03,0.03,True,official_train
+S0026,my father has had fever and cough for 2 days,English,paramedic_home_visit,paramedic_home_visit,0.88,0.03,0.03,0.03,0.03,True,official_train
+S0029,kl subh shugr test ghr pr,Hindi,lab_test_home,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0030,papa ko insulin lgvana hai,Hindi,home_nursing,paramedic_home_visit,0.5734,0.2187,0.044,0.0269,0.137,False,official_train
+S0031,insulin injection help needed for elderly father,English,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0032,heavy bleeding that won t stop after an accident,English,emergency_112,emergency_112,0.0595,0.6937,0.0839,0.0614,0.1015,True,official_train
+S0033,insulin injection help needed for elderly father,English,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0035,phul b di chekap ghr se sainpl,Hindi,lab_test_home,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0036,insulin injection help needed for elderly father,English,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0037,ghr pr injekshn lgvana hai,Hindi,home_nursing,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0038,dadi ko ghav ki dresing chahie,Hindi,home_nursing,home_nursing,0.2858,0.468,0.0691,0.0858,0.0913,True,official_train
+S0040,need blood diabetes test at home tomorrow morning,English,lab_test_home,lab_test_home,0.02,0.02,0.92,0.02,0.02,True,official_train
+S0041,kl subh shugr test ghr pr,Hindi,lab_test_home,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0042,grandfather is weak and not eating want a home check up,English,paramedic_home_visit,teleconsultation,0.0574,0.1564,0.1273,0.5796,0.0793,False,official_train
+S0043,kal subah diabetes test ghar pe,Hinglish,lab_test_home,lab_test_home,0.02,0.02,0.92,0.02,0.02,True,official_train
+S0044,help chahiye,Hinglish,follow_up,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0045,i need help,English,follow_up,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0048,operation ke baad ghar pe dressing karani hai,Hinglish,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0050,need a second opinion on my child s prescription,English,teleconsultation,teleconsultation,0.03,0.03,0.03,0.88,0.03,True,official_train
+S0052,cbc aur thyroid test ghar se sample lekar,Hinglish,lab_test_home,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0053,reports ke baare me doctor se baat karni hai,Hinglish,teleconsultation,teleconsultation,0.1,0.1,0.1,0.6,0.1,True,official_train
+S0055,need a second opinion on my child s prescription,English,teleconsultation,teleconsultation,0.03,0.03,0.03,0.88,0.03,True,official_train
+S0056,papa ko do din se fever hai aur cough bhi,Hinglish,paramedic_home_visit,paramedic_home_visit,0.88,0.03,0.03,0.03,0.03,True,official_train
+S0057,i want to book something for my mother,English,follow_up,paramedic_home_visit,0.4492,0.2884,0.0843,0.0552,0.1229,False,official_train
+S0058,operation ke baad ghar pe dressing karani hai,Hinglish,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0059,hi is anyone there,English,follow_up,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0061,phul b di chekap ghr se sainpl,Hindi,lab_test_home,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0063,need an im injection given at home,English,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0065,papa ko tej sine men drd hai aur sans nhin aa rhi,Hindi,emergency_112,paramedic_home_visit,0.5734,0.2187,0.044,0.0269,0.137,False,official_train
+S0066,need blood diabetes test at home tomorrow morning,English,lab_test_home,lab_test_home,0.02,0.02,0.92,0.02,0.02,True,official_train
+S0068,bchche ki dva pr seknd opiniyn chahie,Hindi,teleconsultation,teleconsultation,0.1,0.1,0.1,0.6,0.1,True,official_train
+S0071,doctor prescribed an injection can someone come home,English,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0072,wife ki post op dressing change karwani hai,Hinglish,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0073,kal subah diabetes test ghar pe,Hinglish,lab_test_home,lab_test_home,0.02,0.02,0.92,0.02,0.02,True,official_train
+S0075,papa ko severe chest pain hai saans nahi aa rahi,Hinglish,emergency_112,emergency_112,0.01,0.01,0.01,0.01,0.96,True,official_train
+S0076,i need help,English,follow_up,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0077,need wound dressing at home after surgery,English,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0079,need blood diabetes test at home tomorrow morning,English,lab_test_home,lab_test_home,0.02,0.02,0.92,0.02,0.02,True,official_train
+S0080,need an im injection given at home,English,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0081,need blood diabetes test at home tomorrow morning,English,lab_test_home,lab_test_home,0.02,0.02,0.92,0.02,0.02,True,official_train
+S0082,i need help,English,follow_up,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0083,need blood diabetes test at home tomorrow morning,English,lab_test_home,lab_test_home,0.02,0.02,0.92,0.02,0.02,True,official_train
+S0084,doctor chahiye,English,follow_up,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0086,bacche ki medicine pe second opinion chahiye,Hinglish,teleconsultation,teleconsultation,0.03,0.03,0.03,0.88,0.03,True,official_train
+S0088,my father is having severe chest pain and can t breathe,English,emergency_112,emergency_112,0.01,0.01,0.01,0.01,0.96,True,official_train
+S0090,he suddenly collapsed and is not responding,English,emergency_112,emergency_112,0.1,0.1,0.1,0.6,0.1,True,official_train
+S0092,vo achank gir ge aur jvab nhin de rhe,Hindi,emergency_112,home_nursing,0.0595,0.6937,0.0839,0.0614,0.1015,False,official_train
+S0093,hi is anyone there,English,follow_up,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0094,papa ko tej sine men drd hai aur sans nhin aa rhi,Hindi,emergency_112,paramedic_home_visit,0.5734,0.2187,0.044,0.0269,0.137,False,official_train
+S0095,need a second opinion on my child s prescription,English,teleconsultation,teleconsultation,0.03,0.03,0.03,0.88,0.03,True,official_train
+S0097,papa ko do din se fever hai aur cough bhi,Hinglish,paramedic_home_visit,paramedic_home_visit,0.88,0.03,0.03,0.03,0.03,True,official_train
+S0098,sibisi aur thayraid test ghr se sainpl lekr,Hindi,lab_test_home,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0100,ghr pr injekshn lgvana hai,Hindi,home_nursing,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0101,bchche ki dva pr seknd opiniyn chahie,Hindi,teleconsultation,teleconsultation,0.1,0.1,0.1,0.6,0.1,True,official_train
+S0102,mummy ka hypertension diabetes ghar pe check karwana hai,Hinglish,paramedic_home_visit,paramedic_home_visit,0.4492,0.2884,0.0843,0.0552,0.1229,True,official_train
+S0103,my father has had fever and cough for 2 days,English,paramedic_home_visit,paramedic_home_visit,0.88,0.03,0.03,0.03,0.03,True,official_train
+S0105,d ktr ne injekshn likha hai ghr koee aa skta hai,Hindi,home_nursing,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0106,vo achank gir ge aur jvab nhin de rhe,Hindi,emergency_112,home_nursing,0.0595,0.6937,0.0839,0.0614,0.1015,False,official_train
+S0107,help chahiye,Hinglish,follow_up,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0108,need an im injection given at home,English,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0109,kal subah diabetes test ghar pe,Hinglish,lab_test_home,lab_test_home,0.02,0.02,0.92,0.02,0.02,True,official_train
+S0110,mummy ka hypertension diabetes ghar pe check karwana hai,Hinglish,paramedic_home_visit,paramedic_home_visit,0.4492,0.2884,0.0843,0.0552,0.1229,True,official_train
+S0111,vo achank gir ge aur jvab nhin de rhe,Hindi,emergency_112,home_nursing,0.0595,0.6937,0.0839,0.0614,0.1015,False,official_train
+S0112,ghr pr injekshn lgvana hai,Hindi,home_nursing,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0113,d ktr ne injekshn likha hai ghr koee aa skta hai,Hindi,home_nursing,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0114,bacche ki medicine pe second opinion chahiye,Hinglish,teleconsultation,teleconsultation,0.03,0.03,0.03,0.88,0.03,True,official_train
+S0115,subh se esiditi hai d ktr se slah chahie,Hindi,teleconsultation,teleconsultation,0.1,0.1,0.1,0.6,0.1,True,official_train
+S0116,book a full body checkup home collection,English,lab_test_home,lab_test_home,0.02,0.02,0.92,0.02,0.02,True,official_train
+S0118,vo achank gir ge aur jvab nhin de rhe,Hindi,emergency_112,home_nursing,0.0595,0.6937,0.0839,0.0614,0.1015,False,official_train
+S0119,ghr pr injekshn lgvana hai,Hindi,home_nursing,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0121,phul b di chekap ghr se sainpl,Hindi,lab_test_home,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0122,post operative dressing change required for my wife,English,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0123,kal subah diabetes test ghar pe,Hinglish,lab_test_home,lab_test_home,0.02,0.02,0.92,0.02,0.02,True,official_train
+S0125,mdd chahie,Hindi,follow_up,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0126,operation ke baad ghar pe dressing karani hai,Hinglish,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0127,eksident ke bad khun nhin ruk rha,Hindi,emergency_112,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0128,need a second opinion on my child s prescription,English,teleconsultation,teleconsultation,0.03,0.03,0.03,0.88,0.03,True,official_train
+S0129,bchche ki dva pr seknd opiniyn chahie,Hindi,teleconsultation,teleconsultation,0.1,0.1,0.1,0.6,0.1,True,official_train
+S0130,cbc aur thyroid test ghar se sample lekar,Hinglish,lab_test_home,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0131,papa ko tej sine men drd hai aur sans nhin aa rhi,Hindi,emergency_112,paramedic_home_visit,0.5734,0.2187,0.044,0.0269,0.137,False,official_train
+S0132,papa ko tej sine men drd hai aur sans nhin aa rhi,Hindi,emergency_112,paramedic_home_visit,0.5734,0.2187,0.044,0.0269,0.137,False,official_train
+S0133,doctor prescribed an injection can someone come home,English,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0134,papa ko tej sine men drd hai aur sans nhin aa rhi,Hindi,emergency_112,paramedic_home_visit,0.5734,0.2187,0.044,0.0269,0.137,False,official_train
+S0137,cbc aur thyroid test ghar se sample lekar,Hinglish,lab_test_home,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0138,need a second opinion on my child s prescription,English,teleconsultation,teleconsultation,0.03,0.03,0.03,0.88,0.03,True,official_train
+S0139,book a full body checkup home collection,English,lab_test_home,lab_test_home,0.02,0.02,0.92,0.02,0.02,True,official_train
+S0142,kl subh shugr test ghr pr,Hindi,lab_test_home,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0144,d ktr ne injekshn likha hai ghr koee aa skta hai,Hindi,home_nursing,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0145,riport ke bare men d ktr se bat krni hai,Hindi,teleconsultation,teleconsultation,0.1,0.1,0.1,0.6,0.1,True,official_train
+S0146,papa ko tej sine men drd hai aur sans nhin aa rhi,Hindi,emergency_112,paramedic_home_visit,0.5734,0.2187,0.044,0.0269,0.137,False,official_train
+S0148,d ktr ne injekshn likha hai ghr koee aa skta hai,Hindi,home_nursing,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0149,d ktr ne injekshn likha hai ghr koee aa skta hai,Hindi,home_nursing,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0150,my father has had fever and cough for 2 days,English,paramedic_home_visit,paramedic_home_visit,0.88,0.03,0.03,0.03,0.03,True,official_train
+S0152,mummy ke liye kuch book karna hai,Hinglish,follow_up,paramedic_home_visit,0.4492,0.2884,0.0843,0.0552,0.1229,False,official_train
+S0153,phul b di chekap ghr se sainpl,Hindi,lab_test_home,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0156,kal subah diabetes test ghar pe,Hinglish,lab_test_home,lab_test_home,0.02,0.02,0.92,0.02,0.02,True,official_train
+S0157,heavy bleeding that won t stop after an accident,English,emergency_112,emergency_112,0.0595,0.6937,0.0839,0.0614,0.1015,True,official_train
+S0159,doctor prescribed an injection can someone come home,English,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0160,need a second opinion on my child s prescription,English,teleconsultation,teleconsultation,0.03,0.03,0.03,0.88,0.03,True,official_train
+S0163,need wound dressing at home after surgery,English,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0164,dadaji kmjor hain ghr pr janch chahie,Hindi,paramedic_home_visit,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0165,grandfather is weak and not eating want a home check up,English,paramedic_home_visit,teleconsultation,0.0574,0.1564,0.1273,0.5796,0.0793,False,official_train
+S0166,ghr pr injekshn lgvana hai,Hindi,home_nursing,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0167,papa ko severe chest pain hai saans nahi aa rahi,Hinglish,emergency_112,emergency_112,0.01,0.01,0.01,0.01,0.96,True,official_train
+S0168,insulin injection help needed for elderly father,English,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0169,riport ke bare men d ktr se bat krni hai,Hindi,teleconsultation,teleconsultation,0.1,0.1,0.1,0.6,0.1,True,official_train
+S0171,phul b di chekap ghr se sainpl,Hindi,lab_test_home,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0172,bchche ki dva pr seknd opiniyn chahie,Hindi,teleconsultation,teleconsultation,0.1,0.1,0.1,0.6,0.1,True,official_train
+S0173,he suddenly collapsed and is not responding,English,emergency_112,emergency_112,0.1,0.1,0.1,0.6,0.1,True,official_train
+S0175,hi is anyone there,English,follow_up,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0176,dadaji weak hain ghar pe checkup chahiye,Hinglish,paramedic_home_visit,lab_test_home,0.02,0.02,0.92,0.02,0.02,False,official_train
+S0177,insulin injection help needed for elderly father,English,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0178,i want to book something for my mother,English,follow_up,paramedic_home_visit,0.4492,0.2884,0.0843,0.0552,0.1229,False,official_train
+S0179,insulin injection help needed for elderly father,English,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0180,hi is anyone there,English,follow_up,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0181,operation ke baad ghar pe dressing karani hai,Hinglish,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0182,need an im injection given at home,English,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0183,dadaji weak hain ghar pe checkup chahiye,Hinglish,paramedic_home_visit,lab_test_home,0.02,0.02,0.92,0.02,0.02,False,official_train
+S0184,subh se esiditi hai d ktr se slah chahie,Hindi,teleconsultation,teleconsultation,0.1,0.1,0.1,0.6,0.1,True,official_train
+S0185,phul b di chekap ghr se sainpl,Hindi,lab_test_home,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0186,mummy ka hypertension diabetes ghar pe check karwana hai,Hinglish,paramedic_home_visit,paramedic_home_visit,0.4492,0.2884,0.0843,0.0552,0.1229,True,official_train
+S0187,doctor chahiye,English,follow_up,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0188,doctor prescribed an injection can someone come home,English,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0189,grandmother has a bedsore that needs dressing,English,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0190,doctor chahiye,Hinglish,follow_up,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0191,post operative dressing change required for my wife,English,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0192,papa ko severe chest pain hai saans nahi aa rahi,Hinglish,emergency_112,emergency_112,0.01,0.01,0.01,0.01,0.96,True,official_train
+S0193,doctor prescribed an injection can someone come home,English,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0195,ghr pr injekshn lgvana hai,Hindi,home_nursing,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0196,vo achank gir ge aur jvab nhin de rhe,Hindi,emergency_112,home_nursing,0.0595,0.6937,0.0839,0.0614,0.1015,False,official_train
+S0197,help chahiye,Hinglish,follow_up,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0198,papa ko insulin injection chahiye ghar pe,Hinglish,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0202,post operative dressing change required for my wife,English,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0204,mummy ka hypertension diabetes ghar pe check karwana hai,Hinglish,paramedic_home_visit,paramedic_home_visit,0.4492,0.2884,0.0843,0.0552,0.1229,True,official_train
+S0205,kal subah diabetes test ghar pe,Hinglish,lab_test_home,lab_test_home,0.02,0.02,0.92,0.02,0.02,True,official_train
+S0206,need wound dressing at home after surgery,English,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0207,heavy bleeding that won t stop after an accident,English,emergency_112,emergency_112,0.0595,0.6937,0.0839,0.0614,0.1015,True,official_train
+S0208,grandfather is weak and not eating want a home check up,English,paramedic_home_visit,teleconsultation,0.0574,0.1564,0.1273,0.5796,0.0793,False,official_train
+S0209,full body checkup home collection,Hinglish,lab_test_home,lab_test_home,0.02,0.02,0.92,0.02,0.02,True,official_train
+S0210,papa ko do din se fever hai aur cough bhi,Hinglish,paramedic_home_visit,paramedic_home_visit,0.88,0.03,0.03,0.03,0.03,True,official_train
+S0211,dadaji weak hain ghar pe checkup chahiye,Hinglish,paramedic_home_visit,lab_test_home,0.02,0.02,0.92,0.02,0.02,False,official_train
+S0213,doctor prescribed an injection can someone come home,English,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0214,papa ko severe chest pain hai saans nahi aa rahi,Hinglish,emergency_112,emergency_112,0.01,0.01,0.01,0.01,0.96,True,official_train
+S0215,book a full body checkup home collection,English,lab_test_home,lab_test_home,0.02,0.02,0.92,0.02,0.02,True,official_train
+S0216,operation ke baad ghar pe dressing karani hai,Hinglish,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0217,mdd chahie,Hindi,follow_up,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0219,operation ke baad ghar pe dressing karani hai,Hinglish,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0221,wo achanak gir gaye response nahi de rahe,Hinglish,emergency_112,home_nursing,0.0595,0.6937,0.0839,0.0614,0.1015,False,official_train
+S0222,doctor chahiye,English,follow_up,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0223,full body checkup home collection,Hinglish,lab_test_home,lab_test_home,0.02,0.02,0.92,0.02,0.02,True,official_train
+S0224,my father has had fever and cough for 2 days,English,paramedic_home_visit,paramedic_home_visit,0.88,0.03,0.03,0.03,0.03,True,official_train
+S0225,my father is having severe chest pain and can t breathe,English,emergency_112,emergency_112,0.01,0.01,0.01,0.01,0.96,True,official_train
+S0226,papa ko do din se fever hai aur cough bhi,Hinglish,paramedic_home_visit,paramedic_home_visit,0.88,0.03,0.03,0.03,0.03,True,official_train
+S0229,dadaji weak hain ghar pe checkup chahiye,Hinglish,paramedic_home_visit,lab_test_home,0.02,0.02,0.92,0.02,0.02,False,official_train
+S0231,insulin injection help needed for elderly father,English,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0232,bchche ki dva pr seknd opiniyn chahie,Hindi,teleconsultation,teleconsultation,0.1,0.1,0.1,0.6,0.1,True,official_train
+S0233,cbc aur thyroid test ghar se sample lekar,Hinglish,lab_test_home,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0234,operation ke baad ghar pe dressing karani hai,Hinglish,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0235,need a second opinion on my child s prescription,English,teleconsultation,teleconsultation,0.03,0.03,0.03,0.88,0.03,True,official_train
+S0236,he suddenly collapsed and is not responding,English,emergency_112,emergency_112,0.1,0.1,0.1,0.6,0.1,True,official_train
+S0239,i want to book something for my mother,English,follow_up,paramedic_home_visit,0.4492,0.2884,0.0843,0.0552,0.1229,False,official_train
+S0240,cbc aur thyroid test ghar se sample lekar,Hinglish,lab_test_home,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0241,need a second opinion on my child s prescription,English,teleconsultation,teleconsultation,0.03,0.03,0.03,0.88,0.03,True,official_train
+S0242,help chahiye,Hinglish,follow_up,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0244,nmste koee hai,Hindi,follow_up,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0245,need a second opinion on my child s prescription,English,teleconsultation,teleconsultation,0.03,0.03,0.03,0.88,0.03,True,official_train
+S0246,operation ke baad ghar pe dressing karani hai,Hinglish,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0247,post operative dressing change required for my wife,English,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0248,operation ke baad ghar pe dressing karani hai,Hinglish,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0249,vo achank gir ge aur jvab nhin de rhe,Hindi,emergency_112,home_nursing,0.0595,0.6937,0.0839,0.0614,0.1015,False,official_train
+S0251,heavy bleeding that won t stop after an accident,English,emergency_112,emergency_112,0.0595,0.6937,0.0839,0.0614,0.1015,True,official_train
+S0252,bacche ki medicine pe second opinion chahiye,Hinglish,teleconsultation,teleconsultation,0.03,0.03,0.03,0.88,0.03,True,official_train
+S0255,he suddenly collapsed and is not responding,English,emergency_112,emergency_112,0.1,0.1,0.1,0.6,0.1,True,official_train
+S0258,papa ko tej sine men drd hai aur sans nhin aa rhi,Hindi,emergency_112,paramedic_home_visit,0.5734,0.2187,0.044,0.0269,0.137,False,official_train
+S0260,riport ke bare men d ktr se bat krni hai,Hindi,teleconsultation,teleconsultation,0.1,0.1,0.1,0.6,0.1,True,official_train
+S0262,operation ke baad ghar pe dressing karani hai,Hinglish,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0263,subh se esiditi hai d ktr se slah chahie,Hindi,teleconsultation,teleconsultation,0.1,0.1,0.1,0.6,0.1,True,official_train
+S0265,need an im injection given at home,English,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0267,hello koi hai,Hinglish,follow_up,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0268,papa ko insulin injection chahiye ghar pe,Hinglish,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0269,he suddenly collapsed and is not responding,English,emergency_112,emergency_112,0.1,0.1,0.1,0.6,0.1,True,official_train
+S0270,eksident ke bad khun nhin ruk rha,Hindi,emergency_112,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0271,book a full body checkup home collection,English,lab_test_home,lab_test_home,0.02,0.02,0.92,0.02,0.02,True,official_train
+S0272,kl subh shugr test ghr pr,Hindi,lab_test_home,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0274,i want to book something for my mother,English,follow_up,paramedic_home_visit,0.4492,0.2884,0.0843,0.0552,0.1229,False,official_train
+S0275,vo achank gir ge aur jvab nhin de rhe,Hindi,emergency_112,home_nursing,0.0595,0.6937,0.0839,0.0614,0.1015,False,official_train
+S0276,post operative dressing change required for my wife,English,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0277,hello koi hai,Hinglish,follow_up,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0280,ghr pr injekshn lgvana hai,Hindi,home_nursing,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0281,book a full body checkup home collection,English,lab_test_home,lab_test_home,0.02,0.02,0.92,0.02,0.02,True,official_train
+S0282,help chahiye,Hinglish,follow_up,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0283,vo achank gir ge aur jvab nhin de rhe,Hindi,emergency_112,home_nursing,0.0595,0.6937,0.0839,0.0614,0.1015,False,official_train
+S0284,my father is having severe chest pain and can t breathe,English,emergency_112,emergency_112,0.01,0.01,0.01,0.01,0.96,True,official_train
+S0287,mummy ka hypertension diabetes ghar pe check karwana hai,Hinglish,paramedic_home_visit,paramedic_home_visit,0.4492,0.2884,0.0843,0.0552,0.1229,True,official_train
+S0288,d ktr ne injekshn likha hai ghr koee aa skta hai,Hindi,home_nursing,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0289,d ktr ne injekshn likha hai ghr koee aa skta hai,Hindi,home_nursing,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0290,insulin injection help needed for elderly father,English,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0291,papa ko tej sine men drd hai aur sans nhin aa rhi,Hindi,emergency_112,paramedic_home_visit,0.5734,0.2187,0.044,0.0269,0.137,False,official_train
+S0292,dadaji kmjor hain ghr pr janch chahie,Hindi,paramedic_home_visit,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0293,sibisi aur thayraid test ghr se sainpl lekr,Hindi,lab_test_home,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0294,reports ke baare me doctor se baat karni hai,Hinglish,teleconsultation,teleconsultation,0.1,0.1,0.1,0.6,0.1,True,official_train
+S0296,wo achanak gir gaye response nahi de rahe,Hinglish,emergency_112,home_nursing,0.0595,0.6937,0.0839,0.0614,0.1015,False,official_train
+S0298,bacche ki medicine pe second opinion chahiye,Hinglish,teleconsultation,teleconsultation,0.03,0.03,0.03,0.88,0.03,True,official_train
+S0299,full body checkup home collection,Hinglish,lab_test_home,lab_test_home,0.02,0.02,0.92,0.02,0.02,True,official_train
+S0301,grandfather is weak and not eating want a home check up,English,paramedic_home_visit,teleconsultation,0.0574,0.1564,0.1273,0.5796,0.0793,False,official_train
+S0303,operation ke baad ghar pe dressing karani hai,Hinglish,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0304,hi is anyone there,English,follow_up,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0305,full body checkup home collection,Hinglish,lab_test_home,lab_test_home,0.02,0.02,0.92,0.02,0.02,True,official_train
+S0306,papa ko severe chest pain hai saans nahi aa rahi,Hinglish,emergency_112,emergency_112,0.01,0.01,0.01,0.01,0.96,True,official_train
+S0307,phul b di chekap ghr se sainpl,Hindi,lab_test_home,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0308,my father has had fever and cough for 2 days,English,paramedic_home_visit,paramedic_home_visit,0.88,0.03,0.03,0.03,0.03,True,official_train
+S0309,need a second opinion on my child s prescription,English,teleconsultation,teleconsultation,0.03,0.03,0.03,0.88,0.03,True,official_train
+S0310,vo achank gir ge aur jvab nhin de rhe,Hindi,emergency_112,home_nursing,0.0595,0.6937,0.0839,0.0614,0.1015,False,official_train
+S0313,wo achanak gir gaye response nahi de rahe,Hinglish,emergency_112,home_nursing,0.0595,0.6937,0.0839,0.0614,0.1015,False,official_train
+S0314,wife ki post op dressing change karwani hai,Hinglish,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0315,kal subah diabetes test ghar pe,Hinglish,lab_test_home,lab_test_home,0.02,0.02,0.92,0.02,0.02,True,official_train
+S0317,i want to book something for my mother,English,follow_up,paramedic_home_visit,0.4492,0.2884,0.0843,0.0552,0.1229,False,official_train
+S0318,papa ko insulin injection chahiye ghar pe,Hinglish,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0319,sibisi aur thayraid test ghr se sainpl lekr,Hindi,lab_test_home,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0320,cbc aur thyroid test ghar se sample lekar,Hinglish,lab_test_home,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0321,cbc aur thyroid test ghar se sample lekar,Hinglish,lab_test_home,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0322,full body checkup home collection,Hinglish,lab_test_home,lab_test_home,0.02,0.02,0.92,0.02,0.02,True,official_train
+S0323,reports ke baare me doctor se baat karni hai,Hinglish,teleconsultation,teleconsultation,0.1,0.1,0.1,0.6,0.1,True,official_train
+S0324,papa ko insulin lgvana hai,Hindi,home_nursing,paramedic_home_visit,0.5734,0.2187,0.044,0.0269,0.137,False,official_train
+S0325,post operative dressing change required for my wife,English,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0326,hi is anyone there,English,follow_up,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0327,my father has had fever and cough for 2 days,English,paramedic_home_visit,paramedic_home_visit,0.88,0.03,0.03,0.03,0.03,True,official_train
+S0329,doctor prescribed an injection can someone come home,English,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0330,grandfather is weak and not eating want a home check up,English,paramedic_home_visit,teleconsultation,0.0574,0.1564,0.1273,0.5796,0.0793,False,official_train
+S0331,doctor chahiye,Hinglish,follow_up,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0334,post operative dressing change required for my wife,English,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+S0335,i want to book something for my mother,English,follow_up,paramedic_home_visit,0.4492,0.2884,0.0843,0.0552,0.1229,False,official_train
+S0336,my father has had fever and cough for 2 days,English,paramedic_home_visit,paramedic_home_visit,0.88,0.03,0.03,0.03,0.03,True,official_train
+S0337,eksident ke bad khun nhin ruk rha,Hindi,emergency_112,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0338,kl subh shugr test ghr pr,Hindi,lab_test_home,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0340,my father is having severe chest pain and can t breathe,English,emergency_112,emergency_112,0.01,0.01,0.01,0.01,0.96,True,official_train
+SYN_0001,papa ko do din se fever hai aur cough bhi,Hinglish,paramedic_home_visit,paramedic_home_visit,0.88,0.03,0.03,0.03,0.03,True,official_train
+SYN_0002,mummy ko 3 din se fever aur fatigue hai,Hinglish,paramedic_home_visit,paramedic_home_visit,0.88,0.03,0.03,0.03,0.03,True,official_train
+SYN_0003,dadi ko fever aur vomiting ho rahi hai ghar pe medic bhejo,Hinglish,paramedic_home_visit,paramedic_home_visit,0.88,0.03,0.03,0.03,0.03,True,official_train
+SYN_0004,father is weak and has fever for 2 days need home visit,English,paramedic_home_visit,paramedic_home_visit,0.88,0.03,0.03,0.03,0.03,True,official_train
+SYN_0005,elderly grandfather needs vitals monitoring and diabetes hypertension check at home,English,paramedic_home_visit,teleconsultation,0.0574,0.1564,0.1273,0.5796,0.0793,False,official_train
+SYN_0006,pitaji ko do din se tej fever aur kmjori hai ghr pr dikhaen,Hindi,paramedic_home_visit,paramedic_home_visit,0.88,0.03,0.03,0.03,0.03,True,official_train
+SYN_0007,mmmi ko cough aur fever hai ghr pr medik bhejen,Hindi,paramedic_home_visit,paramedic_home_visit,0.88,0.03,0.03,0.03,0.03,True,official_train
+SYN_0008,bachhe ko fever hai aur badan dard ghar pe dekhna hai,Hinglish,paramedic_home_visit,teleconsultation,0.3196,0.074,0.0617,0.4401,0.1046,False,official_train
+SYN_0009,bedridden patient vitals check at home,English,paramedic_home_visit,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+SYN_0010,senior citizen with high fever and chills needs in person examination,English,paramedic_home_visit,paramedic_home_visit,0.627,0.1235,0.062,0.0451,0.1424,True,official_train
+SYN_0011,doctor prescribed an injection can someone come home,English,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+SYN_0012,ghar pe im injection lagwana hai,Hinglish,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+SYN_0013,ghar par iv drip lagwane ke liye nurse chahiye,Hinglish,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+SYN_0014,surgical wound dressing change at home,English,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+SYN_0015,tanke ktvane hain aur ptti bdlvani hai ghr pr,Hindi,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+SYN_0016,catheter change and bladder wash at home,English,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+SYN_0017,bedsore dressing for elderly patient,English,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+SYN_0018,home nursing for postoperative wound cleaning,English,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+SYN_0019,insulin injection administration needed at home,English,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+SYN_0020,dadi ke ghutne ke operation ke baad dressing karwani hai,Hinglish,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_train
+SYN_0021,full body checkup home collection,English,lab_test_home,lab_test_home,0.02,0.02,0.92,0.02,0.02,True,official_train
+SYN_0022,blood sample collection at home for diabetes test,English,lab_test_home,lab_test_home,0.02,0.02,0.92,0.02,0.02,True,official_train
+SYN_0023,ghar pe blood test ke liye sample lene wala chahiye,Hinglish,lab_test_home,lab_test_home,0.02,0.02,0.92,0.02,0.02,True,official_train
+SYN_0024,lipid profile and cbc test sample collection tomorrow,English,lab_test_home,lab_test_home,0.02,0.02,0.92,0.02,0.02,True,official_train
+SYN_0025,ghr pr khun ki janch ke lie sainpl klekshn bhejna hai,Hindi,lab_test_home,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+SYN_0026,thyroid test home phlebotomy needed,English,lab_test_home,lab_test_home,0.02,0.02,0.92,0.02,0.02,True,official_train
+SYN_0027,routine blood test at home for senior citizen,English,lab_test_home,lab_test_home,0.02,0.02,0.92,0.02,0.02,True,official_train
+SYN_0028,diabetes test blood test home sample pick,English,lab_test_home,lab_test_home,0.02,0.02,0.92,0.02,0.02,True,official_train
+SYN_0029,ghar aakar khoon ki jaanch ka sample le jayein,Hinglish,lab_test_home,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+SYN_0030,doctor chahiye online baat karne ke liye,Hinglish,teleconsultation,teleconsultation,0.1,0.1,0.1,0.6,0.1,True,official_train
+SYN_0031,want to consult a doctor online for acidity,English,teleconsultation,teleconsultation,0.1,0.1,0.1,0.6,0.1,True,official_train
+SYN_0032,mild cold and sore throat doctor consult,English,teleconsultation,teleconsultation,0.0487,0.1321,0.1746,0.5418,0.1028,True,official_train
+SYN_0033,report review with doctor over video call,English,teleconsultation,teleconsultation,0.1,0.1,0.1,0.6,0.1,True,official_train
+SYN_0034,doctor se online baat karni hai dawa ke liye,Hinglish,teleconsultation,teleconsultation,0.1,0.1,0.1,0.6,0.1,True,official_train
+SYN_0035,d ktr se ऑnlain pramrsh lena hai sirdrd ke lie,Hindi,teleconsultation,teleconsultation,0.1,0.1,0.1,0.6,0.1,True,official_train
+SYN_0036,general doctor video consultation,English,teleconsultation,teleconsultation,0.03,0.03,0.03,0.88,0.03,True,official_train
+SYN_0037,mujhe headache hai kal se doctor se consult karna hai,Hinglish,teleconsultation,teleconsultation,0.03,0.03,0.03,0.88,0.03,True,official_train
+SYN_0038,skin allergy general doctor advice video,English,teleconsultation,teleconsultation,0.1,0.1,0.1,0.6,0.1,True,official_train
+SYN_0039,chest pain ho raha hai papa ko,Hinglish,emergency_112,emergency_112,0.01,0.01,0.01,0.01,0.96,True,official_train
+SYN_0040,severe crushing chest pain left arm sweating,English,emergency_112,emergency_112,0.01,0.01,0.01,0.01,0.96,True,official_train
+SYN_0041,sine men tej drd aur psina aa rha hai,Hindi,emergency_112,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+SYN_0042,saans nahi aa rahi dam ghut raha hai,Hinglish,emergency_112,emergency_112,0.1,0.1,0.1,0.6,0.1,True,official_train
+SYN_0043,cannot breathe choking gasping for breath,English,emergency_112,emergency_112,0.1,0.1,0.1,0.6,0.1,True,official_train
+SYN_0044,sans phul rhi hai aur honth nile pd rhe hain,Hindi,emergency_112,emergency_112,0.1,0.1,0.1,0.6,0.1,True,official_train
+SYN_0045,meri maa behosh ho gayi hai koi hosh nahi,Hinglish,emergency_112,emergency_112,0.4492,0.2884,0.0843,0.0552,0.1229,True,official_train
+SYN_0046,patient fainted and completely unresponsive,English,emergency_112,emergency_112,0.1,0.1,0.1,0.6,0.1,True,official_train
+SYN_0047,achank behosh hokr gir pd a koee jvab nhin de rha,Hindi,emergency_112,emergency_112,0.0595,0.6937,0.0839,0.0614,0.1015,True,official_train
+SYN_0048,accident ke baad heavy bleeding ruk nahi rahi,Hinglish,emergency_112,home_nursing,0.0595,0.6937,0.0839,0.0614,0.1015,False,official_train
+SYN_0049,spurting blood profuse arterial bleeding won t stop,English,emergency_112,emergency_112,0.1,0.1,0.1,0.6,0.1,True,official_train
+SYN_0050,khun bhna bnd nhin ho rha bhut jyada khun nikl rha hai,Hindi,emergency_112,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+SYN_0051,chehra tedha ho gaya aur bol nahi pa raha,Hinglish,emergency_112,emergency_112,0.1,0.1,0.1,0.6,0.1,True,official_train
+SYN_0052,sudden face drooping and one sided arm paralysis stroke,English,emergency_112,emergency_112,0.1,0.1,0.1,0.6,0.1,True,official_train
+SYN_0053,lkva mar gya aavaj ld khd a rhi hai chehra tedh a,Hindi,emergency_112,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+SYN_0054,mirgi ka daura pad gaya jhatke aa rahe,Hinglish,emergency_112,emergency_112,0.1,0.1,0.1,0.6,0.1,True,official_train
+SYN_0055,continuous violent seizure fits shaking violently,English,emergency_112,emergency_112,0.1,0.1,0.1,0.6,0.1,True,official_train
+SYN_0056,daure pd rhe hain mrij jor jor se kanp rha hai,Hindi,emergency_112,emergency_112,0.1,0.1,0.1,0.6,0.1,True,official_train
+SYN_0057,2 mahine ke bachhe ko 104 fever hai,Hinglish,emergency_112,paramedic_home_visit,0.3022,0.2404,0.085,0.2877,0.0847,False,official_train
+SYN_0058,newborn baby high fever 104 degrees lethargic,English,emergency_112,teleconsultation,0.2467,0.1301,0.1196,0.3846,0.119,False,official_train
+SYN_0059,nvjat shishu ko tej fever hai aur sust hai,Hindi,emergency_112,paramedic_home_visit,0.627,0.1235,0.062,0.0451,0.1424,False,official_train
+SYN_0060,khud ko marna chahta hu suicide karna hai,Hinglish,emergency_112,emergency_112,0.1,0.1,0.1,0.6,0.1,True,official_train
+SYN_0061,suicidal ideation wanting to end life,English,emergency_112,emergency_112,0.1,0.1,0.1,0.6,0.1,True,official_train
+SYN_0062,jan dena chahta hu khudkushi ka vichar,Hindi,emergency_112,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+SYN_0063,severe dehydration aankhen dhas gayi no urine 24 hours,Hinglish,emergency_112,emergency_112,0.0795,0.3588,0.0865,0.1026,0.3726,True,official_train
+SYN_0064,unresponsive severe dehydration sunken eyes no urine,English,emergency_112,emergency_112,0.1087,0.1283,0.0697,0.0729,0.6204,True,official_train
+SYN_0065,pani ki gnbhir kmi aankhen dhns gee peshab nhin aa rha,Hindi,emergency_112,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+SYN_0066,tabiyat theek nahi,Hinglish,follow_up,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+SYN_0067,kuch help chahiye,Hinglish,follow_up,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+SYN_0068,bimar hu,Hinglish,follow_up,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+SYN_0069,not feeling well,English,follow_up,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+SYN_0070,kripya madad karein,Hinglish,follow_up,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+SYN_0071,need assistance,English,follow_up,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_train
+S0002,mild acidity and gas since morning want to consult a doctor,English,teleconsultation,home_nursing,0.064,0.5306,0.0925,0.2296,0.0833,False,official_val
+S0004,accident ke baad bleeding ruk nahi rahi,Hinglish,emergency_112,home_nursing,0.0595,0.6937,0.0839,0.0614,0.1015,False,official_val
+S0010,doctor ne injection likha hai koi ghar aa sakta hai,Hinglish,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_val
+S0013,doctor ne injection likha hai koi ghar aa sakta hai,Hinglish,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_val
+S0015,accident ke baad bleeding ruk nahi rahi,Hinglish,emergency_112,home_nursing,0.0595,0.6937,0.0839,0.0614,0.1015,False,official_val
+S0017,want a cbc and thyroid test with home sample collection,English,lab_test_home,lab_test_home,0.02,0.02,0.92,0.02,0.02,True,official_val
+S0027,want to talk to a doctor about my reports,English,teleconsultation,teleconsultation,0.1,0.1,0.1,0.6,0.1,True,official_val
+S0028,doctor ne injection likha hai koi ghar aa sakta hai,Hinglish,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_val
+S0034,want to talk to a doctor about my reports,English,teleconsultation,teleconsultation,0.1,0.1,0.1,0.6,0.1,True,official_val
+S0039,ghar pe im injection lagwana hai,Hinglish,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_val
+S0046,doctor ne injection likha hai koi ghar aa sakta hai,Hinglish,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_val
+S0047,accident ke baad bleeding ruk nahi rahi,Hinglish,emergency_112,home_nursing,0.0595,0.6937,0.0839,0.0614,0.1015,False,official_val
+S0049,want to talk to a doctor about my reports,English,teleconsultation,teleconsultation,0.1,0.1,0.1,0.6,0.1,True,official_val
+S0051,want to talk to a doctor about my reports,English,teleconsultation,teleconsultation,0.1,0.1,0.1,0.6,0.1,True,official_val
+S0054,mild acidity and gas since morning want to consult a doctor,English,teleconsultation,home_nursing,0.064,0.5306,0.0925,0.2296,0.0833,False,official_val
+S0060,ptni ki ptti bdlvani hai ghr pr,Hindi,home_nursing,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_val
+S0062,want to talk to a doctor about my reports,English,teleconsultation,teleconsultation,0.1,0.1,0.1,0.6,0.1,True,official_val
+S0064,d ktr chahie,Hindi,follow_up,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_val
+S0067,want to talk to a doctor about my reports,English,teleconsultation,teleconsultation,0.1,0.1,0.1,0.6,0.1,True,official_val
+S0069,need someone to check hypertension and diabetes at home for my mother,English,paramedic_home_visit,paramedic_home_visit,0.4492,0.2884,0.0843,0.0552,0.1229,True,official_val
+S0070,ghar pe im injection lagwana hai,Hinglish,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_val
+S0074,ghar pe im injection lagwana hai,Hinglish,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_val
+S0078,mild acidity and gas since morning want to consult a doctor,English,teleconsultation,home_nursing,0.064,0.5306,0.0925,0.2296,0.0833,False,official_val
+S0085,accident ke baad bleeding ruk nahi rahi,Hinglish,emergency_112,home_nursing,0.0595,0.6937,0.0839,0.0614,0.1015,False,official_val
+S0087,mild acidity and gas since morning want to consult a doctor,English,teleconsultation,home_nursing,0.064,0.5306,0.0925,0.2296,0.0833,False,official_val
+S0089,ma ka bipi aur shugr ghr pr chek krvana hai,Hindi,paramedic_home_visit,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_val
+S0091,accident ke baad bleeding ruk nahi rahi,Hinglish,emergency_112,home_nursing,0.0595,0.6937,0.0839,0.0614,0.1015,False,official_val
+S0096,want to talk to a doctor about my reports,English,teleconsultation,teleconsultation,0.1,0.1,0.1,0.6,0.1,True,official_val
+S0099,ma ka bipi aur shugr ghr pr chek krvana hai,Hindi,paramedic_home_visit,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_val
+S0104,ptni ki ptti bdlvani hai ghr pr,Hindi,home_nursing,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_val
+S0117,papa ko do din se fever aur cough hai,Hindi,paramedic_home_visit,paramedic_home_visit,0.88,0.03,0.03,0.03,0.03,True,official_val
+S0120,accident ke baad bleeding ruk nahi rahi,Hinglish,emergency_112,home_nursing,0.0595,0.6937,0.0839,0.0614,0.1015,False,official_val
+S0124,dadi ko bedsore dressing chahiye,Hinglish,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_val
+S0135,want to talk to a doctor about my reports,English,teleconsultation,teleconsultation,0.1,0.1,0.1,0.6,0.1,True,official_val
+S0136,ऑpreshn ke bad ghr pr dresing krvani hai,Hindi,home_nursing,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_val
+S0140,ghar pe im injection lagwana hai,Hinglish,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_val
+S0141,accident ke baad bleeding ruk nahi rahi,Hinglish,emergency_112,home_nursing,0.0595,0.6937,0.0839,0.0614,0.1015,False,official_val
+S0143,ma ka bipi aur shugr ghr pr chek krvana hai,Hindi,paramedic_home_visit,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_val
+S0147,need someone to check hypertension and diabetes at home for my mother,English,paramedic_home_visit,paramedic_home_visit,0.4492,0.2884,0.0843,0.0552,0.1229,True,official_val
+S0151,d ktr chahie,Hindi,follow_up,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_val
+S0154,ऑpreshn ke bad ghr pr dresing krvani hai,Hindi,home_nursing,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_val
+S0155,want a cbc and thyroid test with home sample collection,English,lab_test_home,lab_test_home,0.02,0.02,0.92,0.02,0.02,True,official_val
+S0158,ma ka bipi aur shugr ghr pr chek krvana hai,Hindi,paramedic_home_visit,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_val
+S0161,mild acidity and gas since morning want to consult a doctor,English,teleconsultation,home_nursing,0.064,0.5306,0.0925,0.2296,0.0833,False,official_val
+S0162,papa ko do din se fever aur cough hai,Hindi,paramedic_home_visit,paramedic_home_visit,0.88,0.03,0.03,0.03,0.03,True,official_val
+S0170,dadi ko bedsore dressing chahiye,Hinglish,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_val
+S0174,ऑpreshn ke bad ghr pr dresing krvani hai,Hindi,home_nursing,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_val
+S0194,doctor ne injection likha hai koi ghar aa sakta hai,Hinglish,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_val
+S0199,ghar pe im injection lagwana hai,Hinglish,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_val
+S0200,dadi ko bedsore dressing chahiye,Hinglish,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_val
+S0201,accident ke baad bleeding ruk nahi rahi,Hinglish,emergency_112,home_nursing,0.0595,0.6937,0.0839,0.0614,0.1015,False,official_val
+S0203,need someone to check hypertension and diabetes at home for my mother,English,paramedic_home_visit,paramedic_home_visit,0.4492,0.2884,0.0843,0.0552,0.1229,True,official_val
+S0212,accident ke baad bleeding ruk nahi rahi,Hinglish,emergency_112,home_nursing,0.0595,0.6937,0.0839,0.0614,0.1015,False,official_val
+S0218,ghar pe im injection lagwana hai,Hinglish,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_val
+S0220,ghar pe im injection lagwana hai,Hinglish,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_val
+S0227,dadi ko bedsore dressing chahiye,Hinglish,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_val
+S0228,want a cbc and thyroid test with home sample collection,English,lab_test_home,lab_test_home,0.02,0.02,0.92,0.02,0.02,True,official_val
+S0230,ptni ki ptti bdlvani hai ghr pr,Hindi,home_nursing,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_val
+S0237,ghar pe im injection lagwana hai,Hinglish,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_val
+S0238,want a cbc and thyroid test with home sample collection,English,lab_test_home,lab_test_home,0.02,0.02,0.92,0.02,0.02,True,official_val
+S0243,accident ke baad bleeding ruk nahi rahi,Hinglish,emergency_112,home_nursing,0.0595,0.6937,0.0839,0.0614,0.1015,False,official_val
+S0250,papa ko do din se fever aur cough hai,Hindi,paramedic_home_visit,paramedic_home_visit,0.88,0.03,0.03,0.03,0.03,True,official_val
+S0253,accident ke baad bleeding ruk nahi rahi,Hinglish,emergency_112,home_nursing,0.0595,0.6937,0.0839,0.0614,0.1015,False,official_val
+S0254,accident ke baad bleeding ruk nahi rahi,Hinglish,emergency_112,home_nursing,0.0595,0.6937,0.0839,0.0614,0.1015,False,official_val
+S0256,papa ko do din se fever aur cough hai,Hindi,paramedic_home_visit,paramedic_home_visit,0.88,0.03,0.03,0.03,0.03,True,official_val
+S0257,d ktr chahie,Hindi,follow_up,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_val
+S0259,need someone to check hypertension and diabetes at home for my mother,English,paramedic_home_visit,paramedic_home_visit,0.4492,0.2884,0.0843,0.0552,0.1229,True,official_val
+S0261,mild acidity and gas since morning want to consult a doctor,English,teleconsultation,home_nursing,0.064,0.5306,0.0925,0.2296,0.0833,False,official_val
+S0264,need someone to check hypertension and diabetes at home for my mother,English,paramedic_home_visit,paramedic_home_visit,0.4492,0.2884,0.0843,0.0552,0.1229,True,official_val
+S0266,ptni ki ptti bdlvani hai ghr pr,Hindi,home_nursing,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_val
+S0273,ptni ki ptti bdlvani hai ghr pr,Hindi,home_nursing,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_val
+S0278,accident ke baad bleeding ruk nahi rahi,Hinglish,emergency_112,home_nursing,0.0595,0.6937,0.0839,0.0614,0.1015,False,official_val
+S0279,mild acidity and gas since morning want to consult a doctor,English,teleconsultation,home_nursing,0.064,0.5306,0.0925,0.2296,0.0833,False,official_val
+S0285,mild acidity and gas since morning want to consult a doctor,English,teleconsultation,home_nursing,0.064,0.5306,0.0925,0.2296,0.0833,False,official_val
+S0286,want a cbc and thyroid test with home sample collection,English,lab_test_home,lab_test_home,0.02,0.02,0.92,0.02,0.02,True,official_val
+S0295,dadi ko bedsore dressing chahiye,Hinglish,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_val
+S0297,papa ko do din se fever aur cough hai,Hindi,paramedic_home_visit,paramedic_home_visit,0.88,0.03,0.03,0.03,0.03,True,official_val
+S0300,want to talk to a doctor about my reports,English,teleconsultation,teleconsultation,0.1,0.1,0.1,0.6,0.1,True,official_val
+S0302,ptni ki ptti bdlvani hai ghr pr,Hindi,home_nursing,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_val
+S0311,ghar pe im injection lagwana hai,Hinglish,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_val
+S0312,doctor ne injection likha hai koi ghar aa sakta hai,Hinglish,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_val
+S0316,ghar pe im injection lagwana hai,Hinglish,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,official_val
+S0328,d ktr chahie,Hindi,follow_up,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_val
+S0332,mild acidity and gas since morning want to consult a doctor,English,teleconsultation,home_nursing,0.064,0.5306,0.0925,0.2296,0.0833,False,official_val
+S0333,ऑpreshn ke bad ghr pr dresing krvani hai,Hindi,home_nursing,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_val
+S0339,ऑpreshn ke bad ghr pr dresing krvani hai,Hindi,home_nursing,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,official_val
+HLD_001,my chest feels like someone is sitting on it,en,emergency_112,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,redflag_holdout
+HLD_002,there is a stabbing sensation in the middle of my chest,en,emergency_112,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,redflag_holdout
+HLD_003,मेरे सीने में चुभन हो रही है और बायां हाथ दर्द कर रहा है,hi,emergency_112,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,redflag_holdout
+HLD_004,chhati me ajeeb sa bhaari pan hai aur paseena aa raha hai,hinglish,emergency_112,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,redflag_holdout
+HLD_005,I ran out of air just climbing one flight of stairs,en,emergency_112,paramedic_home_visit,0.88,0.03,0.03,0.03,0.03,False,redflag_holdout
+HLD_006,she keeps opening her mouth but air is not going in,en,emergency_112,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,redflag_holdout
+HLD_007,"साँस अटक रही है, छाती में सीटी जैसी आवाज है",hi,emergency_112,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,redflag_holdout
+HLD_008,"saans andar ja hi nahi rahi, ghut raha hai",hinglish,emergency_112,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,redflag_holdout
+HLD_009,he collapsed while eating dinner and now his eyes are closed and he is not moving,en,emergency_112,emergency_112,0.1,0.1,0.1,0.6,0.1,True,redflag_holdout
+HLD_010,my aunt fainted twice today and the second time she did not wake up for a long time,en,emergency_112,emergency_112,0.0567,0.6866,0.0939,0.0825,0.0803,True,redflag_holdout
+HLD_011,मेरी माँ खाना खाते समय अचानक गिर गईं और अब कुछ नहीं बोल रहीं,hi,emergency_112,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,redflag_holdout
+HLD_012,"there is a pool of blood where my father is standing, the cut will not close",en,emergency_112,paramedic_home_visit,0.5734,0.2187,0.044,0.0269,0.137,False,redflag_holdout
+HLD_013,my son fell off the cycle and the blood is soaking through three towels,en,emergency_112,home_nursing,0.0595,0.6937,0.0839,0.0614,0.1015,False,redflag_holdout
+HLD_014,दुर्घटना के बाद घुटने से खून की धार बह रही है,hi,emergency_112,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,redflag_holdout
+HLD_015,khoon itna beh raha hai ki towel laal ho gaya hai,hinglish,emergency_112,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,redflag_holdout
+HLD_016,my uncle cannot smile on one side of his face since this morning,en,emergency_112,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,redflag_holdout
+HLD_017,she is speaking gibberish and her left arm keeps dropping,en,emergency_112,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,redflag_holdout
+HLD_018,मेरे पिता का चेहरा एक तरफ लटक गया है और आँख बंद नहीं हो रही,hi,emergency_112,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,redflag_holdout
+HLD_019,bolne par awaz ajeeb aa rahi hai aur ek haath kaam nahi kar raha,hinglish,emergency_112,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,redflag_holdout
+HLD_020,my daughter's body went stiff and then started shaking for a minute,en,emergency_112,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,redflag_holdout
+HLD_021,he bit his tongue during the shaking episode and is confused now,en,emergency_112,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,redflag_holdout
+HLD_022,बच्ची की आँखें ऊपर चढ़ गईं और पूरा शरीर झटकने लगा,hi,emergency_112,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,redflag_holdout
+HLD_023,pair haath akad gaye aur muh se safed jhaag nikla,hinglish,emergency_112,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,redflag_holdout
+HLD_024,my six-week-old baby feels like a furnace and is not crying normally,en,emergency_112,teleconsultation,0.1358,0.2411,0.0633,0.4853,0.0745,False,redflag_holdout
+HLD_025,the newborn's forehead is burning hot and she is breathing fast,en,emergency_112,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,redflag_holdout
+HLD_026,डेढ़ महीने के बच्चे का शरीर तवे जैसा गर्म है,hi,emergency_112,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,redflag_holdout
+HLD_027,naya janma bacha bilkul sust hai aur garam hai,hinglish,emergency_112,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,redflag_holdout
+HLD_028,my brother said goodbye to everyone and wrote a note,en,emergency_112,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,redflag_holdout
+HLD_029,she keeps saying everyone would be better off without her,en,emergency_112,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,redflag_holdout
+HLD_030,भाई ने कहा कि अब और नहीं झेल पाएगा और सबको अलविदा कह दिया,hi,emergency_112,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,redflag_holdout
+HLD_031,raat ko sabko thank you bol raha tha jaise jaane wala ho,hinglish,emergency_112,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,redflag_holdout
+HLD_032,my grandmother has not made urine since yesterday and her lips are cracked,en,emergency_112,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,redflag_holdout
+HLD_033,the baby's soft spot is deeply sunken and she cries without tears,en,emergency_112,teleconsultation,0.0603,0.0844,0.0732,0.6881,0.094,False,redflag_holdout
+HLD_034,दादी की जीभ सूख गई है और तीन दिन से पेशाब नहीं हुआ,hi,emergency_112,home_nursing,0.2925,0.5307,0.0463,0.0757,0.0548,False,redflag_holdout
+HLD_035,dast ke baad se aankhen andar dhans gayi hain,hinglish,emergency_112,teleconsultation,0.1045,0.4184,0.1402,0.1778,0.1591,False,redflag_holdout
+HLD_036,"I do not have chest pain, my back hurts",en,teleconsultation,paramedic_home_visit,0.88,0.03,0.03,0.03,0.03,False,redflag_holdout
+HLD_037,"no trouble breathing, just a cold",en,teleconsultation,lab_test_home,0.0633,0.1874,0.4065,0.1774,0.1654,False,redflag_holdout
+HLD_038,"he is not unconscious, he is just sleeping",en,teleconsultation,teleconsultation,0.1,0.1,0.1,0.6,0.1,True,redflag_holdout
+HLD_039,the bleeding has stopped completely,en,teleconsultation,teleconsultation,0.1,0.1,0.1,0.6,0.1,True,redflag_holdout
+HLD_040,"no stroke, the doctor said it is a pinched nerve",en,teleconsultation,teleconsultation,0.1,0.1,0.1,0.6,0.1,True,redflag_holdout
+HLD_041,"usko daura nahi aaya, sirf ghabrahat thi",hinglish,teleconsultation,teleconsultation,0.03,0.03,0.03,0.88,0.03,True,redflag_holdout
+HLD_042,"बच्चे को बुखार नहीं है, बस हल्की सर्दी है",hi,teleconsultation,teleconsultation,0.064,0.2139,0.1207,0.4909,0.1105,True,redflag_holdout
+HLD_043,mera koi bhi khud ko nuksan pahunchane ka vichar nahi hai,hinglish,teleconsultation,teleconsultation,0.1,0.1,0.1,0.6,0.1,True,redflag_holdout
+HLD_044,"seene me dard nahi hai, sirf acidity hai",hinglish,teleconsultation,paramedic_home_visit,0.88,0.03,0.03,0.03,0.03,False,redflag_holdout
+HLD_045,"saans ki koi problem nahi hai, jukam hai",hinglish,teleconsultation,teleconsultation,0.1,0.1,0.1,0.6,0.1,True,redflag_holdout
+HLD_046,I felt dizzy for a second after standing up too fast,en,teleconsultation,teleconsultation,0.03,0.03,0.03,0.88,0.03,True,redflag_holdout
+HLD_047,my leg feels numb from sitting cross-legged,en,teleconsultation,teleconsultation,0.1,0.1,0.1,0.6,0.1,True,redflag_holdout
+HLD_048,a small cut on my finger with a band-aid,en,teleconsultation,home_nursing,0.0595,0.6937,0.0839,0.0614,0.1015,False,redflag_holdout
+HLD_049,halka sa sar dard hai office ke baad,hinglish,teleconsultation,teleconsultation,0.03,0.03,0.03,0.88,0.03,True,redflag_holdout
+HLD_050,choti si kharoch hai jo sookh gayi hai,hinglish,teleconsultation,teleconsultation,0.1,0.1,0.1,0.6,0.1,True,redflag_holdout
+HLD_051,mild cough after a dusty day,en,teleconsultation,paramedic_home_visit,0.6071,0.0784,0.0951,0.1749,0.0445,False,redflag_holdout
+HLD_052,pet me halki si marod hai,hinglish,teleconsultation,teleconsultation,0.064,0.2139,0.1207,0.4909,0.1105,True,redflag_holdout
+HLD_053,thodi thakan hai der raat tak kaam karne se,hinglish,teleconsultation,teleconsultation,0.03,0.03,0.03,0.88,0.03,True,redflag_holdout
+UNS_001,Severe sudden pressure in middle of chest and left arm is numb,en,emergency_112,emergency_112,0.1087,0.1283,0.0697,0.0729,0.6204,True,unseen_tests
+UNS_002,meri dadi behosh ho gayi hain aur bilkul uth nahi rahi hain,hinglish,emergency_112,emergency_112,0.2858,0.468,0.0691,0.0858,0.0913,True,unseen_tests
+UNS_003,मरीज को लगातार दौरे पड़ रहे हैं और मुंह से झाग आ रहा है,hi,emergency_112,emergency_112,0.1,0.1,0.1,0.6,0.1,True,unseen_tests
+UNS_004,Heavy bleeding from wrist cut not stopping with bandage,en,emergency_112,emergency_112,0.0595,0.6937,0.0839,0.0614,0.1015,True,unseen_tests
+UNS_005,pita ji ka muh tedha ho gaya hai aur bol nahi pa rahe hain,hinglish,emergency_112,emergency_112,0.1,0.1,0.1,0.6,0.1,True,unseen_tests
+UNS_006,सांस बिल्कुल नहीं आ रही है और होंठ नीले पड़ रहे हैं,hi,emergency_112,emergency_112,0.1,0.1,0.1,0.6,0.1,True,unseen_tests
+UNS_007,dada ji ko subah se halka bukhar hai aur chalne me kamzori hai ghar aake checkup chahiye,hinglish,paramedic_home_visit,lab_test_home,0.02,0.02,0.92,0.02,0.02,False,unseen_tests
+UNS_008,I fell on the stairs and badly twisted my ankle cannot put weight on foot,en,paramedic_home_visit,paramedic_home_visit,0.88,0.03,0.03,0.03,0.03,True,unseen_tests
+UNS_009,बुजुर्ग माताजी बिस्तर से उठ नहीं पा रही हैं घर आकर बीपी और शुगर चेक कर लीजिए,hi,paramedic_home_visit,paramedic_home_visit,0.4492,0.2884,0.0843,0.0552,0.1229,True,unseen_tests
+UNS_010,papa ko 2 din se tez bukhar aur khansi hai ghar par doctor checkup chahiye,hinglish,paramedic_home_visit,lab_test_home,0.02,0.02,0.92,0.02,0.02,False,unseen_tests
+UNS_011,My 78 year old grandfather feels extremely dizzy and unsteady need a home visit medic,en,paramedic_home_visit,paramedic_home_visit,0.88,0.03,0.03,0.03,0.03,True,unseen_tests
+UNS_012,घुटने में अचानक भयानक मोच आ गई है और सूजन बढ़ रही है घर पर देखने आइए,hi,paramedic_home_visit,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,unseen_tests
+UNS_013,Need a nurse to come home and give daily intramuscular antibiotic injection,en,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,unseen_tests
+UNS_014,surgery ke baad tanke katwane hain aur dressing change karni hai ghar par,hinglish,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,unseen_tests
+UNS_015,मरीज का यूरिनरी कैथेटर बदलना है घर पर ट्रेंड नर्स भेज दीजिए,hi,home_nursing,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,unseen_tests
+UNS_016,Grandmother has stage 2 bedsore on lower back need sterile wound dressing at home,en,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,unseen_tests
+UNS_017,doctor ne IV saline drip lagane ko bola hai ghar par drip lagwani hai,hinglish,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,unseen_tests
+UNS_018,ऑपरेशन के बाद घाव की सफाई और नई पट्टी बंधवाने के लिए सिस्टर चाहिए,hi,home_nursing,home_nursing,0.02,0.92,0.02,0.02,0.02,True,unseen_tests
+UNS_019,Want to book complete annual lipid profile and HbA1c blood test home collection,en,lab_test_home,lab_test_home,0.02,0.02,0.92,0.02,0.02,True,unseen_tests
+UNS_020,subah fasting me thyroid aur CBC ka blood sample collect karwana hai ghar se,hinglish,lab_test_home,lab_test_home,0.02,0.02,0.92,0.02,0.02,True,unseen_tests
+UNS_021,घर पर आकर पूरे परिवार का रूटीन ब्लड टेस्ट और लिवर फंक्शन टेस्ट करना है,hi,lab_test_home,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,unseen_tests
+UNS_022,Need phlebotomist for senior citizen kidney function and creatinine sample at home,en,lab_test_home,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,unseen_tests
+UNS_023,full body health package blood test home collection book karna hai kal subah,hinglish,lab_test_home,lab_test_home,0.02,0.02,0.92,0.02,0.02,True,unseen_tests
+UNS_024,डॉक्टर ने विटामिन डी और बी12 का टेस्ट लिखा है घर से ब्लड सैंपल ले जाइए,hi,lab_test_home,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,unseen_tests
+UNS_025,I have had a mild throbbing headache since yesterday morning need online consult,en,teleconsultation,teleconsultation,0.03,0.03,0.03,0.88,0.03,True,unseen_tests
+UNS_026,bachhe ko pet me halki gas aur dard hai dawai ke liye online doctor consult chahiye,hinglish,teleconsultation,teleconsultation,0.03,0.03,0.03,0.88,0.03,True,unseen_tests
+UNS_027,त्वचा पर लाल चकत्ते और खुजली हो रही है डॉक्टर से ऑनलाइन सलाह लेनी है,hi,teleconsultation,teleconsultation,0.1,0.1,0.1,0.6,0.1,True,unseen_tests
+UNS_028,Need a second opinion from a physician on my recent medical prescription,en,teleconsultation,teleconsultation,0.03,0.03,0.03,0.88,0.03,True,unseen_tests
+UNS_029,gale me kharash aur halki sardi hai dawa likhwane ke liye call par baat karni hai,hinglish,teleconsultation,teleconsultation,0.0487,0.1321,0.1746,0.5418,0.1028,True,unseen_tests
+UNS_030,कल रात से एसिडिटी और खट्टी डकारें आ रही हैं ऑनलाइन डॉक्टर परामर्श चाहिए,hi,teleconsultation,teleconsultation,0.1,0.1,0.1,0.6,0.1,True,unseen_tests

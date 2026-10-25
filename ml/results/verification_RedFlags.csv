@@ -1,0 +1,10 @@
+flag,positives,caught_by_rules,caught_by_ml,caught_by_semantic,missed,false_alarms_on_negatives
+chest_pain,63,11,25,12,38,4
+breathlessness,63,12,21,10,41,5
+unconsciousness,6,5,4,2,1,12
+severe_bleeding,7,1,4,1,3,19
+stroke_symptoms,7,2,4,1,3,1
+seizure,7,3,5,1,2,2
+high_fever_infant,7,0,3,2,4,0
+suicidal_ideation,7,2,3,0,4,1
+severe_dehydration,7,1,6,2,1,0

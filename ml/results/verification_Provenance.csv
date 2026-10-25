@@ -1,0 +1,6 @@
+dataset,rows,unique_texts,source,human_reviewed,use,leaky
+official_train,325,120,official_sanocare,no,train,yes
+official_val,86,13,official_sanocare,no,validation,yes
+redflag_holdout,53,53,ai_drafted_holdout,no,test,no
+unseen_tests,30,30,ai_drafted_unseen,no,test,no
+human_holdout.csv,,,human_holdout,yes,test,missing - skipped

@@ -1,0 +1,14 @@
+id,text,ml_care_type,llm_care_type,note,llm_reason
+agreement_rate,,,,value=0.6 n=30 agrees=18 more=2 less=10 unavail=0,
+S0008,wo achanak gir gaye response nahi de rahe,home_nursing,emergency_112,llm_more_severe_asked,"Patient fell suddenly and is unresponsive, indicating unconsciousness emergency"
+S0009,ghr pr injekshn lgvana hai,teleconsultation,home_nursing,llm_less_severe_ignored,Request for injection at home; no red flags present
+S0011,mummy ka hypertension diabetes ghar pe check karwana hai,paramedic_home_visit,lab_test_home,llm_less_severe_ignored,"Home monitoring of hypertension and diabetes requested, no acute red flags"
+S0014,i want to book something for my mother,paramedic_home_visit,teleconsultation,llm_less_severe_ignored,Vague booking request; teleconsultation best first step to assess needs
+S0016,papa ko tej sine men drd hai aur sans nhin aa rhi,paramedic_home_visit,emergency_112,llm_more_severe_asked,Severe chest pain with breathlessness needs immediate emergency response
+S0021,cbc aur thyroid test ghar se sample lekar,teleconsultation,lab_test_home,llm_less_severe_ignored,Patient requests home sample collection for CBC and thyroid tests.
+S0023,subah se acidity gas hai doctor se consult karna hai,home_nursing,teleconsultation,llm_less_severe_ignored,"Acidity and gas since morning; suitable for doctor consultation, no red flags."
+S0025,my father has had fever and cough for 2 days,paramedic_home_visit,teleconsultation,llm_less_severe_ignored,"Fever and cough for 2 days, no red flags; teleconsultation appropriate"
+S0026,my father has had fever and cough for 2 days,paramedic_home_visit,teleconsultation,llm_less_severe_ignored,"Fever and cough for 2 days, no red flags; teleconsultation appropriate"
+S0029,kl subh shugr test ghr pr,teleconsultation,lab_test_home,llm_less_severe_ignored,Patient requests home blood sugar test tomorrow morning
+S0030,papa ko insulin lgvana hai,paramedic_home_visit,home_nursing,llm_less_severe_ignored,Patient needs insulin injection administered at home by a nurse.
+S0037,ghr pr injekshn lgvana hai,teleconsultation,home_nursing,llm_less_severe_ignored,Request for injection at home; no red flags present

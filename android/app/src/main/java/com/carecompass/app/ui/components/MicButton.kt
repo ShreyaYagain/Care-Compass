@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Stop
@@ -30,7 +31,9 @@ import com.carecompass.app.util.MicState
 fun MicButton(
     state: MicState,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    elapsedSeconds: Int = 0,
+    level: Float = 0f
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
     val pulseScale by infiniteTransition.animateFloat(
@@ -60,7 +63,6 @@ fun MicButton(
             contentAlignment = Alignment.Center,
             modifier = Modifier.size(104.dp)
         ) {
-            // Pulsing background ring when listening
             if (state == MicState.LISTENING) {
                 Box(
                     modifier = Modifier
@@ -117,7 +119,7 @@ fun MicButton(
         Spacer(modifier = Modifier.height(6.dp))
 
         val labelText = when (state) {
-            MicState.LISTENING -> "Listening…"
+            MicState.LISTENING -> "Listening… tap to stop"
             MicState.PROCESSING -> "Processing voice…"
             MicState.IDLE -> "Tap & Speak"
         }
@@ -133,5 +135,46 @@ fun MicButton(
             fontWeight = FontWeight.Bold,
             color = labelColor
         )
+
+        if (state == MicState.LISTENING) {
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = formatElapsed(elapsedSeconds),
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF616161)
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            LevelIndicator(level = level, modifier = Modifier.width(120.dp))
+        }
+    }
+}
+
+private fun formatElapsed(seconds: Int): String {
+    val s = seconds.coerceAtLeast(0)
+    return "%d:%02d".format(s / 60, s % 60)
+}
+
+/** A simple 9-bar level meter; rms dB is roughly -2..10, normalised to 0..1. */
+@Composable
+private fun LevelIndicator(level: Float, modifier: Modifier = Modifier) {
+    val normalized = (((level + 2f) / 12f)).coerceIn(0f, 1f)
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(3.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        val bars = 9
+        for (i in 0 until bars) {
+            val threshold = (i + 1).toFloat() / bars
+            val active = normalized >= threshold
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(if (active) 14.dp else 6.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(if (active) EmergencyRed else Color(0xFFE0E0E0))
+            )
+        }
     }
 }

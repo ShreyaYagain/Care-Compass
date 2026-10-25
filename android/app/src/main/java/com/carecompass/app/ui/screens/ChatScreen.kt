@@ -32,6 +32,7 @@ import com.carecompass.app.util.MicState
 import com.carecompass.app.util.SpeechHelper
 import com.carecompass.app.viewmodel.TriageUiState
 import com.carecompass.app.viewmodel.TriageViewModel
+import kotlinx.coroutines.delay
 
 @Composable
 fun ChatScreen(
@@ -49,6 +50,8 @@ fun ChatScreen(
 
     var inputText by remember { mutableStateOf("") }
     var micState by remember { mutableStateOf(MicState.IDLE) }
+    var micLevel by remember { mutableStateOf(0f) }
+    var elapsedSeconds by remember { mutableStateOf(0) }
     var userMessage by remember { mutableStateOf<String?>(null) }
 
     // SpeechRecognizer Helper for follow-up answering
@@ -60,15 +63,29 @@ fun ChatScreen(
                 inputText = partial
             },
             onFinalResult = { finalResult ->
+                // Never auto-send: fill the box so the user can review/edit and press Send.
                 inputText = finalResult
                 if (finalResult.isNotBlank()) {
-                    viewModel.submitUserInput(finalResult)
+                    userMessage = "Transcription ready — check it, then press send."
                 }
             },
             onError = { errMsg ->
                 userMessage = errMsg
-            }
+            },
+            onLevelChanged = { level -> micLevel = level }
         )
+    }
+
+    LaunchedEffect(micState) {
+        if (micState == MicState.LISTENING) {
+            elapsedSeconds = 0
+            while (true) {
+                delay(1000)
+                elapsedSeconds += 1
+            }
+        } else {
+            micLevel = 0f
+        }
     }
 
     DisposableEffect(Unit) {
@@ -186,7 +203,9 @@ fun ChatScreen(
         // Mic available for voice reply
         MicButton(
             state = micState,
-            onClick = { handleMicTap() }
+            onClick = { handleMicTap() },
+            elapsedSeconds = elapsedSeconds,
+            level = micLevel
         )
 
         if (userMessage != null) {

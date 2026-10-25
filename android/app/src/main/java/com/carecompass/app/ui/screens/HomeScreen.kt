@@ -42,6 +42,7 @@ import com.carecompass.app.util.MicState
 import com.carecompass.app.util.SpeechHelper
 import com.carecompass.app.viewmodel.TriageUiState
 import com.carecompass.app.viewmodel.TriageViewModel
+import kotlinx.coroutines.delay
 
 private data class SymptomItem(
     val id: String,
@@ -76,6 +77,8 @@ fun HomeScreen(
     val context = LocalContext.current
     var inputText by remember { mutableStateOf("") }
     var micState by remember { mutableStateOf(MicState.IDLE) }
+    var micLevel by remember { mutableStateOf(0f) }
+    var elapsedSeconds by remember { mutableStateOf(0) }
     var userMessage by remember { mutableStateOf<String?>(null) }
     var showAbout by remember { mutableStateOf(false) }
 
@@ -131,8 +134,22 @@ fun HomeScreen(
             },
             onError = { errMsg ->
                 userMessage = errMsg
-            }
+            },
+            onLevelChanged = { level -> micLevel = level }
         )
+    }
+
+    // Listening timer: resets when listening starts, ticks once per second.
+    LaunchedEffect(micState) {
+        if (micState == MicState.LISTENING) {
+            elapsedSeconds = 0
+            while (true) {
+                delay(1000)
+                elapsedSeconds += 1
+            }
+        } else {
+            micLevel = 0f
+        }
     }
 
     DisposableEffect(Unit) {
@@ -340,7 +357,9 @@ fun HomeScreen(
 
                     MicButton(
                         state = micState,
-                        onClick = { handleMicTap() }
+                        onClick = { handleMicTap() },
+                        elapsedSeconds = elapsedSeconds,
+                        level = micLevel
                     )
 
                     Spacer(modifier = Modifier.height(14.dp))

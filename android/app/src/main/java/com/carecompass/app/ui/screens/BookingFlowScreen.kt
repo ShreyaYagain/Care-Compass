@@ -55,6 +55,7 @@ import com.carecompass.app.util.TtsHelper
 import com.carecompass.app.viewmodel.BookingUiState
 import com.carecompass.app.viewmodel.BookingViewModel
 import com.carecompass.app.viewmodel.CareService
+import kotlinx.coroutines.delay
 
 @Composable
 fun BookingFlowScreen(
@@ -286,6 +287,8 @@ private fun Step1ReasonView(
     val context = LocalContext.current
     var micState by remember { mutableStateOf(MicState.IDLE) }
     var micError by remember { mutableStateOf<String?>(null) }
+    var micLevel by remember { mutableStateOf(0f) }
+    var elapsedSeconds by remember { mutableStateOf(0) }
 
     val speechHelper = remember {
         SpeechHelper(
@@ -293,8 +296,21 @@ private fun Step1ReasonView(
             onStateChanged = { micState = it },
             onPartialResult = { viewModel.setReason(it) },
             onFinalResult = { viewModel.setReason(it) },
-            onError = { micError = it }
+            onError = { micError = it },
+            onLevelChanged = { level -> micLevel = level }
         )
+    }
+
+    LaunchedEffect(micState) {
+        if (micState == MicState.LISTENING) {
+            elapsedSeconds = 0
+            while (true) {
+                delay(1000)
+                elapsedSeconds += 1
+            }
+        } else {
+            micLevel = 0f
+        }
     }
 
     DisposableEffect(Unit) {
@@ -428,6 +444,8 @@ private fun Step1ReasonView(
         ) {
             MicButton(
                 state = micState,
+                elapsedSeconds = elapsedSeconds,
+                level = micLevel,
                 onClick = {
                     if (micState == MicState.LISTENING) {
                         speechHelper.stopListening()

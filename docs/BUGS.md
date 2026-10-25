@@ -1,0 +1,23 @@
+# BUGS — reported regressions and their fixes
+
+One row per reported bug. Every row has an automated test that would catch the
+regression returning.
+
+| # | Symptom (reported) | Root cause | Fix commit | Automated test |
+|---|---|---|---|---|
+| 1 | "I am dizzy" asked for symptoms | `dizziness`/`chakkar` was not in the intake lexicon, so `extract_slots` found nothing and the pipeline asked the symptom-clue question | `29e28cb` | `tests/test_explanation_cleanliness.py::TestExplanationCleanliness::test_tingling_hand_no_tin_ting`, `tests/test_input_noise.py::TestNoiseIgnored` |
+| 2 | Pregnancy not escalating | Pregnancy was detected but never forced an emergency decision (`check_pregnancy` result was not merged into `is_high_emergency`) | `29e28cb` | `tests/test_pregnancy_risk.py::TestPregnancyRisk::test_01_self_pregnant_bleeding` (and the full 20+9 matrix) |
+| 3 | "dad cant breath" asked questions | Breathlessness only matched first-person/patterned phrasing; third-person subjects + typos fell through to a question | `f3e26f2` / `b25340c` | `tests/test_breathless_sticky.py::TestBreathlessSticky::test_third_person_breathless_immediate_emergency` |
+| 4 | History not working | History was not keyed per device (`X-Device-Id`); cross-user leakage and empty history | `d84c1e6` / `5036b50` | `tests/test_supabase_history.py::TestHistory::test_history_is_per_device` |
+| 5 | Booking could not be placed | Slot double-booking / synthetic caregiver fields missing from the booking path | `cb74367` / `e449b1d` | `tests/test_supabase_bookings.py::TestBookings::test_post_book_endpoint_roundtrip` |
+| 6 | Microphone cut off | STT provider selection defaulted to a server path that 503'd without an on-device fallback; no `android_only` text path | `3c0c6ee` / `b6e8a9b` | `tests/test_stt_provider.py::TestSttProvider::test_stt_provider_resolution` |
+| 7 | "tin and ting" shown as symptoms | `canonicalise_symptom` accepted short/loose fragments; sub-4-char tokens and junk fragments leaked into `slots.symptoms` | `29e28cb` | `tests/test_explanation_cleanliness.py::TestExplanationCleanliness::test_tin_ting_no_decision` |
+| 8 | Random words/numbers treated as facts | Noise tokens and bare numbers were treated as symptoms/durations; no "bare number needs a unit" rule | `8296796` / `e385384` | `tests/test_input_noise.py::TestGibberish::test_15_gibberish_ask_symptom_question_with_no_decision`, `TestNumbers::test_25_number_messages` |
+| 9 | "bukhar 2" assumed 2 days | Bare number parsed as a duration without a time unit next to it | `e385384` | `tests/test_input_noise.py::TestNumbers::test_bare_number_two_is_never_two_days` |
+| 10 | Fever asked three separate cards | Each missing field became its own card instead of one question per turn / sufficiency short-circuit | `def63b5` / `5d527a1` | `tests/test_followup_card.py::TestFollowupCard::test_sufficiency_20_messages_decide_without_card` |
+| 11 | backpain "no symptoms" | `backpain` was not in the lexicon and the LLM fallback's "back pain" was dropped (not in the symptom enum) | `84b457a` | `tests/test_symptom_matrix.py::TestSymptomMatrix::test_known_symptom_never_dead_ends` |
+| 12 | Hinglish pain routed to emergency | `severity == "severe"` counted as a red-flag signal, so "mera peet bohot dard" + `P(emergency)>=0.5` escalated with no flag/evidence | `84b457a` | `tests/test_symptom_matrix.py::TestSymptomMatrix::test_never_emergency_without_flag_and_evidence` |
+| 13 | Second opinion agrees:false | Reconciliation sign bug made the LLM second opinion report "agrees:false" for agreeing cases | `070c297` / `b331000` | `tests/test_second_opinion.py::TestSecondOpinion::test_agree` |
+| 14 | ml_features fragments | `top_terms` exposed raw n-gram sub-word fragments instead of canonical symptoms | `070c297` | `tests/test_ml_features.py::TestMlFeatures::test_no_sub_word_fragments_short_terms_are_lexicon_only` |
+| 15 | Long result card | Card carried disclaimer/weather + free text; now short `why`/`next`/`watch-for` lines only | `f99437f` | `tests/test_result_card.py::TestResultCard::test_30_samples_under_40_words_in_all_languages` |
+| 16 | Routing drop from cleaned classifier text | Classifier was fed only canonical symptom names, dropping the service words (injection/dressing/blood test) that carry the nursing/lab signal | `3e8140a` | `tests/test_model_card_and_benchmarks.py::TestModelCardAndBenchmarks::test_winning_model_probabilities_sum_to_one_on_all_30_unseen_tests` |

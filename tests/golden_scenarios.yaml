@@ -1,0 +1,331 @@
+# Golden end-to-end scenarios — every message the team has reported plus
+# representative coverage. Run by scripts/smoke.sh (LLM mocked, deterministic).
+#
+# Fields:
+#   id, message, language
+#   screen: "skip" or a list of red-flag ids to inject (mocks the semantic screen)
+#   expect_care_type: exact care_type or null (null = don't care / undecided question)
+#   expect_urgency:   exact urgency or null
+#   expect_question:  true | false | null (null = don't care)
+#   expect_red_flag:  a flag id that must be present, or null
+#   forbid_emergency: true = care_type must NOT be emergency_112
+- id: dizzy
+  message: "I am dizzy"
+  language: en
+  screen: skip
+  expect_care_type: teleconsultation
+  expect_urgency: same_day
+  expect_question: false
+
+- id: dad_cant_breath
+  message: "dad cant breath"
+  language: hinglish
+  screen: skip
+  expect_care_type: emergency_112
+  expect_urgency: emergency
+  expect_question: false
+  expect_red_flag: breathlessness
+
+- id: pregnant_bleeding
+  message: "I am pregnant and bleeding"
+  language: en
+  screen: skip
+  expect_care_type: emergency_112
+  expect_urgency: emergency
+  expect_question: false
+  expect_red_flag: severe_bleeding
+
+- id: backpain
+  message: "I have backpain"
+  language: en
+  screen: skip
+  expect_care_type: teleconsultation
+  expect_urgency: same_day
+  expect_question: false
+  forbid_emergency: true
+
+- id: kamar_dard
+  message: "kamar dard"
+  language: hinglish
+  screen: skip
+  expect_question: true
+  forbid_emergency: true
+
+- id: fell_leg_hurts
+  message: "I fell and my leg hurts"
+  language: en
+  screen: skip
+  expect_question: true
+  forbid_emergency: true
+
+- id: mujhe_bukhar_hai
+  message: "mujhe bukhar hai"
+  language: hinglish
+  screen: skip
+  expect_question: true
+  forbid_emergency: true
+
+- id: bukhar_2_din
+  message: "mujhe 2 din se bukhar hai"
+  language: hinglish
+  screen: skip
+  expect_care_type: teleconsultation
+  expect_urgency: same_day
+  expect_question: false
+
+- id: tin_ting
+  message: "tin ting"
+  language: en
+  screen: skip
+  expect_question: true
+
+- id: asdf
+  message: "asdf"
+  language: en
+  screen: skip
+  expect_question: true
+
+- id: bukhar_2_bare
+  message: "bukhar 2"
+  language: hinglish
+  screen: skip
+  expect_question: true
+
+- id: injection
+  message: "injection lagwana hai"
+  language: hinglish
+  screen: skip
+  expect_care_type: home_nursing
+  expect_urgency: same_day
+  expect_question: false
+
+- id: blood_test
+  message: "blood test at home"
+  language: en
+  screen: skip
+  expect_care_type: lab_test_home
+  expect_urgency: scheduled
+  expect_question: false
+
+- id: chest_feels_like
+  message: "chest feels like someone sitting on it"
+  language: en
+  screen: [chest_pain]
+  expect_question: true
+
+- id: hinglish_back_pain_no_emergency
+  message: "mera peet bohot dard kr raha he"
+  language: hinglish
+  screen: skip
+  expect_question: true
+  forbid_emergency: true
+
+- id: head_pain
+  message: "sir me bahut dard"
+  language: hinglish
+  screen: skip
+  expect_care_type: teleconsultation
+  expect_urgency: same_day
+  expect_question: false
+  forbid_emergency: true
+
+- id: severe_chest_pain
+  message: "severe chest pain"
+  language: en
+  screen: skip
+  expect_care_type: emergency_112
+  expect_urgency: emergency
+  expect_question: false
+  expect_red_flag: chest_pain
+
+- id: saans_nahi
+  message: "saans nahi aa rahi"
+  language: hinglish
+  screen: skip
+  expect_care_type: emergency_112
+  expect_urgency: emergency
+  expect_question: false
+  expect_red_flag: breathlessness
+
+- id: fainted
+  message: "my friend fainted"
+  language: en
+  screen: skip
+  expect_care_type: emergency_112
+  expect_urgency: emergency
+  expect_question: false
+  expect_red_flag: unconsciousness
+
+- id: ulti
+  message: "mujhe ulti ho rahi hai"
+  language: hinglish
+  screen: skip
+  expect_care_type: teleconsultation
+  expect_urgency: same_day
+  expect_question: false
+
+- id: moch
+  message: "pair mein moch aa gayi"
+  language: hinglish
+  screen: skip
+  expect_question: true
+  forbid_emergency: true
+
+- id: sugar_check
+  message: "sugar check karna hai"
+  language: hinglish
+  screen: skip
+  expect_care_type: lab_test_home
+  expect_urgency: scheduled
+  expect_question: false
+
+- id: khoon_nahi_ruk
+  message: "khoon nahi ruk raha"
+  language: hinglish
+  screen: skip
+  expect_care_type: emergency_112
+  expect_urgency: emergency
+  expect_question: false
+  expect_red_flag: severe_bleeding
+
+- id: newborn_bukhar
+  message: "newborn ko bukhar hai"
+  language: hinglish
+  screen: skip
+  expect_care_type: emergency_112
+  expect_urgency: emergency
+  expect_question: false
+  expect_red_flag: high_fever_infant
+
+- id: suicidal
+  message: "I want to kill myself"
+  language: en
+  screen: skip
+  expect_care_type: emergency_112
+  expect_urgency: emergency
+  expect_question: false
+  expect_red_flag: suicidal_ideation
+
+- id: dehydration
+  message: "paani ki bahut kami ho gayi"
+  language: hinglish
+  screen: skip
+  expect_care_type: emergency_112
+  expect_urgency: emergency
+  expect_question: false
+  expect_red_flag: severe_dehydration
+
+- id: stroke
+  message: "ek taraf kamzori"
+  language: hinglish
+  screen: skip
+  expect_care_type: emergency_112
+  expect_urgency: emergency
+  expect_question: false
+  expect_red_flag: stroke_symptoms
+
+- id: seizure
+  message: "daura pad raha hai"
+  language: hinglish
+  screen: skip
+  expect_care_type: emergency_112
+  expect_urgency: emergency
+  expect_question: false
+  expect_red_flag: seizure
+
+- id: chakkar
+  message: "mujhe chakkar aa rahe hain"
+  language: hinglish
+  screen: skip
+  expect_care_type: teleconsultation
+  expect_urgency: same_day
+  expect_question: false
+
+- id: papa_bukhar
+  message: "papa ko bukhar hai do din se"
+  language: hinglish
+  screen: skip
+  expect_care_type: paramedic_home_visit
+  expect_urgency: same_day
+  expect_question: false
+
+- id: full_body_checkup
+  message: "full body checkup chahiye"
+  language: hinglish
+  screen: skip
+  expect_care_type: lab_test_home
+  expect_urgency: scheduled
+  expect_question: false
+
+- id: ghar_injection
+  message: "ghar pe injection lagwana hai"
+  language: hinglish
+  screen: skip
+  expect_care_type: home_nursing
+  expect_urgency: same_day
+  expect_question: false
+
+- id: pet_dard
+  message: "pet me dard hai"
+  language: hinglish
+  screen: skip
+  expect_question: true
+  forbid_emergency: true
+
+- id: haath_dard
+  message: "haath mein dard"
+  language: hinglish
+  screen: skip
+  expect_care_type: teleconsultation
+  expect_urgency: same_day
+  expect_question: false
+  forbid_emergency: true
+
+- id: ghutna_dard
+  message: "ghutne mein dard"
+  language: hinglish
+  screen: skip
+  expect_care_type: teleconsultation
+  expect_urgency: same_day
+  expect_question: false
+  forbid_emergency: true
+
+- id: ghabrahat
+  message: "ghabrahat ho rahi hai"
+  language: hinglish
+  screen: skip
+  expect_question: true
+  forbid_emergency: true
+
+- id: bacha_bukhar
+  message: "bache ko halka bukhar hai"
+  language: hinglish
+  screen: skip
+  expect_care_type: teleconsultation
+  expect_urgency: same_day
+  expect_question: false
+
+- id: seene_tez_dard
+  message: "seene me tez dard"
+  language: hinglish
+  screen: skip
+  expect_care_type: emergency_112
+  expect_urgency: emergency
+  expect_question: false
+  expect_red_flag: chest_pain
+
+- id: gala_kharab
+  message: "mujhe gala kharab hai"
+  language: hinglish
+  screen: skip
+  expect_question: true
+  forbid_emergency: true
+
+- id: body_pain
+  message: "pura badan dard kar raha hai"
+  language: hinglish
+  screen: skip
+  expect_care_type: teleconsultation
+  expect_urgency: same_day
+  expect_question: false
+  forbid_emergency: true

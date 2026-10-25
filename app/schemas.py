@@ -324,5 +324,7 @@ class HealthResponse(BaseModel):
     stt_provider: Optional[str] = None
     last_llm_error: Optional[str] = None
     llm_fallback_count: Optional[int] = None
+    lexicon_miss_rate: Optional[float] = None
+    resolver_counts: Optional[dict[str, Any]] = None
     store: str = "sqlite"
     screen_status: Optional[str] = None

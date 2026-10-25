@@ -47,10 +47,13 @@ def check_red_flags(
     normalised_text: str = "",
     translated_en: str = "",
     return_medium: bool = False,
+    evidence: dict | None = None,
 ) -> tuple:
     """
     Checks for red flags across original text, transliterated/normalised text, and English text.
     Only HIGH-severity flags are returned in high_severity_flags (matches response red_flags contract).
+    If `evidence` is a dict, it is populated with {flag_id: matched_pattern_text} for each
+    flag that matched (used for the debug `red_flag_sources` field).
     Returns:
         If return_medium is False (default): (high_severity_flags, highest_severity, has_immediate_emergency)
         If return_medium is True: (high_severity_flags, medium_severity_flags, highest_severity, has_immediate_emergency)
@@ -86,6 +89,7 @@ def check_red_flags(
         requires_not_negated = flag.get("requires_not_negated", True)
 
         found = False
+        matched_pat = ""
 
         # 1. Check Devanagari patterns (transliterated to Roman, word-boundary match)
         for pat in patterns_hi:
@@ -96,6 +100,7 @@ def check_red_flags(
                 ):
                     continue
                 found = True
+                matched_pat = pat
                 break
 
         # 2. Check English patterns (word-boundary match on normalised text)
@@ -108,6 +113,7 @@ def check_red_flags(
                     ):
                         continue
                     found = True
+                    matched_pat = pat
                     break
 
         # 3. Check Hinglish patterns (word-boundary match on normalised text)
@@ -120,14 +126,18 @@ def check_red_flags(
                     ):
                         continue
                     found = True
+                    matched_pat = pat
                     break
 
         # 4. Fuzzy breathlessness surface (typo-tolerant, negation-aware)
         if not found and flag_id == "breathlessness":
             if _fuzzy_breathless(combined_roman):
                 found = True
+                matched_pat = "(fuzzy breathless)"
 
         if found:
+            if evidence is not None and flag_id not in evidence:
+                evidence[flag_id] = matched_pat
             if severity == "high":
                 if flag_id in settings.RED_FLAGS and flag_id not in high_flags:
                     high_flags.append(flag_id)

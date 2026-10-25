@@ -117,7 +117,9 @@
   message: "mera peet bohot dard kr raha he"
   language: hinglish
   screen: skip
-  expect_question: true
+  expect_care_type: paramedic_home_visit
+  expect_urgency: same_day
+  expect_question: false
   forbid_emergency: true
 
 - id: head_pain

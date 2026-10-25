@@ -27,6 +27,12 @@ ml/guardrail_eval/data/*_prompts.jsonl
 # LLM evaluation cache (never committed)
 ml/results/llm_cache.jsonl
 
+# Intake miss log (runtime, masked; never committed)
+ml/results/lexicon_misses.jsonl
+
+# Generated symptom-embedding index (rebuilt lazily at first use)
+ml/artifacts/symptom_embeddings.joblib
+
 # External datasets/repos (downloaded, never committed)
 ml/external/raw/
 ml/external/*.csv

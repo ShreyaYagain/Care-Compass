@@ -160,6 +160,7 @@ def _emergency_response(
     debug: bool,
     screen_status: str = "skip",
     one_shot: bool = False,
+    red_flag_sources: dict[str, Any] | None = None,
 ) -> "TriageResponse":
     """Builds the emergency_112 response (shared by the rule bypass and the
     one-shot semantic-screen escalation)."""
@@ -197,9 +198,18 @@ def _emergency_response(
         if one_shot
         else "High-severity official red flag triggered immediate 112 emergency bypass"
     )
+    emergency_reasons = [reason]
+    for f in high_flags:
+        src = (red_flag_sources or {}).get("rules", {}).get(f) or \
+              (red_flag_sources or {}).get("semantic_screen", {}).get(f) or \
+              (red_flag_sources or {}).get("one_shot_policy", {}).get(f) or \
+              (red_flag_sources or {}).get("history_sticky", {}).get(f) or ""
+        if src:
+            emergency_reasons.append(f"red-flag rule matched {f} ('{src}')")
     debug_trace = {
         "red_flags_high": high_flags,
         "red_flags_medium": medium_flags,
+        "red_flag_sources": red_flag_sources or {},
         "model_probs": {"emergency_112": 1.0},
         "calibrated_probabilities": {"emergency_112": 1.0},
         "urgency_after_cost_matrix": "emergency",
@@ -217,7 +227,7 @@ def _emergency_response(
             "output_violations": output_violations,
             "template_replaced": template_replaced,
         },
-        "reasons": [reason],
+        "reasons": emergency_reasons,
     }
 
     resp = TriageResponse(
@@ -241,6 +251,7 @@ def _emergency_response(
             "care_type": "emergency_112",
             "urgency": "emergency",
             "red_flags": high_flags,
+            "red_flag_sources": red_flag_sources or {},
         },
     )
 
@@ -442,11 +453,16 @@ def run_triage_pipeline(
 
     # 2. Red-flag check (MUST run even if injection or off-topic is flagged)
     # Check both original and cleaned text so injection wrappers never hide true emergencies
-    high_flags_orig, _, _, is_high_orig = check_red_flags(user_input, detect_and_normalise(user_input)[1], return_medium=True)
-    high_flags_clean, medium_flags, severity, is_high_clean = check_red_flags(orig_text, norm_text, return_medium=True)
+    rules_evidence: dict = {}
+    high_flags_orig, _, _, is_high_orig = check_red_flags(user_input, detect_and_normalise(user_input)[1], return_medium=True, evidence=rules_evidence)
+    high_flags_clean, medium_flags, severity, is_high_clean = check_red_flags(orig_text, norm_text, return_medium=True, evidence=rules_evidence)
 
     high_flags = list(set(high_flags_orig + high_flags_clean))
     is_high_emergency = is_high_orig or is_high_clean
+
+    red_flag_sources: dict[str, Any] = {"rules": {}, "ml_redflag_model": {}, "semantic_screen": {}, "one_shot_policy": {}, "history_sticky": {}}
+    for flag in high_flags:
+        red_flag_sources["rules"][flag] = rules_evidence.get(flag, "")
 
     # 2.1 Sticky red flags: rebuild flags from the WHOLE conversation on every
     # turn so an earlier emergency can never be lowered by a later answer
@@ -456,9 +472,13 @@ def run_triage_pipeline(
     ]
     history_text = " . ".join(t.strip() for t in history_user_texts if t.strip())
     if history_text:
+        hist_evidence: dict = {}
         high_flags_hist, medium_hist, _, is_high_hist = check_red_flags(
-            history_text, normalise_text(history_text), return_medium=True
+            history_text, normalise_text(history_text), return_medium=True, evidence=hist_evidence
         )
+        for flag in high_flags_hist:
+            if flag not in red_flag_sources["rules"]:
+                red_flag_sources["history_sticky"][flag] = hist_evidence.get(flag, "")
         high_flags = list(set(high_flags + high_flags_hist))
         medium_flags = list(set(medium_flags + medium_hist))
         is_high_emergency = is_high_emergency or is_high_hist
@@ -486,6 +506,7 @@ def run_triage_pipeline(
             if s_kind == "yes" or (s_kind == "unsure" and s_flag in NOT_SURE_AS_YES):
                 high_flags = list(set(high_flags + [s_flag]))
                 is_high_emergency = True
+                red_flag_sources["semantic_screen"][s_flag] = user_input
                 reasons.append(f"Semantic screen: user confirmed red flag {s_flag} (answer={s_kind})")
             else:
                 reasons.append(f"Semantic screen: user cleared red flag {s_flag} (answer={s_kind})")
@@ -495,6 +516,7 @@ def run_triage_pipeline(
                 if c_flag:
                     high_flags = list(set(high_flags + [c_flag]))
                     is_high_emergency = True
+                    red_flag_sources["semantic_screen"][c_flag] = user_input
                     reasons.append(f"Semantic screen: combined failsafe confirmed red flag {c_flag} (answer={c_kind})")
                 elif c_kind == "yes" and history_turns == 1:
                     # Bare Yes with no named symptom and question budget left:
@@ -551,6 +573,7 @@ def run_triage_pipeline(
             w_flag = semantic_answer[1]
             high_flags = list(set(high_flags + [w_flag]))
             is_high_emergency = True
+            red_flag_sources["semantic_screen"][w_flag] = user_input
             reasons.append(f"Semantic screen: which-one answer mapped to red flag {w_flag}")
 
     # Emergency branch (Immediate 112)
@@ -558,6 +581,7 @@ def run_triage_pipeline(
         return _emergency_response(
             user_input, high_flags, medium_flags, lang, context, reasons,
             input_guard_res, output_violations, template_replaced, db, debug,
+            red_flag_sources=red_flag_sources,
         )
 
     # If NO emergency was triggered, but input was disallowed (prompt injection / off-topic / abusive)
@@ -651,6 +675,8 @@ def run_triage_pipeline(
         try:
             ml_red_flags = ml_predict_flags(user_input)
             ml_red_flags = _filter_unconsciousness_for_plain_headaches(user_input, ml_red_flags)
+            for f in ml_red_flags:
+                red_flag_sources["ml_redflag_model"][f] = user_input
             semantic_flags = list(set(semantic_flags + ml_red_flags))
         except Exception as e:
             logger.warning(f"ML red-flag model failed: {e}")
@@ -664,11 +690,14 @@ def run_triage_pipeline(
         critical = [f for f in screen_flags if f in NOT_SURE_AS_YES]
         if critical:
             high_flags = list(set(high_flags + critical))
+            for f in critical:
+                red_flag_sources["one_shot_policy"][f] = user_input
             reasons.append(f"One-shot escalation: semantic screen flagged {critical}")
             return _emergency_response(
                 user_input, high_flags, medium_flags, lang, context, reasons,
                 input_guard_res, output_violations, template_replaced, db, debug,
                 screen_status=screen_status, one_shot=True,
+                red_flag_sources=red_flag_sources,
             )
 
     if semantic_flags and request.allow_followup:
@@ -1460,6 +1489,8 @@ def run_triage_pipeline(
         "confidence": confidence,
         "slots": slots,
         "extraction_source": slots.get("extraction_source"),
+        "intake_error": slots.get("intake_error"),
+        "red_flag_sources": red_flag_sources,
         "ml_red_flags": ml_red_flags,
         "second_opinion": second_opinion,
         "overrides": overrides,
@@ -1519,8 +1550,10 @@ def run_triage_pipeline(
             "care_type": final_care_type,
             "urgency": final_urgency,
             "red_flags": high_flags,
+            "red_flag_sources": red_flag_sources,
             "ml_features": top_terms,
             "extraction_source": slots.get("extraction_source"),
+            "intake_error": slots.get("intake_error"),
         },
     )
 

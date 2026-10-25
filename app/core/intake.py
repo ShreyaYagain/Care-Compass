@@ -7,6 +7,7 @@ from pathlib import Path
 from app.config import settings
 from app.core.language import normalise_text, is_phrase_negated
 from app.core.llm import llm_json, is_llm_available, llm_fast_model
+from app.core import open_vocab
 
 logger = logging.getLogger(__name__)
 
@@ -337,12 +338,13 @@ _BODY_PAIN_TO_SYMPTOM = {
     "arm": "joint_pain",
     "shoulder": "joint_pain",
     "knee": "joint_pain",
+    "ankle": "joint_pain",
 }
 
 _BODY_PART_SYNONYMS = {
     "head": ["head", "sir", "sar", "sira"],
     "stomach": ["stomach", "pet", "peta", "abdomen"],
-    "back": ["back", "kamar", "kamara", "peeth", "pith", "pitha", "peed", "pith"],
+    "back": ["back", "kamar", "kamara", "peeth", "pith", "pitha", "peed", "pith", "peet"],
     "body": ["body", "badan", "sharir", "sarir", "whole body", "pura badan", "pura sharir"],
     "muscle": ["muscle", "muscles", "machhli"],
     "joint": ["joint", "joints", "jodon", "jodo", "jod"],
@@ -350,12 +352,13 @@ _BODY_PART_SYNONYMS = {
     "leg": ["leg", "pair", "paira", "taang", "tang", "tamga"],
     "hand": ["hand", "haath", "hath", "hatha"],
     "arm": ["arm", "baah", "bazu"],
-    "shoulder": ["shoulder", "kandha", "kamdha", "kandhe"],
-    "knee": ["knee", "ghutna", "ghutana", "ghutne"],
+    "shoulder": ["shoulder", "kandha", "kamdha", "kandhe", "kamdhe"],
+    "knee": ["knee", "ghutna", "ghutana", "ghutne", "ghutane"],
+    "ankle": ["ankle", "takna", "takhna", "takhane"],
 }
 
 _PAIN_WORDS = [
-    "pain", "ache", "aches", "hurt", "hurts", "hurting", "sore",
+    "pain", "ache", "aches", "aching", "ached", "hurt", "hurts", "hurting", "sore",
     "dard", "dukh", "dukha", "dukhta", "dukta", "dukhna", "takleef", "taklif",
 ]
 
@@ -384,6 +387,25 @@ def detect_body_pain(norm: str) -> Optional[str]:
         if any(re.search(rf"\b{re.escape(s)}\b", n) for s in syns):
             if any(re.search(rf"\b{re.escape(w)}\b", n) for w in _PAIN_WORDS):
                 return _BODY_PAIN_TO_SYMPTOM[part]
+
+    # Typo tolerance for 6+ char tokens: fuzzy-match tokens against the body-part
+    # synonyms and pain words (similarity >= 0.88).
+    tokens = n.split()
+    long_tokens = [t for t in tokens if len(t) >= 6]
+    if long_tokens:
+        all_parts = [s for syns in _BODY_PART_SYNONYMS.values() for s in syns]
+        part_hit = any(
+            open_vocab.fuzzy_match_token(t, all_parts) is not None for t in long_tokens
+        )
+        pain_hit = any(
+            open_vocab.fuzzy_match_token(t, _PAIN_WORDS) is not None for t in long_tokens
+        )
+        if part_hit and pain_hit:
+            # Resolve the canonical part for the fuzzy-matched token.
+            for part, syns in _BODY_PART_SYNONYMS.items():
+                for t in long_tokens:
+                    if open_vocab.fuzzy_match_token(t, list(syns)) is not None:
+                        return _BODY_PAIN_TO_SYMPTOM[part]
     return None
 
 
@@ -802,12 +824,23 @@ def extract_slots(text: str, history: list[dict] = None) -> dict:
     """
     rule_slots = rule_based_extract(text, history)
 
-    # The LLM is a fallback ONLY when the lexicon found nothing.
+    # 1. Lexicon + fuzzy matching: authoritative when it finds a symptom or a
+    # service request.
     lexicon_found = bool(rule_slots["symptoms"]) or rule_slots.get("service_requested") != "none"
     if lexicon_found:
+        open_vocab.record_resolution("lexicon", lexicon_miss=False, text=text)
         return rule_slots
 
-    # Attempt LLM intake extraction (fallback)
+    # 2. Offline embedding match (multilingual-e5-small -> nearest lexicon symptom).
+    emb = open_vocab.embedding_match(text)
+    if emb:
+        rule_slots["symptoms"] = [emb[0]]
+        rule_slots["extraction_source"] = "embedding"
+        open_vocab.record_resolution("embedding", lexicon_miss=True, text=text)
+        return rule_slots
+
+    # 3. DeepSeek intake fallback (full slot extraction; symptoms validated
+    # against the canonical enum, so junk fragments are dropped).
     system_prompt = (
         "You are an expert clinical intake parser for CareCompass India.\n"
         "Your role is to extract factual patient slots from colloquial inputs in English, Hindi, and Hinglish.\n"
@@ -853,6 +886,7 @@ def extract_slots(text: str, history: list[dict] = None) -> dict:
         if llm_result is None:
             rule_slots["extraction_source"] = "llm_failed"
             rule_slots["intake_error"] = "llm returned no result"
+            open_vocab.record_resolution("buttons", lexicon_miss=True, text=text)
             return rule_slots
         # Merge LLM extractions into slots. Every LLM-returned symptom is
         # validated against the canonical lexicon; junk fragments
@@ -862,6 +896,7 @@ def extract_slots(text: str, history: list[dict] = None) -> dict:
         rule_slots["symptoms"] = merged_symptoms
         if llm_symptoms:
             rule_slots["extraction_source"] = "llm"
+            open_vocab.record_resolution("llm", lexicon_miss=True, text=text)
 
             if llm_result.service_requested != "none":
                 rule_slots["service_requested"] = llm_result.service_requested
@@ -891,9 +926,14 @@ def extract_slots(text: str, history: list[dict] = None) -> dict:
                     rule_slots["breathing_difficulty"] = True
                 elif rf == "chest_pain" and rule_slots.get("chest_pain") is None:
                     rule_slots["chest_pain"] = True
+        else:
+            rule_slots["extraction_source"] = "llm_failed"
+            rule_slots["intake_error"] = "llm mapped no valid symptom"
+            open_vocab.record_resolution("buttons", lexicon_miss=True, text=text)
     except Exception as e:
         rule_slots["extraction_source"] = "llm_failed"
         rule_slots["intake_error"] = f"{type(e).__name__}: {e}"
+        open_vocab.record_resolution("buttons", lexicon_miss=True, text=text)
         logger.warning(f"LLM intake fallback failed: {e}")
 
     return rule_slots

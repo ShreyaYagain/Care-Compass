@@ -78,7 +78,7 @@ HLD_031,raat ko sabko thank you bol raha tha jaise jaane wala ho,emergency_112,t
 HLD_032,my grandmother has not made urine since yesterday and her lips are cracked,emergency_112,teleconsultation,redflag_holdout
 HLD_033,the baby's soft spot is deeply sunken and she cries without tears,emergency_112,teleconsultation,redflag_holdout
 HLD_034,दादी की जीभ सूख गई है और तीन दिन से पेशाब नहीं हुआ,emergency_112,home_nursing,redflag_holdout
-HLD_035,dast ke baad se aankhen andar dhans gayi hain,emergency_112,teleconsultation,redflag_holdout
+HLD_035,dast ke baad se aankhen andar dhans gayi hain,emergency_112,home_nursing,redflag_holdout
 S0009,ghr pr injekshn lgvana hai,home_nursing,teleconsultation,official_train
 S0014,i want to book something for my mother,follow_up,paramedic_home_visit,official_train
 S0018,mdd chahie,follow_up,teleconsultation,official_train

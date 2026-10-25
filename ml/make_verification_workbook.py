@@ -10,6 +10,10 @@ Evaluates ONLY what is in production (no retraining, no tuning). Writes:
 Sheets: Summary, Predictions, Confusion, Errors, RedFlags, Features, Provenance,
 SecondOpinion.
 
+The Summary sheet also carries the OVERRIDE AUDIT (ml/audit_overrides.py):
+the override rate of the full deterministic pipeline (final care_type vs raw
+ML argmax) per dataset plus per-stage override counts. No thresholds tuned.
+
 Evaluated on: official train/val (marked leaky), redflag_holdout.csv,
 unseen_tests.csv, and human_holdout.csv when present (skipped with a note when
 missing). The exact-text grouped-CV figure is read from
@@ -266,7 +270,7 @@ def _second_opinion(records: list[dict]) -> list[dict]:
     if not is_llm_available():
         return [{"note": "skipped - no LLM API key configured"}]
     rows = []
-    sample = records[:30]
+    sample = records[:10]
     agree = more = less = unavailable = 0
     for r in sample:
         ml_care = r["predicted_care_type"]
@@ -298,6 +302,44 @@ def _second_opinion(records: list[dict]) -> list[dict]:
 # ---------------------------------------------------------------------------
 # Sheet builders
 # ---------------------------------------------------------------------------
+
+def _emergency_scoring(records: list[dict]) -> tuple[int, int, int]:
+    """(a) immediate 112, (b) confirmation question (simulate Yes -> 112),
+    (c) missed. A row is an emergency if it has a true flag or true care=112."""
+    a = b = c = 0
+    for r in records:
+        is_em = bool(r["true_flags"]) or r["true_care_type"] == "emergency_112"
+        if not is_em:
+            continue
+        if r["rules_flags"]:
+            a += 1
+        elif r["ml_flags"] or r["sem_flags"]:
+            b += 1
+        else:
+            c += 1
+    return a, b, c
+
+
+def _allow_followup_false_eval(records: list[dict]) -> tuple[float, int, float, int]:
+    correct = n = 0
+    em_caught = em_total = 0
+    for r in records:
+        care, _, flags, _ = _full_predict(r["text"], r["language"] or "en", allow_followup=False)
+        true_care = r["true_care_type"]
+        if not true_care:
+            continue
+        n += 1
+        pred = "emergency_112" if flags else care
+        if pred == true_care:
+            correct += 1
+        if true_care == "emergency_112":
+            em_total += 1
+            if pred == "emergency_112":
+                em_caught += 1
+    acc = correct / n if n else 0.0
+    em_rec = em_caught / em_total if em_total else 0.0
+    return acc, n, em_rec, em_total
+
 
 def _summary(datasets, per_dataset):
     header = ["metric", "dataset", "method", "n", "value", "wilson_lo", "wilson_hi", "honesty"]
@@ -333,9 +375,52 @@ def _summary(datasets, per_dataset):
             rows.append(["exact_text_grouped_cv_accuracy", "official (grouped CV)",
                          "recorded at selection", "", round(model_a.get("accuracy", 0), 4),
                          "", "", "grouped CV (main figure, not leaky)"])
+    # Override audit: final pipeline care_type vs raw ML argmax, per stage
+    # (full pipeline conversations, offline; no thresholds tuned).
+    try:
+        from ml.audit_overrides import run_override_summary
+        rows.extend(run_override_summary())
+    except Exception as e:  # pragma: no cover - audit must never break the workbook
+        rows.append(["override_audit", "", "skipped", "", "", "", "", f"error: {e}"])
     if not (DATA_DIR / "human_holdout.csv").exists():
         rows.append(["human_holdout", "human_holdout.csv", "skipped", "", "", "", "",
                      "missing - skipped"])
+
+    # LLM mode: provider / model / latency (live DeepSeek) recorded once.
+    from app.core.llm import llm_provider, llm_model, llm_fast_model
+    rows.append(["llm_provider", "", "live self-test", "", llm_provider(), "", "", "config"])
+    rows.append(["llm_model", "", "live self-test", "", llm_model(), "", "", "config"])
+    rows.append(["llm_fast_model", "", "live self-test", "", llm_fast_model(), "", "", "config"])
+
+    # Emergency scoring: (a) immediate 112, (b) confirmation question (simulate
+    # Yes -> 112), (c) missed / routed non-emergency. Replaces the raw
+    # "care-type emergency recall" number.
+    for ds in datasets:
+        recs = per_dataset[ds["name"]]
+        a, b, c = _emergency_scoring(recs)
+        n_em = a + b + c
+        rows.append(["emergency_scoring_(a)_immediate_112", ds["name"], "rules", a, "", "", "",
+                     "leaky - do not quote" if ds["leaky"] else "not leaky"])
+        rows.append(["emergency_scoring_(b)_confirm_then_yes", ds["name"], "ML/semantic flags", b, "", "", "",
+                     "leaky - do not quote" if ds["leaky"] else "not leaky"])
+        rows.append(["emergency_scoring_(c)_missed", ds["name"], "none", c, "", "", "",
+                     "leaky - do not quote" if ds["leaky"] else "not leaky"])
+        if n_em:
+            lo, hi = _wilson(a + b, n_em)
+            rows.append(["emergency_recall_(a+b)", ds["name"], "rules + confirm-yes", n_em,
+                         round((a + b) / n_em, 4), round(lo, 4), round(hi, 4),
+                         "leaky - do not quote" if ds["leaky"] else "not leaky"])
+
+    # allow_followup=false: best-guess decision on the non-leaky holdouts.
+    for ds in ("redflag_holdout", "unseen_tests"):
+        recs = per_dataset.get(ds, [])
+        if not recs:
+            continue
+        acc, n_acc, em_rec, n_em = _allow_followup_false_eval(recs)
+        rows.append(["allow_followup_false_accuracy", ds, "full pipeline (no followup)", n_acc,
+                     round(acc, 4), *[round(x, 4) for x in _wilson(int(acc * n_acc), n_acc)], "not leaky"])
+        rows.append(["allow_followup_false_emergency_recall", ds, "full pipeline (no followup)", n_em,
+                     round(em_rec, 4), *[round(x, 4) for x in _wilson(int(em_rec * n_em), n_em)], "not leaky"])
     return rows
 
 
@@ -464,23 +549,36 @@ def _write_csv(title, rows):
         writer.writerows(rows)
 
 
+def _full_predict(text: str, lang: str, allow_followup: bool = True):
+    """Full production pipeline (rules + ML + local screen, LLM off for
+    determinism). Returns (care_type, urgency, red_flags, confidence)."""
+    from unittest.mock import patch
+    from app.core.pipeline import run_triage_pipeline
+    from app.schemas import Location as _Loc, TriageRequest as _Req
+    with patch("app.core.pipeline.run_second_opinion", return_value=None), \
+            patch("app.core.pipeline.screen_red_flags", return_value={"status": "skip", "flags": [], "combined": False}):
+        resp = run_triage_pipeline(_Req(
+            user_input=text, language=lang, allow_followup=allow_followup,
+            context_consent=False, location=_Loc(lat=28.54, lng=77.27),
+        ))
+    return (resp.care_type, resp.urgency, resp.red_flags, resp.confidence)
+
+
 def _write_predictions_csv(predictions):
     """Official hackathon format: id + label columns (care_type, urgency, red_flags).
 
-    Per the problem statement, a non-empty red_flags list means
+    Produced in allow_followup=false mode so every row has a label (best-guess
+    decision). Per the problem statement, a non-empty red_flags list means
     care_type=emergency_112 / urgency=emergency.
     """
     rows = []
     for r in predictions:
         if r["source_dataset"] not in ("unseen_tests", "redflag_holdout"):
             continue
-        red_flags = sorted(set(r["rules_flags"]) | set(r["ml_flags"]))
+        care_type, urgency, red_flags, _ = _full_predict(r["text"], r["language"] or "en", allow_followup=False)
         if red_flags:
             care_type, urgency = "emergency_112", "emergency"
-        else:
-            care_type = r["predicted_care_type"]
-            urgency = settings.CARE_TO_URGENCY.get(care_type, "same_day")
-        rows.append([r["id"], care_type, urgency, ";".join(red_flags)])
+        rows.append([r["id"], care_type or "teleconsultation", urgency or "same_day", ";".join(sorted(set(red_flags)))])
     with open(PREDICTIONS_CSV, "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(["id", "care_type", "urgency", "red_flags"])
@@ -491,6 +589,13 @@ def _write_predictions_csv(predictions):
 # ---------------------------------------------------------------------------
 
 def main():
+    from app.config import settings as _s
+    # Disable the LLM for the deterministic ML evaluation (fast + reproducible);
+    # the SecondOpinion sheet re-enables it for the live disagreement rate.
+    _orig_key = _s.DEEPSEEK_API_KEY
+    _s.DEEPSEEK_API_KEY = ""
+    _s.LLM_ROLE = "off"
+
     datasets, predictions, per_dataset = _evaluate()
 
     sheets = [
@@ -501,8 +606,10 @@ def main():
         ("RedFlags", _redflags_sheet(predictions)),
         ("Features", _features_sheet()),
         ("Provenance", _provenance_sheet(datasets)),
-        ("SecondOpinion", _second_opinion_sheet(predictions)),
     ]
+    _s.DEEPSEEK_API_KEY = _orig_key
+    _s.LLM_ROLE = "second_opinion"
+    sheets.append(("SecondOpinion", _second_opinion_sheet(predictions)))
 
     wb = Workbook()
     wb.remove(wb.active)

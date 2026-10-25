@@ -444,7 +444,7 @@ HLD_031,raat ko sabko thank you bol raha tha jaise jaane wala ho,hinglish,emerge
 HLD_032,my grandmother has not made urine since yesterday and her lips are cracked,en,emergency_112,teleconsultation,0.1,0.1,0.1,0.6,0.1,False,redflag_holdout
 HLD_033,the baby's soft spot is deeply sunken and she cries without tears,en,emergency_112,teleconsultation,0.0603,0.0844,0.0732,0.6881,0.094,False,redflag_holdout
 HLD_034,दादी की जीभ सूख गई है और तीन दिन से पेशाब नहीं हुआ,hi,emergency_112,home_nursing,0.2925,0.5307,0.0463,0.0757,0.0548,False,redflag_holdout
-HLD_035,dast ke baad se aankhen andar dhans gayi hain,hinglish,emergency_112,teleconsultation,0.1045,0.4184,0.1402,0.1778,0.1591,False,redflag_holdout
+HLD_035,dast ke baad se aankhen andar dhans gayi hain,hinglish,emergency_112,home_nursing,0.1045,0.4184,0.1402,0.1778,0.1591,False,redflag_holdout
 HLD_036,"I do not have chest pain, my back hurts",en,teleconsultation,paramedic_home_visit,0.88,0.03,0.03,0.03,0.03,False,redflag_holdout
 HLD_037,"no trouble breathing, just a cold",en,teleconsultation,lab_test_home,0.0633,0.1874,0.4065,0.1774,0.1654,False,redflag_holdout
 HLD_038,"he is not unconscious, he is just sleeping",en,teleconsultation,teleconsultation,0.1,0.1,0.1,0.6,0.1,True,redflag_holdout

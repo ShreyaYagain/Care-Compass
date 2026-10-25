@@ -10,11 +10,46 @@ macro_f1,official_val,production ML,86,0.5644,,,leaky - do not quote
 routing_accuracy,redflag_holdout,production ML,53,0.283,0.1797,0.4157,not leaky
 emergency_recall,redflag_holdout,production ML,35,0.0571,0.0158,0.1861,not leaky
 emergency_flag_detection_recall,redflag_holdout,rules + ML flags + semantic screen,35,0.4,0.2555,0.5643,not leaky
-macro_f1,redflag_holdout,production ML,53,0.1083,,,not leaky
+macro_f1,redflag_holdout,production ML,53,0.1098,,,not leaky
 routing_accuracy,unseen_tests,production ML,30,0.7667,0.5907,0.8821,not leaky
 emergency_recall,unseen_tests,production ML,6,1.0,0.6097,1.0,not leaky
 emergency_flag_detection_recall,unseen_tests,rules + ML flags + semantic screen,0,0.0,0.0,0.0,not leaky
 macro_f1,unseen_tests,production ML,30,0.7654,,,not leaky
 exact_text_grouped_cv_f1,official (grouped CV),recorded at selection,,0.8786,,,"grouped CV (main figure, not leaky)"
 exact_text_grouped_cv_accuracy,official (grouped CV),recorded at selection,,0.9767,,,"grouped CV (main figure, not leaky)"
+,,,,,,,
+override_rate (final != raw ML argmax),,full pipeline vs raw ML argmax,,,,,see per-dataset rows
+override_rate,unseen_tests.csv,full pipeline vs raw ML argmax,14,0.1429,,,not leaky
+override_rate,redflag_holdout.csv,full pipeline vs raw ML argmax,22,0.3182,,,not leaky
+override_rate,official_triage (exact-text CV OOF raw),full pipeline vs raw ML argmax,169,0.1006,,,in-sample rows (leaky for accuracy)
+override_rate,ALL (3 sets),full pipeline vs raw ML argmax,205,0.1268,,,per-dataset honesty above
+override_stage_count,0_model_version,Production model differs from CV fold model (not a pipeline stage),8,,,,
+override_stage_count,2_red_flag_bypass,Stage 2 red-flag emergency bypass (rules),16,,,,
+override_stage_count,2_module_decision,Module decision (injury module: head hit -> emergency),1,,,,
+override_stage_count,6.6_injury_sanity,Stage 6.6 injury sanity,1,,,,
+override_outcome,fixed,override corrected a raw-model error,21,,,,
+override_outcome,broke,override broke a correct raw decision,5,,,,
 human_holdout,human_holdout.csv,skipped,,,,,missing - skipped
+llm_provider,,live self-test,,deepseek,,,config
+llm_model,,live self-test,,deepseek-v4-pro,,,config
+llm_fast_model,,live self-test,,deepseek-flash,,,config
+emergency_scoring_(a)_immediate_112,official_train,rules,36,,,,leaky - do not quote
+emergency_scoring_(b)_confirm_then_yes,official_train,ML/semantic flags,22,,,,leaky - do not quote
+emergency_scoring_(c)_missed,official_train,none,12,,,,leaky - do not quote
+emergency_recall_(a+b),official_train,rules + confirm-yes,70,0.8286,0.7238,0.8991,leaky - do not quote
+emergency_scoring_(a)_immediate_112,official_val,rules,0,,,,leaky - do not quote
+emergency_scoring_(b)_confirm_then_yes,official_val,ML/semantic flags,13,,,,leaky - do not quote
+emergency_scoring_(c)_missed,official_val,none,0,,,,leaky - do not quote
+emergency_recall_(a+b),official_val,rules + confirm-yes,13,1.0,0.7719,1.0,leaky - do not quote
+emergency_scoring_(a)_immediate_112,redflag_holdout,rules,2,,,,not leaky
+emergency_scoring_(b)_confirm_then_yes,redflag_holdout,ML/semantic flags,14,,,,not leaky
+emergency_scoring_(c)_missed,redflag_holdout,none,19,,,,not leaky
+emergency_recall_(a+b),redflag_holdout,rules + confirm-yes,35,0.4571,0.3047,0.6181,not leaky
+emergency_scoring_(a)_immediate_112,unseen_tests,rules,5,,,,not leaky
+emergency_scoring_(b)_confirm_then_yes,unseen_tests,ML/semantic flags,1,,,,not leaky
+emergency_scoring_(c)_missed,unseen_tests,none,0,,,,not leaky
+emergency_recall_(a+b),unseen_tests,rules + confirm-yes,6,1.0,0.6097,1.0,not leaky
+allow_followup_false_accuracy,redflag_holdout,full pipeline (no followup),53,0.3774,0.2594,0.5119,not leaky
+allow_followup_false_emergency_recall,redflag_holdout,full pipeline (no followup),35,0.0571,0.0158,0.1861,not leaky
+allow_followup_false_accuracy,unseen_tests,full pipeline (no followup),30,0.7,0.5212,0.8334,not leaky
+allow_followup_false_emergency_recall,unseen_tests,full pipeline (no followup),6,1.0,0.6097,1.0,not leaky

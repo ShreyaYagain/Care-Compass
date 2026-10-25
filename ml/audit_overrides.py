@@ -2,9 +2,15 @@
 raw ML argmax, which stage changed it, and whether each override helped or
 hurt accuracy.
 
-Runs three sets through the full pipeline (offline: the LLM is disabled, so
-only the deterministic stages run — the LLM second opinion never changes
-care_type, it can only ask a confirmation question):
+Runs three sets through the full pipeline as the app would drive it:
+conversations continue while the pipeline asks a CLOSED red-flag screen
+question (answered truthfully: "Yes" only when the true label is
+emergency_112, and the injury module's head_hit question likewise), and stop
+when the pipeline asks for information we cannot answer truthfully (module
+cards, intake questions, "no symptoms recognised") — those rows are counted
+as "undecided / needs follow-up", never answered with fabricated facts.
+Offline mode (LLM disabled): the LLM second opinion never changes care_type,
+so the deterministic stages are exactly what is being audited.
 
   1. ml/data/unseen_tests.csv            (30 rows, raw = production model argmax)
   2. ml/data/redflag_holdout.csv         (53 rows, raw = production model argmax)
@@ -17,7 +23,8 @@ No thresholds are tuned here. Outputs:
   - console report
   - ml/results/override_audit.json
   - ml/results/override_audit_rows.csv (per-row trail)
-  - docs/verification_workbook.xlsx (Summary sheet updated)
+  - Summary rows are appended to ml/results/verification.xlsx via
+    ml/make_verification_workbook.py (run_override_summary()).
 """
 import csv
 import json
@@ -31,14 +38,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from app.config import settings
 
-settings.DEEPSEEK_API_KEY = ""  # offline: LLM second opinion never changes care_type anyway
-
-from app.schemas import TriageRequest, Location
+from app.schemas import TriageRequest, Location, ChatMessage
 from app.core.pipeline import run_triage_pipeline
 from app.core.triage_model import raw_model_argmax
 from app.core.language import normalise_text
-from app.core.intake import extract_slots, build_classifier_text
+from app.core.intake import extract_slots, build_classifier_text, is_bank_question
 from app.core.guardrails import input_guard
+from app.core.semantic_screen import QUESTION_TO_FLAG, COMBINED_QUESTION_ID, WHICH_ONE_QUESTION_ID
 
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data"
@@ -51,11 +57,17 @@ HOLDOUT = DATA_DIR / "redflag_holdout.csv"
 OFFICIAL = DATA_DIR / "official" / "triage_dataset.jsonl"
 
 LOC = Location(lat=28.54, lng=77.27)
+MAX_TURNS = 6
 
 _LANG_MAP = {"English": "en", "Hindi": "hi", "Hinglish": "hinglish",
              "en": "en", "hi": "hi", "hinglish": "hinglish"}
 
 STAGE_LABELS = {
+    "0_model_version": "Production model differs from CV fold model (not a pipeline stage)",
+    "2_red_flag_bypass": "Stage 2 red-flag emergency bypass (rules)",
+    "2_pregnancy_layer": "Stage 2.2 pregnancy layer",
+    "2_semantic_screen_yes": "Stage 2.3/2.4 semantic screen confirmation",
+    "2_module_decision": "Module decision (injury module: head hit -> emergency)",
     "5_hybrid_rules_ml": "Stage 5 rule layer (inside predict_triage)",
     "5_unfamiliar_map": "Stage 5 unfamiliar-care-type mapping",
     "6_risk_modifiers": "Stage 6 risk modifiers",
@@ -67,6 +79,8 @@ STAGE_LABELS = {
     "8_pregnancy_floor": "Stage 8 pregnancy floor",
     "8_context_night_rain": "Stage 8 context night/rain",
 }
+
+_SCREEN_QUESTION_IDS = set(QUESTION_TO_FLAG.keys()) | {COMBINED_QUESTION_ID, WHICH_ONE_QUESTION_ID}
 
 
 def load_official_clf_entries():
@@ -117,6 +131,56 @@ def exact_text_cv_oof(entries):
     return [str(p) for p in oof]
 
 
+def run_conversation(user_input, lang, true_label):
+    """Drives the pipeline like the app. Returns
+    (final_care_type, overrides_of_last_turn, debug_of_last_turn, stop_reason)."""
+    history: list[ChatMessage] = []
+    last_resp = None
+    last_debug = None
+    module_id = None
+    module_answers: dict = {}
+    current = user_input
+    for _turn in range(MAX_TURNS):
+        last_resp = run_triage_pipeline(
+            TriageRequest(
+                user_input=current, language=lang, location=LOC, conversation_history=history,
+                module_id=module_id, module_answers=module_answers if module_answers else None,
+            ),
+            debug=True,
+        )
+        last_debug = last_resp.debug or {}
+        if last_resp.care_type is not None:
+            return last_resp.care_type, last_debug.get("overrides") or [], last_debug, None
+
+        q_text = last_resp.follow_up_question or ""
+        card = last_resp.module_card
+        if card is not None:
+            field = (card.get("fields") or [{}])[0]
+            if card.get("module_id") == "injury" and field.get("id") == "head_hit":
+                module_id = card.get("module_id")
+                module_answers[field.get("id")] = "Yes" if true_label == "emergency_112" else "No"
+                answer = module_answers[field.get("id")]
+            else:
+                # Module fields other than head_hit cannot be answered
+                # truthfully from the dataset; stop instead of fabricating.
+                return None, [], last_debug, "module_card"
+        elif q_text:
+            qid = is_bank_question(q_text)
+            if qid == WHICH_ONE_QUESTION_ID:
+                answer = (last_resp.follow_up_options or ["Yes"])[0]
+            elif qid in _SCREEN_QUESTION_IDS:
+                answer = "Yes" if true_label == "emergency_112" else "No"
+            else:
+                return None, [], last_debug, "intake_question"
+        else:
+            return None, [], last_debug, "no_question"
+
+        history.append(ChatMessage(role="assistant", text=q_text, content=q_text))
+        history.append(ChatMessage(role="user", text=answer, content=answer))
+        current = answer
+    return None, [], last_debug, "max_turns"
+
+
 def replicated_raw_argmax(user_input):
     """Raw production-model argmax computed exactly the way the pipeline
     builds its classifier text (used for rows that emergency-bypass stage 5,
@@ -127,50 +191,50 @@ def replicated_raw_argmax(user_input):
     return raw_model_argmax(build_classifier_text(slots))
 
 
-def run_row(row):
-    """Runs the pipeline for one row; returns (final, overrides, raw_prod)."""
-    lang = _LANG_MAP.get(row.get("language", "en"), "en")
-    resp = run_triage_pipeline(
-        TriageRequest(
-            user_input=row["user_input"],
-            language=lang,
-            location=LOC,
-            conversation_history=[],
-        ),
-        debug=True,
-    )
-    debug = resp.debug or {}
-    overrides = debug.get("overrides") or []
-    raw_prod = None
+def production_argmax_from_debug(overrides, user_input):
     for o in overrides:
         if o.get("stage") == "5_model_argmax":
-            raw_prod = o.get("care_type")
-    if raw_prod is None and resp.care_type is not None:
-        # Emergency bypass: stage 5 never ran; replicate the classifier text.
-        raw_prod = replicated_raw_argmax(row["user_input"])
-    return resp.care_type, overrides, raw_prod
+            return o.get("care_type")
+    return replicated_raw_argmax(user_input)
 
 
-def attributing_stage(overrides, final, raw):
+def attributing_stage(overrides, final, raw, raw_prod, debug):
     """The stage responsible for the final deviation from the raw argmax."""
+    if raw and raw_prod and raw != raw_prod and (final == raw or final == raw_prod):
+        # The difference comes from the deployed model itself differing from
+        # the CV fold model that produced `raw`; no pipeline stage is
+        # responsible.
+        return "0_model_version"
     for o in reversed(overrides):
         if o.get("to") == final:
             return o.get("stage")
     if final == raw:
         return None
+    debug = debug or {}
+    if debug.get("module_id"):
+        return "2_module_decision"
+    reasons_str = " | ".join(debug.get("reasons") or [])
+    if "Semantic screen" in reasons_str:
+        return "2_semantic_screen_yes"
+    if "Pregnancy layer" in reasons_str:
+        return "2_pregnancy_layer"
+    if "red flag" in reasons_str.lower() or "emergency bypass" in reasons_str:
+        return "2_red_flag_bypass"
     # The stage-5 hybrid already equals the final: the rule layer inside
     # predict_triage produced it.
     return "5_hybrid_rules_ml"
 
 
-def evaluate(name, rows, cv_oof=None):
+def evaluate(name, rows, raw_of):
     stats = {
         "name": name,
         "n_rows": len(rows),
         "n_decided": 0,
         "n_undecided": 0,
+        "undecided_reasons": Counter(),
         "n_labeled_decided": 0,
         "n_override": 0,
+        "n_override_prod": 0,
         "n_override_labeled": 0,
         "override_fixed": 0,
         "override_broke": 0,
@@ -182,30 +246,37 @@ def evaluate(name, rows, cv_oof=None):
         "rows": [],
     }
     for i, row in enumerate(rows):
-        final, overrides, raw_prod = run_row(row)
-        if cv_oof is not None:
-            raw = cv_oof[i]
-        else:
-            raw = raw_prod
+        final, overrides, debug, stop_reason = run_conversation(
+            row["user_input"], _LANG_MAP.get(row.get("language", "en"), "en"),
+            row.get("care_type"),
+        )
+        raw = raw_of(i, overrides, row)
+        true = row.get("care_type") or ""
         if final is None:
             stats["n_undecided"] += 1
+            stats["undecided_reasons"][stop_reason or "unknown"] += 1
             stats["rows"].append({
                 "id": row.get("id"), "user_input": row["user_input"],
-                "raw_ml": raw, "final": None, "true_label": row.get("care_type") or "",
-                "override": "", "stage": "", "outcome": "",
+                "raw_ml": raw or "", "raw_prod": raw or "", "final": "",
+                "true_label": true, "override": "", "stage": stop_reason or "undecided",
+                "outcome": "",
             })
             continue
         stats["n_decided"] += 1
         for o in overrides:
             if o.get("from") and o.get("to") and o.get("from") != o.get("to"):
                 stats["stage_transitions"][o.get("stage")] += 1
+        raw_prod = production_argmax_from_debug(overrides, row["user_input"])
         override = bool(raw is not None and final != raw)
-        stage = attributing_stage(overrides, final, raw) if override else ""
+        override_prod = bool(raw_prod is not None and final != raw_prod)
+        stage = ""
         outcome = ""
         if override:
             stats["n_override"] += 1
+            stage = attributing_stage(overrides, final, raw, raw_prod, debug)
             stats["stage_attribution"][stage] += 1
-        true = row.get("care_type")
+        if override_prod:
+            stats["n_override_prod"] += 1
         if true:
             stats["n_labeled_decided"] += 1
             if final == true:
@@ -225,137 +296,157 @@ def evaluate(name, rows, cv_oof=None):
                     outcome = "both_wrong"
         stats["rows"].append({
             "id": row.get("id"), "user_input": row["user_input"],
-            "raw_ml": raw or "", "final": final, "true_label": true or "",
-            "override": "1" if override else "", "stage": stage, "outcome": outcome,
+            "raw_ml": raw or "", "raw_prod": raw_prod or "", "final": final,
+            "true_label": true, "override": "1" if override else "",
+            "stage": stage, "outcome": outcome,
         })
     stats["override_rate"] = (stats["n_override"] / stats["n_decided"]) if stats["n_decided"] else None
+    stats["override_rate_prod"] = (stats["n_override_prod"] / stats["n_decided"]) if stats["n_decided"] else None
     stats["pipeline_acc"] = (stats["pipeline_correct"] / stats["n_labeled_decided"]) if stats["n_labeled_decided"] else None
     stats["raw_acc"] = (stats["raw_correct"] / stats["n_labeled_decided"]) if stats["n_labeled_decided"] else None
     return stats
 
 
 def update_workbook(report, stage_labels):
-    """Writes the Summary sheet of docs/verification_workbook.xlsx."""
+    """REMOVED: override summary rows are now appended to the Summary sheet of
+    ml/results/verification.xlsx by ml/make_verification_workbook.py via
+    run_override_summary()."""
+    raise NotImplementedError
+
+
+_REPORT_CACHE: dict | None = None
+
+
+def _compute_report() -> dict:
+    """Runs the full override audit (offline) and returns the report dict.
+    Cached per process so make_verification_workbook and main() share one run."""
+    global _REPORT_CACHE
+    if _REPORT_CACHE is not None:
+        return _REPORT_CACHE
+
+    prev_key = settings.DEEPSEEK_API_KEY
+    settings.DEEPSEEK_API_KEY = ""  # offline: the LLM second opinion never changes care_type
     try:
-        from openpyxl import Workbook, load_workbook
-    except ImportError:
-        print("openpyxl not installed; skipping verification workbook update")
-        return
-    wb_path = DOCS_DIR / "verification_workbook.xlsx"
-    if wb_path.exists():
-        wb = load_workbook(wb_path)
-        if "Summary" in wb.sheetnames:
-            ws = wb["Summary"]
-        else:
-            ws = wb.create_sheet("Summary", 0)
-    else:
-        wb = Workbook()
-        ws = wb.active
-        ws.title = "Summary"
-    ws["A1"] = "CareCompass Verification Summary"
-    ws["A2"] = "Override audit: final care_type vs raw ML argmax (no thresholds tuned)"
-    row = 4
-    for col, head in enumerate(["Dataset", "Rows", "Decided", "Overridden", "Override rate",
-                                "Pipeline acc", "Raw ML acc"], start=1):
-        ws.cell(row=row, column=col, value=head)
-    row += 1
+        unseen = []
+        with open(UNSEEN, "r", encoding="utf-8") as f:
+            for r in csv.DictReader(f):
+                unseen.append({"id": r["id"], "user_input": r["user_input"],
+                               "language": r.get("language", "en"), "care_type": r["care_type"]})
+        holdout = []
+        with open(HOLDOUT, "r", encoding="utf-8") as f:
+            for r in csv.DictReader(f):
+                holdout.append({"id": r["id"], "user_input": r["user_input"],
+                                "language": r.get("language", "en"), "care_type": r["care_type"]})
+        official = load_official_clf_entries()
+        print(f"Official rows (labeled, exact-text CV set): {len(official)}")
+        cv_oof = exact_text_cv_oof(official)
+        oof_by_idx = dict(enumerate(cv_oof))
+
+        def raw_prod_only(i, overrides, row):
+            return production_argmax_from_debug(overrides, row["user_input"])
+
+        def raw_cv_oof(i, overrides, row):
+            return oof_by_idx[i]
+
+        datasets = [
+            ("unseen_tests.csv", unseen, raw_prod_only),
+            ("redflag_holdout.csv", holdout, raw_prod_only),
+            ("official_triage (exact-text CV OOF raw)", official, raw_cv_oof),
+        ]
+
+        print("\nRunning pipeline conversations (offline, truthful screen answers only)...\n")
+        report = {"datasets": [], "stages": {}, "all": {}}
+        all_decided = 0
+        all_override = 0
+        transitions_total = Counter()
+        attribution_total = Counter()
+        rows_all = []
+        for name, rows, raw_of in datasets:
+            print(f"  {name}: {len(rows)} rows")
+            stats = evaluate(name, rows, raw_of)
+            report["datasets"].append(stats)
+            rows_all.extend((name, r) for r in stats["rows"])
+            all_decided += stats["n_decided"]
+            all_override += stats["n_override"]
+            transitions_total.update(stats["stage_transitions"])
+            attribution_total.update(stats["stage_attribution"])
+            print(f"    decided={stats['n_decided']} undecided={stats['n_undecided']} "
+                  f"{dict(stats['undecided_reasons'])} "
+                  f"override_rate={stats['override_rate']:.3f} "
+                  f"pipeline_acc={stats['pipeline_acc']:.3f} raw_acc={stats['raw_acc']:.3f}")
+
+        report["all"] = {
+            "n_decided": all_decided,
+            "n_override": all_override,
+            "override_rate": (all_override / all_decided) if all_decided else None,
+        }
+        report["stages"] = {k: {"transitions": transitions_total.get(k, 0),
+                                "attributed_overrides": attribution_total.get(k, 0)}
+                            for k in STAGE_LABELS}
+        report["_rows"] = rows_all
+    finally:
+        settings.DEEPSEEK_API_KEY = prev_key
+    _REPORT_CACHE = report
+    return report
+
+
+def run_override_summary() -> list[list]:
+    """Summary-sheet rows for ml/results/verification.xlsx: the override rate
+    per dataset and the per-stage override counts, in the workbook's
+    (metric, dataset, method, n, value, wilson_lo, wilson_hi, honesty) layout."""
+    report = _compute_report()
+    blank = [""] * 8
+    rows: list[list] = [
+        blank,
+        ["override_rate (final != raw ML argmax)", "", "full pipeline vs raw ML argmax",
+         "", "", "", "", "see per-dataset rows"],
+    ]
     for d in report["datasets"]:
-        ws.cell(row=row, column=1, value=d["name"])
-        ws.cell(row=row, column=2, value=d["n_rows"])
-        ws.cell(row=row, column=3, value=d["n_decided"])
-        ws.cell(row=row, column=4, value=d["n_override"])
-        ws.cell(row=row, column=5, value=round(d["override_rate"], 4))
-        ws.cell(row=row, column=6, value=round(d["pipeline_acc"], 4))
-        ws.cell(row=row, column=7, value=round(d["raw_acc"], 4))
-        row += 1
-    ws.cell(row=row, column=1, value="ALL")
-    ws.cell(row=row, column=3, value=report["all"]["n_decided"])
-    ws.cell(row=row, column=4, value=report["all"]["n_override"])
-    ws.cell(row=row, column=5, value=round(report["all"]["override_rate"], 4))
-    row += 2
-    ws.cell(row=row, column=1, value="Stage")
-    ws.cell(row=row, column=2, value="Meaning")
-    ws.cell(row=row, column=3, value="Transitions")
-    ws.cell(row=row, column=4, value="Attributed overrides")
-    row += 1
-    for k, label in stage_labels.items():
-        ws.cell(row=row, column=1, value=k)
-        ws.cell(row=row, column=2, value=label)
-        ws.cell(row=row, column=3, value=report["stages"][k]["transitions"])
-        ws.cell(row=row, column=4, value=report["stages"][k]["attributed_overrides"])
-        row += 1
-    wb.save(wb_path)
-    print(f"Updated {wb_path} (Summary sheet)")
+        honesty = "not leaky" if "official" not in d["name"] else "in-sample rows (leaky for accuracy)"
+        rows.append(["override_rate", d["name"], "full pipeline vs raw ML argmax",
+                     d["n_decided"], round(d["override_rate"], 4), "", "", honesty])
+    all_d = report["all"]
+    rows.append(["override_rate", "ALL (3 sets)", "full pipeline vs raw ML argmax",
+                 all_d["n_decided"], round(all_d["override_rate"], 4), "", "",
+                 "per-dataset honesty above"])
+    for k, label in STAGE_LABELS.items():
+        a = report["stages"][k]["attributed_overrides"]
+        if a:
+            rows.append(["override_stage_count", k, label, a, "", "", "", ""])
+    fixed = sum(d["override_fixed"] for d in report["datasets"])
+    broke = sum(d["override_broke"] for d in report["datasets"])
+    rows.append(["override_outcome", "fixed", "override corrected a raw-model error",
+                 fixed, "", "", "", ""])
+    rows.append(["override_outcome", "broke", "override broke a correct raw decision",
+                 broke, "", "", "", ""])
+    return rows
 
 
 def main():
-    unseen = []
-    with open(UNSEEN, "r", encoding="utf-8") as f:
-        for r in csv.DictReader(f):
-            unseen.append({"id": r["id"], "user_input": r["user_input"],
-                           "language": r.get("language", "en"), "care_type": r["care_type"]})
-    holdout = []
-    with open(HOLDOUT, "r", encoding="utf-8") as f:
-        for r in csv.DictReader(f):
-            holdout.append({"id": r["id"], "user_input": r["user_input"],
-                            "language": r.get("language", "en"), "care_type": r["care_type"]})
-    official = load_official_clf_entries()
-    print(f"Official rows (labeled, exact-text CV set): {len(official)}")
-    cv_oof = exact_text_cv_oof(official)
+    report = _compute_report()
+    rows_all = report.pop("_rows", [])
 
-    datasets = [
-        ("unseen_tests.csv", unseen, None),
-        ("redflag_holdout.csv", holdout, None),
-        ("official_triage (exact-text CV OOF raw)", official, cv_oof),
-    ]
-
-    print("\nRunning pipeline (offline, deterministic stages only)...\n")
-    report = {"datasets": [], "stages": {}, "all": {}}
-    all_decided = 0
-    all_override = 0
-    transitions_total = Counter()
-    attribution_total = Counter()
-    rows_all = []
-    for name, rows, oof in datasets:
-        print(f"  {name}: {len(rows)} rows")
-        stats = evaluate(name, rows, cv_oof=oof)
-        report["datasets"].append(stats)
-        rows_all.extend((name, r) for r in stats["rows"])
-        all_decided += stats["n_decided"]
-        all_override += stats["n_override"]
-        transitions_total.update(stats["stage_transitions"])
-        attribution_total.update(stats["stage_attribution"])
-        print(f"    decided={stats['n_decided']} undecided={stats['n_undecided']} "
-              f"override_rate={stats['override_rate']:.3f} "
-              f"pipeline_acc={stats['pipeline_acc']:.3f} raw_acc={stats['raw_acc']:.3f}")
-
-    report["all"] = {
-        "n_decided": all_decided,
-        "n_override": all_override,
-        "override_rate": (all_override / all_decided) if all_decided else None,
-    }
-    report["stages"] = {k: {"transitions": transitions_total.get(k, 0),
-                            "attributed_overrides": attribution_total.get(k, 0)}
-                        for k in STAGE_LABELS}
-
-    print("\n" + "=" * 90)
+    all_d = report["all"]
+    print("\n" + "=" * 100)
     print("OVERRIDE AUDIT REPORT")
-    print("=" * 90)
-    print(f"\nOverall override rate: {all_override}/{all_decided} decided rows "
-          f"({report['all']['override_rate']:.3f})")
+    print("=" * 100)
+    print(f"\nOverall override rate: {all_d['n_override']}/{all_d['n_decided']} decided rows "
+          f"({all_d['override_rate']:.3f})")
     print("\nPer-dataset:")
     for d in report["datasets"]:
-        print(f"  {d['name']:40s} rows={d['n_rows']:>4} decided={d['n_decided']:>4} "
+        print(f"  {d['name']:44s} rows={d['n_rows']:>4} decided={d['n_decided']:>4} "
               f"override={d['n_override']:>4} ({d['override_rate']:.3f}) "
+              f"override_vs_deployed={d['n_override_prod']:>4} ({d['override_rate_prod']:.3f}) "
               f"pipeline_acc={d['pipeline_acc']:.3f} raw_acc={d['raw_acc']:.3f}")
     print("\nPer-stage (transitions = rows where the stage changed care_type;")
     print("attributed = overrides whose final value came from that stage):")
     for k, label in STAGE_LABELS.items():
-        print(f"  {k:26s} {label:44s} transitions={transitions_total.get(k, 0):>3} "
-              f"attributed={attribution_total.get(k, 0):>3}")
+        t, a = report["stages"][k]["transitions"], report["stages"][k]["attributed_overrides"]
+        if t or a:
+            print(f"  {k:26s} {label:44s} transitions={t:>3} attributed={a:>3}")
     print("\nOverride correctness vs true label (labeled overrides):")
     for d in report["datasets"]:
-        print(f"  {d['name']:40s} fixed={d['override_fixed']:>3} broke={d['override_broke']:>3} "
+        print(f"  {d['name']:44s} fixed={d['override_fixed']:>3} broke={d['override_broke']:>3} "
               f"both_wrong={d['override_both_wrong']:>3} (of {d['n_override_labeled']} labeled)")
 
     with open(RESULTS_DIR / "override_audit.json", "w", encoding="utf-8") as f:
@@ -364,14 +455,13 @@ def main():
 
     with open(RESULTS_DIR / "override_audit_rows.csv", "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
-        w.writerow(["dataset", "id", "user_input", "raw_ml", "final", "true_label",
+        w.writerow(["dataset", "id", "user_input", "raw_ml", "raw_prod", "final", "true_label",
                     "override", "attributed_stage", "override_outcome"])
         for ds_name, r in rows_all:
-            w.writerow([ds_name, r["id"], r["user_input"], r["raw_ml"], r["final"] or "",
-                        r["true_label"], r["override"], r["stage"], r["outcome"]])
+            w.writerow([ds_name, r["id"], r["user_input"], r["raw_ml"], r["raw_prod"],
+                        r["final"], r["true_label"], r["override"], r["stage"], r["outcome"]])
     print("Saved ml/results/override_audit_rows.csv")
-
-    update_workbook(report, STAGE_LABELS)
+    print("Override summary rows are written to verification.xlsx by ml/make_verification_workbook.py")
 
 
 if __name__ == "__main__":

@@ -24,6 +24,9 @@ ml/artifacts/large_*
 
 ml/guardrail_eval/data/*_prompts.jsonl
 
+# LLM evaluation cache (never committed)
+ml/results/llm_cache.jsonl
+
 # External datasets/repos (downloaded, never committed)
 ml/external/raw/
 ml/external/*.csv

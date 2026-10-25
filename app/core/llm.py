@@ -10,9 +10,12 @@ Every call uses JSON mode + temperature 0. Strict-JSON schema validation and the
 evidence-quote substring checks live in the callers (semantic_screen,
 second_opinion, intake) and are unchanged.
 """
+import hashlib
 import json
 import logging
 import re
+import threading
+from pathlib import Path
 from typing import Any, Type, TypeVar
 
 import requests
@@ -23,6 +26,61 @@ from app.config import settings
 logger = logging.getLogger(__name__)
 
 T = TypeVar("T", bound=BaseModel)
+
+# ---------------------------------------------------------------------------
+# Disk cache for LLM responses (evaluation re-runs). Keyed by
+# (provider, model, prompt version, exact text). Kept out of git.
+# ---------------------------------------------------------------------------
+
+_CACHE_PATH = Path(__file__).resolve().parent.parent.parent / "ml" / "results" / "llm_cache.jsonl"
+_CACHE: dict[str, str] = {}
+_CACHE_LOCK = threading.Lock()
+_CACHE_LOADED = False
+
+
+def _load_cache() -> None:
+    global _CACHE_LOADED
+    if _CACHE_LOADED:
+        return
+    _CACHE_LOADED = True
+    try:
+        if _CACHE_PATH.exists():
+            with open(_CACHE_PATH, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        rec = json.loads(line)
+                        _CACHE[rec["key"]] = rec["content"]
+                    except Exception:
+                        pass
+    except Exception as e:
+        logger.warning(f"Could not load LLM cache: {e}")
+
+
+def _cache_key(system: str, user: str, model: str, schema: Type[T] | None) -> str:
+    prompt_id = hashlib.sha1((system + "|" + (schema.__name__ if schema else "none")).encode()).hexdigest()[:16]
+    text_id = hashlib.sha1((user or "").encode()).hexdigest()[:16]
+    return f"{llm_provider()}|{model}|{prompt_id}|{text_id}"
+
+
+def _read_cache(key: str) -> str | None:
+    _load_cache()
+    with _CACHE_LOCK:
+        return _CACHE.get(key)
+
+
+def _write_cache(key: str, content: str) -> None:
+    with _CACHE_LOCK:
+        _CACHE[key] = content
+    try:
+        _CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
+        with open(_CACHE_PATH, "a", encoding="utf-8") as f:
+            f.write(json.dumps({"key": key, "content": content}) + "\n")
+    except Exception as e:
+        logger.warning(f"Could not write LLM cache: {e}")
+
 
 _PROVIDER_DEFAULT_BASE = {
     "deepseek": "https://api.deepseek.com",
@@ -160,6 +218,18 @@ def _parse_json(text: str) -> Any:
     return None
 
 
+def _schema_result(data: Any, schema: Type[T] | None) -> T | dict | None:
+    if schema is None:
+        return data
+    try:
+        if hasattr(schema, "model_validate"):
+            return schema.model_validate(data)
+        return schema(**data)
+    except Exception as e:
+        logger.warning(f"LLM output failed schema validation: {e}")
+        return None
+
+
 def llm_json(
     system: str,
     user: str,
@@ -168,28 +238,29 @@ def llm_json(
     timeout: float | None = None,
     retries: int = 1,
 ) -> T | dict | None:
-    """JSON-mode call with strict Pydantic validation. `retries` extra attempts
-    are made ONLY on 429 / 5xx / timeout (never on 4xx like 401/404)."""
+    """JSON-mode call with strict Pydantic validation, backed by a disk cache.
+    `retries` extra attempts are made ONLY on 429 / 5xx / timeout."""
+    model_name = model or llm_model()
+    key = _cache_key(system, user, model_name, schema)
+    cached = _read_cache(key)
+    if cached is not None:
+        data = _parse_json(cached)
+        if data is not None:
+            return _schema_result(data, schema)
+
     for attempt in range(retries + 1):
-        raw, status = _chat_completion(system, user, model, timeout, True)
+        raw, status = _chat_completion(system, user, model_name, timeout, True)
         if raw is None:
             if status not in _RETRYABLE_STATUS or attempt >= retries:
                 return None
             logger.warning(f"LLM retryable failure ({status}), retrying")
             continue
+        _write_cache(key, raw)
         data = _parse_json(raw)
         if data is None:
             logger.warning("LLM output was not valid JSON")
             continue
-        if schema is not None:
-            try:
-                if hasattr(schema, "model_validate"):
-                    return schema.model_validate(data)
-                return schema(**data)
-            except Exception as e:
-                logger.warning(f"LLM output failed schema validation: {e}")
-                return None
-        return data
+        return _schema_result(data, schema)
     return None
 
 

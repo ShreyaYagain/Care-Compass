@@ -11,7 +11,7 @@ except ImportError:
 
 from app.config import settings
 from app.schemas import HealthResponse
-from app.core.llm import self_test
+from app.core.llm import self_test, last_llm_error, llm_fallback_count
 from app.core.semantic_screen import get_screen_status
 from app.core.stt import stt_provider
 from app.db.supabase_client import active_store
@@ -30,6 +30,8 @@ def get_health():
         llm_model=check.get("model"),
         llm_status=check.get("status"),
         stt_provider=stt_provider(),
+        last_llm_error=last_llm_error(),
+        llm_fallback_count=llm_fallback_count(),
         store=active_store(),
         screen_status=get_screen_status(),
     )

@@ -322,5 +322,7 @@ class HealthResponse(BaseModel):
     llm_model: Optional[str] = None
     llm_status: Optional[str] = None
     stt_provider: Optional[str] = None
+    last_llm_error: Optional[str] = None
+    llm_fallback_count: Optional[int] = None
     store: str = "sqlite"
     screen_status: Optional[str] = None

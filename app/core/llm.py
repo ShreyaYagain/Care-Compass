@@ -134,7 +134,7 @@ def llm_fast_model() -> str:
     return (settings.LLM_FAST_MODEL or "").strip() or llm_model()
 
 
-_FAILURE_STATE = {"consecutive": 0}
+_FAILURE_STATE = {"consecutive": 0, "total": 0, "last_error": None}
 _FAILURE_LOCK = threading.Lock()
 
 
@@ -145,9 +145,22 @@ def consecutive_llm_failures() -> int:
         return _FAILURE_STATE["consecutive"]
 
 
-def _record_failure() -> None:
+def last_llm_error() -> str | None:
+    with _FAILURE_LOCK:
+        return _FAILURE_STATE["last_error"]
+
+
+def llm_fallback_count() -> int:
+    """Total provider failures since process start (for /health)."""
+    with _FAILURE_LOCK:
+        return _FAILURE_STATE["total"]
+
+
+def _record_failure(msg: str) -> None:
     with _FAILURE_LOCK:
         _FAILURE_STATE["consecutive"] += 1
+        _FAILURE_STATE["total"] += 1
+        _FAILURE_STATE["last_error"] = msg
 
 
 def _record_success() -> None:
@@ -185,7 +198,7 @@ def _chat_completion(
         )
         if resp.status_code >= 400:
             logger.warning(f"LLM call HTTP {resp.status_code}: {resp.text[:200]}")
-            _record_failure()
+            _record_failure(f"HTTP {resp.status_code}")
             return None, resp.status_code
         data = resp.json()
         content = ((data.get("choices") or [{}])[0].get("message") or {}).get("content") or ""
@@ -193,11 +206,11 @@ def _chat_completion(
         return content.strip(), resp.status_code
     except requests.exceptions.Timeout:
         logger.warning("LLM call timed out")
-        _record_failure()
+        _record_failure("timeout")
         return None, 408
     except Exception as e:
         logger.warning(f"LLM call failed: {e}")
-        _record_failure()
+        _record_failure(f"{type(e).__name__}: {e}")
         return None, 0
 
 

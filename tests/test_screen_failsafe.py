@@ -15,6 +15,7 @@ from app.core.intake import get_question_by_id
 from app.core.semantic_screen import (
     screen_red_flags,
     get_screen_status,
+    clear_screen_cache,
     COMBINED_QUESTION_ID,
     WHICH_ONE_QUESTION_ID,
 )
@@ -31,6 +32,9 @@ def _failsafe():
 
 class TestScreenFailsafeUnit(unittest.TestCase):
     """The screen itself (Gemini mocked to fail) must never decide silently."""
+
+    def setUp(self):
+        clear_screen_cache()
 
     def test_gemini_mocked_failure_returns_failsafe_combined(self):
         with patch("app.core.semantic_screen.is_llm_available", return_value=True), \

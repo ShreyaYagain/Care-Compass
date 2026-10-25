@@ -263,6 +263,14 @@ def _has_health_concern(text: str) -> bool:
 _LAST_SCREEN_STATUS: str = "skip"
 
 
+def clear_screen_cache() -> None:
+    """Clears the screen memoization + status (used by tests to avoid
+    order-dependent cache hits)."""
+    global _LAST_SCREEN_STATUS
+    _SCREEN_CACHE.clear()
+    _LAST_SCREEN_STATUS = "skip"
+
+
 def get_screen_status() -> str:
     """Status of the most recent screen run, for /health & debug:
     llm_ok | fallback_local | failsafe_question | skip."""

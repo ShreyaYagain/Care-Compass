@@ -223,7 +223,7 @@ def llm_map_symptom(text: str) -> Optional[dict]:
 
 _MISS_LOG = ML_DIR / "results" / "lexicon_misses.jsonl"
 _LOCK = threading.Lock()
-_COUNTS = {"lexicon": 0, "embedding": 0, "llm": 0, "llm_failed": 0, "buttons": 0}
+_COUNTS = {"lexicon": 0, "embedding": 0, "llm": 0, "buttons": 0}
 _LEXICON_MISSES = 0
 _TOTAL = 0
 

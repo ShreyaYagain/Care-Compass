@@ -839,8 +839,26 @@ def extract_slots(text: str, history: list[dict] = None) -> dict:
         open_vocab.record_resolution("embedding", lexicon_miss=True, text=text)
         return rule_slots
 
-    # 3. DeepSeek intake fallback (full slot extraction; symptoms validated
-    # against the canonical enum, so junk fragments are dropped).
+    # 3. DeepSeek mapper: strict JSON, choose ONLY from the symptom IDs in
+    # symptoms.yaml (enum); evidence_quote is a substring of the message and
+    # other_text carries anything unmapped. It never chooses a care type or
+    # an urgency.
+    mapped = open_vocab.llm_map_symptom(text)
+    if mapped is not None:
+        if mapped.get("symptom"):
+            rule_slots["symptoms"] = [mapped["symptom"]]
+            rule_slots["extraction_source"] = "llm"
+            if mapped.get("evidence_quote"):
+                rule_slots["symptom_evidence"] = mapped["evidence_quote"]
+            open_vocab.record_resolution("llm", lexicon_miss=True, text=text)
+            return rule_slots
+        # Mapper ran but mapped nothing: fall through to the legacy slot
+        # extraction (below) for who_for / age / duration / unfamiliar mapping.
+
+    # 4. DeepSeek intake fallback (full slot extraction; symptoms validated
+    # against the canonical enum, so junk fragments are dropped). This is the
+    # legacy reader path for out-of-dataset requests (unfamiliar_care_type_mapped),
+    # gated in the pipeline to low-confidence decisions and never emergency_112.
     system_prompt = (
         "You are an expert clinical intake parser for CareCompass India.\n"
         "Your role is to extract factual patient slots from colloquial inputs in English, Hindi, and Hinglish.\n"

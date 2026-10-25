@@ -1207,7 +1207,6 @@ def run_triage_pipeline(
         or slots.get("chest_pain") is True
         or slots.get("consciousness") in ["unconscious", "drowsy"]
         or slots.get("bleeding") is True
-        or slots.get("severity") == "severe"
     )
 
     is_emergency = is_high_emergency or user_answered_yes_high or (model_p_emergency >= 0.50 and has_red_flag_signal) or has_pregnancy_emergency

@@ -54,7 +54,7 @@ class TestGibberish(unittest.TestCase):
             with self.subTest(text=text):
                 resp = _triage(text, lang="en")
                 self.assertIsNotNone(resp.follow_up_question, f"no symptom question for {text!r}")
-                self.assertIn("no symptoms were recognised", resp.follow_up_question.lower())
+                self.assertIn("what is bothering you", resp.follow_up_question.lower())
                 self.assertIsNone(resp.care_type, f"decided care_type for {text!r}")
                 self.assertIsNone(resp.urgency, f"decided urgency for {text!r}")
 

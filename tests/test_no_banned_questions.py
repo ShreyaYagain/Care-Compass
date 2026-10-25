@@ -43,6 +43,9 @@ BANNED_PHRASES = [
 BANNED_QUESTION_WORDS = [
     "service", "treatment", "medicine", "meds", "prescrib",
     "when do you want", "kab chahiye",
+    # Removed "blame the user" strings — must never return.
+    "no symptoms were recognised", "no symptom", "please try again",
+    "dobara boliye", "pehchane nahi",
 ]
 
 TEXT_SUFFIXES = {".py", ".yaml", ".yml", ".json", ".kt", ".xml", ".md", ".txt", ".csv"}

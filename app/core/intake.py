@@ -315,6 +315,75 @@ def _evidence_in_text(evidence: Optional[str], text: str) -> bool:
 
 
 # ---------------------------------------------------------------------------
+# Body-part x pain-term vocabulary (bug: "backpain"/"kamar dard" was not
+# recognised). Maps back/body/muscle/joint/neck/leg/arm/knee/shoulder pain to
+# joint_pain, head to headache, stomach to stomach_pain — never to a red flag.
+# ---------------------------------------------------------------------------
+
+_BODY_PAIN_TO_SYMPTOM = {
+    "head": "headache",
+    "stomach": "stomach_pain",
+    "back": "joint_pain",
+    "body": "joint_pain",
+    "muscle": "joint_pain",
+    "joint": "joint_pain",
+    "neck": "joint_pain",
+    "leg": "joint_pain",
+    "hand": "joint_pain",
+    "arm": "joint_pain",
+    "shoulder": "joint_pain",
+    "knee": "joint_pain",
+}
+
+_BODY_PART_SYNONYMS = {
+    "head": ["head", "sir", "sar", "sira"],
+    "stomach": ["stomach", "pet", "peta", "abdomen"],
+    "back": ["back", "kamar", "kamara", "peeth", "pith", "pitha", "peed", "pith"],
+    "body": ["body", "badan", "sharir", "sarir", "whole body", "pura badan", "pura sharir"],
+    "muscle": ["muscle", "muscles", "machhli"],
+    "joint": ["joint", "joints", "jodon", "jodo", "jod"],
+    "neck": ["neck", "gardan", "gardana"],
+    "leg": ["leg", "pair", "paira", "taang", "tang", "tamga"],
+    "hand": ["hand", "haath", "hath", "hatha"],
+    "arm": ["arm", "baah", "bazu"],
+    "shoulder": ["shoulder", "kandha", "kamdha", "kandhe"],
+    "knee": ["knee", "ghutna", "ghutana", "ghutne"],
+}
+
+_PAIN_WORDS = [
+    "pain", "ache", "aches", "hurt", "hurts", "hurting", "sore",
+    "dard", "dukh", "dukha", "dukhta", "dukta", "dukhna", "takleef", "taklif",
+]
+
+_JOINED_BODY_PAIN = [
+    ("backpain", "back pain"), ("bodypain", "body pain"), ("bodyache", "body ache"),
+    ("stomachache", "stomach ache"), ("stomachpain", "stomach pain"),
+    ("legpain", "leg pain"), ("neckpain", "neck pain"), ("headache", "head ache"),
+    ("shoulderpain", "shoulder pain"), ("kneepain", "knee pain"),
+    ("musclepain", "muscle pain"), ("jointpain", "joint pain"),
+]
+
+
+def detect_body_pain(norm: str) -> Optional[str]:
+    """Returns a canonical symptom for a body-part + pain-term phrase, or None.
+
+    Handles joined words ("backpain" -> "back pain") and Roman + Devanagari
+    (ITRANS) body-part forms. Never returns a red flag — pain without a danger
+    sign routes by the classifier (teleconsultation / paramedic_home_visit)."""
+    if not norm:
+        return None
+    n = norm
+    for joined, split in _JOINED_BODY_PAIN:
+        if joined in n:
+            n = n.replace(joined, split)
+    for part, syns in _BODY_PART_SYNONYMS.items():
+        if any(re.search(rf"\b{re.escape(s)}\b", n) for s in syns):
+            if any(re.search(rf"\b{re.escape(w)}\b", n) for w in _PAIN_WORDS):
+                return _BODY_PAIN_TO_SYMPTOM[part]
+    return None
+
+
+# ---------------------------------------------------------------------------
 # Closed question bank (single source of truth: app/data/symptoms.yaml)
 # ---------------------------------------------------------------------------
 
@@ -599,6 +668,11 @@ def rule_based_extract(text: str, history: list[dict] = None) -> dict:
     if any(re.search(rf"\b{re.escape(w)}\b", norm) for w in ["moch", "sprain", "twisted ankle", "knee hurts", "ghutne mein dard", "joint pain", "stairs", "chot", "injury", "pain"]):
         if "joint_pain" not in detected_symptoms:
             detected_symptoms.append("joint_pain")
+
+    # Body-part x pain-term vocabulary (backpain, kamar dard, peeth dard, ...).
+    body_pain = detect_body_pain(norm)
+    if body_pain and body_pain not in detected_symptoms:
+        detected_symptoms.append(body_pain)
 
     # Fall / injury: "I fell down and my leg hurts" -> injury (injury module)
     if any(re.search(rf"\b{re.escape(w)}\b", norm) for w in ["fell", "fell down", "fall", "gir gaya", "gir ke", "gira hai", "giri hai", "gir", "leg hurts", "ankle", "foot", "knee", "hurt", "sprain", "twisted ankle", "swollen", "soojan", "sujan", "swelling", "bruise", "neel", "wrist", "shoulder", "kandha", "kandhe", "elbow", "kohni", "back pain", "back me dard", "back dard", "kamar", "kamar dard", "neck", "gardan", "muscle pain", "bone", "haddi"]):

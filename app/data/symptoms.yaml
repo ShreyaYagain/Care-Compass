@@ -77,9 +77,9 @@ question_bank:
   - id: main_symptom_buttons
     slot: main_symptom
     purpose: main_symptom
-    text_en: "No symptoms were recognised. Please try again."
-    text_hi: "कोई लक्षण पहचाने नहीं गए। कृपया दोबारा बताएं।"
-    text_hinglish: "Koi symptoms pehchane nahi gaye. Kripya dobara boliye ya type karein."
+    text_en: "What is bothering you?"
+    text_hi: "क्या परेशानी है?"
+    text_hinglish: "Kya pareshani hai?"
     options:
       - { en: "Fever or cough", hi: "बुखार या खांसी", hinglish: "Bukhar ya khansi" }
       - { en: "Pain or injury", hi: "दर्द या चोट", hinglish: "Dard ya chot" }

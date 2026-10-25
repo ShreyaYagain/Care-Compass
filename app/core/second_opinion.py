@@ -5,9 +5,11 @@ flags. It returns its own care_type, red flags and a one-line reason (strict
 JSON; every evidence_quote must be a real substring of the message, else the
 field is dropped). The LLM can only RAISE severity:
 
-  - agree         -> the caller bumps confidence ("Second opinion: agrees")
+  - agree         -> the caller bumps confidence (note "agrees")
   - more severe   -> the caller asks ONE confirmation question, never decides
-  - less severe   -> ignored (the LLM can never lower urgency or remove a flag)
+                     (note "llm_more_severe_asked")
+  - less severe   -> ignored, the LLM can never lower urgency or remove a flag
+                     (note "llm_less_severe_ignored")
 
 When LLM_ROLE=off or the call fails, the ML result stands unchanged.
 """
@@ -116,9 +118,15 @@ _CARE_SEVERITY = {
 def reconcile(ml_care_type: str, ml_flags: list[str], llm: Optional[dict]) -> dict:
     """Reconciles the ML decision with the LLM second opinion.
 
+    The ML side must be the FINAL care_type the pipeline will return (after
+    risk modifiers and ambulatory/injury adjustments), so care_type is always
+    compared to care_type (and flags to flags).
+
     Returns a dict:
       {"agrees": bool, "llm_care_type": str|None, "note": str, "ask": bool,
        "ask_flags": [str]}
+    Notes: "agrees" | "llm_more_severe_asked" | "llm_less_severe_ignored"
+    | "llm_unavailable".
     The LLM can never lower urgency or remove a red flag; a more-severe LLM
     opinion only asks a confirmation question (never decides).
     """
@@ -143,10 +151,10 @@ def reconcile(ml_care_type: str, ml_flags: list[str], llm: Optional[dict]) -> di
         return {
             "agrees": False,
             "llm_care_type": llm_care_type,
-            "note": "more_severe",
+            "note": "llm_more_severe_asked",
             "ask": True,
             "ask_flags": new_flags,
         }
 
     # Less severe: LLM would downgrade -> ignore.
-    return {"agrees": False, "llm_care_type": llm_care_type, "note": "less_severe_ignored", "ask": False, "ask_flags": []}
+    return {"agrees": False, "llm_care_type": llm_care_type, "note": "llm_less_severe_ignored", "ask": False, "ask_flags": []}

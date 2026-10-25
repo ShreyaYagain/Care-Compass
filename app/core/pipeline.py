@@ -40,7 +40,7 @@ from app.core.semantic_screen import (
 )
 from app.core.redflag_model import predict_flags as ml_predict_flags
 from app.core.second_opinion import run_second_opinion, reconcile as reconcile_second_opinion
-from app.core.triage_model import predict_triage
+from app.core.triage_model import predict_triage, raw_model_argmax
 from app.core.risk_modifiers import apply_risk_modifiers
 from app.core.matching import rank_caregivers
 from app.core.explain import build_reasoning, build_card_lines, card_text, context_line
@@ -224,6 +224,13 @@ def _ask_next_module_question(module_id: str, answers: dict, slots: dict, lang: 
             return field_id, card
         # Already answered in the message: mark it and move to the next question.
         local_answers[field_id] = "__stated__"
+
+
+def _record_override(overrides: list[dict], stage: str, prev: str | None, new: str | None):
+    """Appends a structured override record when the care_type changed at a
+    pipeline stage (used by the override audit; exposed via debug.overrides)."""
+    if new != prev:
+        overrides.append({"stage": stage, "from": prev, "to": new})
 
 
 def _card_question_and_options(card: dict | None) -> tuple[str | None, list[str]]:
@@ -992,19 +999,32 @@ def run_triage_pipeline(
 
     reasons.append(f"Stage 5 (Model Prediction): care_type={care_type}, urgency={urgency}, probs={probs}, conf={confidence}")
 
+    # Override audit trail: the pure model argmax first, then every stage that
+    # changes the care_type afterwards (exposed as debug.overrides).
+    overrides: list[dict] = []
+    try:
+        overrides.append({"stage": "5_model_argmax", "care_type": raw_model_argmax(patient_text)})
+    except Exception:
+        overrides.append({"stage": "5_model_argmax", "care_type": None})
+    overrides.append({"stage": "5_hybrid_rules_ml", "care_type": care_type})
+
     # Out-of-dataset mapping from LLM if model has low confidence
     if slots.get("unfamiliar_care_type_mapped") and confidence < 0.65:
+        _prev_unfamiliar = care_type
         mapped_type = slots["unfamiliar_care_type_mapped"]
         if mapped_type in settings.CARE_TYPES and mapped_type != "emergency_112":
             care_type = mapped_type
             urgency = settings.CARE_TO_URGENCY.get(care_type, "same_day")
             reasons.append(f"Stage 5 (Unfamiliar request mapped): care_type={care_type} ({slots.get('unfamiliar_reason')})")
+        _record_override(overrides, "5_unfamiliar_map", _prev_unfamiliar, care_type)
 
     # 6. Risk modifiers
+    _prev_risk = care_type
     urgency_after_risk_modifiers, care_type, applied_modifiers = apply_risk_modifiers(
         request.patient, slots, urgency, care_type
     )
     reasons.append(f"Stage 6 (Risk Modifiers): urgency={urgency_after_risk_modifiers}, care_type={care_type}, applied={applied_modifiers}")
+    _record_override(overrides, "6_risk_modifiers", _prev_risk, care_type)
 
     # 6.5 Ambulatory adjustment: routine fever/cough/cold presentations without
     # red flags, severity, high temperature, or vulnerable age are video-consult
@@ -1025,9 +1045,11 @@ def run_triage_pipeline(
         and not (slots.get("fever_temp") is not None and float(slots.get("fever_temp") or 0) >= 103)
         and not high_flags
     ):
+        _prev_ambulatory = care_type
         care_type = "teleconsultation"
         urgency_after_risk_modifiers = "same_day"
         reasons.append("Stage 6.5 (Ambulatory adjustment): routine fever/cough/cold routed to teleconsultation")
+        _record_override(overrides, "6.5_ambulatory", _prev_ambulatory, care_type)
 
     # 6.6 Injury sanity: routine pain/sprain/joint presentations are
     # video-consult material (an X-ray needs a hospital anyway) unless severe
@@ -1039,6 +1061,7 @@ def run_triage_pipeline(
     )
     if care_type != _prev_injury:
         reasons.append(f"Stage 6.6 (Injury sanity): {_prev_injury} -> {care_type}")
+    _record_override(overrides, "6.6_injury_sanity", _prev_injury, care_type)
 
     # 7. Confidence fallback & Max follow-ups decision rule
     urgency_after_confidence_fallback = urgency_after_risk_modifiers
@@ -1052,12 +1075,14 @@ def run_triage_pipeline(
 
     if history_turns >= settings.MAX_FOLLOWUPS:
         if is_unclear and urgency_after_risk_modifiers != "emergency" and care_type != "emergency_112":
+            _prev_fallback = care_type
             care_type = "teleconsultation"
             urgency_after_confidence_fallback = "same_day"
             unclear_fallback = True
             confidence = 0.30
             reasons.append(f"Stage 7: Max follow-ups reached ({history_turns} turns); condition unclear. Defaulted to teleconsultation as safest first step.")
             reasons.append("not enough information")
+            _record_override(overrides, "7_confidence_fallback", _prev_fallback, care_type)
     elif (
         urgency_after_risk_modifiers != "emergency"
         and care_type != "emergency_112"
@@ -1189,21 +1214,27 @@ def run_triage_pipeline(
                 reasons.append("Context Escalation: Severe air pollution + asthma + respiratory symptom escalated to emergency_112")
 
     if is_emergency:
+        _prev_emergency = care_type
         final_care_type = "emergency_112"
         final_urgency = "emergency"
         emergency_steps = _get_emergency_steps(lang)
         matched_caregivers = []
         reasons.append("Stage 8 (Rule 2): Emergency triggered -> emergency_112 & emergency")
+        _record_override(overrides, "8_emergency_rule2", _prev_emergency, final_care_type)
     else:
         final_care_type = care_type
         if final_care_type == "emergency_112":
+            _prev_remap = final_care_type
             final_care_type = "paramedic_home_visit" if ("fever" in slots.get("symptoms", [])) else "teleconsultation"
+            _record_override(overrides, "8_emergency_remap", _prev_remap, final_care_type)
 
         # Pregnancy floor: never "scheduled"; same_day teleconsultation at minimum.
         if slots.get("pregnancy"):
             if final_care_type == "lab_test_home":
+                _prev_pregnancy = final_care_type
                 final_care_type = "teleconsultation"
                 reasons.append("Pregnancy floor: lab test replaced by same_day teleconsultation.")
+                _record_override(overrides, "8_pregnancy_floor", _prev_pregnancy, final_care_type)
 
         final_urgency = settings.CARE_TO_URGENCY.get(final_care_type, "same_day")
         if slots.get("pregnancy") and final_urgency == "scheduled":
@@ -1219,6 +1250,7 @@ def run_triage_pipeline(
             and slots.get("severity") != "severe"
             and slots.get("age_group") != "child"
         ):
+            _prev_context = final_care_type
             final_care_type = "teleconsultation"
             context_key = "night_rain"
             temp_val = round(context["temperature_c"]) if context.get("temperature_c") is not None else None
@@ -1238,6 +1270,7 @@ def run_triage_pipeline(
                 "reason": context_line(context_key, lang),
             }
             reasons.append("Context Soft Adjustment: Night/rain shifted paramedic_home_visit to immediate teleconsultation (same_day)")
+            _record_override(overrides, "8_context_night_rain", _prev_context, final_care_type)
 
         emergency_steps = []
         matched_caregivers = rank_caregivers(
@@ -1384,6 +1417,7 @@ def run_triage_pipeline(
         "extraction_source": slots.get("extraction_source"),
         "ml_red_flags": ml_red_flags,
         "second_opinion": second_opinion,
+        "overrides": overrides,
         "final_care_type": final_care_type,
         "final_urgency": final_urgency,
         "context_info": context,

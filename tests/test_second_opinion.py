@@ -33,11 +33,25 @@ class TestReconcile(unittest.TestCase):
         recon = reconcile("emergency_112", ["chest_pain"], _opinion("teleconsultation", []))
         self.assertFalse(recon["agrees"])
         self.assertFalse(recon["ask"])
-        self.assertEqual(recon["note"], "less_severe_ignored")
+        self.assertEqual(recon["note"], "llm_less_severe_ignored")
+
+    def test_llm_more_severe_note(self):
+        recon = reconcile("teleconsultation", [], _opinion("emergency_112", ["chest_pain"]))
+        self.assertEqual(recon["note"], "llm_more_severe_asked")
 
     def test_llm_unavailable_stands(self):
         recon = reconcile("teleconsultation", [], None)
         self.assertFalse(recon["ask"])
+        self.assertEqual(recon["note"], "llm_unavailable")
+
+    def test_same_care_type_same_flags_agrees(self):
+        # care_type is compared to care_type and flags to flags: identical
+        # decisions must agree, never "less_severe_ignored".
+        recon = reconcile("teleconsultation", [], _opinion("teleconsultation", []))
+        self.assertTrue(recon["agrees"])
+        self.assertEqual(recon["note"], "agrees")
+        recon = reconcile("teleconsultation", ["fever"], _opinion("teleconsultation", ["fever"]))
+        self.assertTrue(recon["agrees"])
 
 
 class TestSecondOpinionPipeline(unittest.TestCase):
@@ -80,6 +94,62 @@ class TestSecondOpinionPipeline(unittest.TestCase):
         self.assertIsNotNone(resp.follow_up_question)
         self.assertIsNotNone(resp.second_opinion)
         self.assertFalse(resp.second_opinion["agrees"])
+        self.assertEqual(resp.second_opinion["note"], "llm_more_severe_asked")
+
+
+class TestSecondOpinionFourCasesLLMMocked(unittest.TestCase):
+    """End-to-end: the LLM provider (Groq/DeepSeek JSON call) is mocked, and
+    all four reconcile outcomes are verified against the FINAL care_type:
+
+      1. agrees                same care_type, no extra red flags
+      2. llm_more_severe_asked LLM higher severity -> one confirmation question
+      3. llm_less_severe_ignored LLM lower severity -> ignored
+      4. llm unavailable       ML decision stands unchanged
+    """
+
+    def _run_with_llm(self, user_input, llm_output, lang="hinglish"):
+        from app.core.second_opinion import SecondOpinionOut
+        with patch("app.core.second_opinion.is_llm_available", return_value=True), \
+             patch("app.core.second_opinion.llm_json", return_value=llm_output):
+            return run_triage_pipeline(TriageRequest(user_input=user_input, language=lang, location=LOC))
+
+    def test_four_cases(self):
+        from app.core.second_opinion import SecondOpinionOut
+
+        # 1. agrees: ML final and LLM both teleconsultation, no extra flags.
+        resp = self._run_with_llm(
+            "mujhe 2 din se bukhar hai",
+            SecondOpinionOut(care_type="teleconsultation", red_flags=[], reason="viral fever"),
+        )
+        self.assertEqual(resp.care_type, "teleconsultation")
+        self.assertIsNotNone(resp.second_opinion)
+        self.assertTrue(resp.second_opinion["agrees"])
+        self.assertEqual(resp.second_opinion["note"], "agrees")
+
+        # 2. llm_more_severe_asked: LLM says emergency + a flag the ML missed.
+        resp = self._run_with_llm(
+            "mujhe sir dard hai kal se",
+            SecondOpinionOut(care_type="emergency_112", red_flags=["chest_pain"], reason="possible heart emergency"),
+        )
+        self.assertIsNone(resp.care_type)
+        self.assertIsNotNone(resp.follow_up_question)
+        self.assertFalse(resp.second_opinion["agrees"])
+        self.assertEqual(resp.second_opinion["note"], "llm_more_severe_asked")
+
+        # 3. llm_less_severe_ignored: ML final is a home visit, LLM downgrades.
+        resp = self._run_with_llm(
+            "papa ko do din se bukhar hai aur khansi bhi",
+            SecondOpinionOut(care_type="teleconsultation", red_flags=[], reason="video consult enough"),
+        )
+        self.assertEqual(resp.care_type, "paramedic_home_visit")
+        self.assertFalse(resp.second_opinion["agrees"])
+        self.assertEqual(resp.second_opinion["note"], "llm_less_severe_ignored")
+
+        # 4. LLM unavailable: the ML decision stands unchanged.
+        with patch("app.core.second_opinion.is_llm_available", return_value=False):
+            resp = run_triage_pipeline(TriageRequest(user_input="mujhe 2 din se bukhar hai", language="hinglish", location=LOC))
+        self.assertEqual(resp.care_type, "teleconsultation")
+        self.assertIsNone(resp.second_opinion)
 
 
 if __name__ == "__main__":

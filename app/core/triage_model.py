@@ -32,6 +32,23 @@ def load_artifacts():
             _TRAIN_TFIDF_DATA = None
 
 
+def raw_model_argmax(text: str) -> str | None:
+    """The pure calibrated model argmax on `text`: no rule layer, no LLM,
+    no pipeline stages. Used by the override audit to attribute final
+    care_type changes. Returns None when the artifacts are unavailable."""
+    load_artifacts()
+    if not (text and text.strip()) or _CARE_MODEL is None or _TFIDF_VECTORIZER is None:
+        return None
+    try:
+        x = _TFIDF_VECTORIZER.transform([text])
+        probs = _CARE_MODEL.predict_proba(x)[0]
+        classes = list(_CARE_MODEL.classes_)
+        best = str(classes[int(np.argmax(probs))])
+        return best if best in settings.CARE_TYPES else None
+    except Exception:
+        return None
+
+
 def rule_based_predict(slots: dict, text: str) -> tuple[str, str, dict, float]:
     """
     High-accuracy clinical and service routing baseline for the official label set:

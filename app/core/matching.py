@@ -74,6 +74,70 @@ SYNTHETIC_VENUE_FOR_CARE_TYPE = {
 
 VENUE_LABELS = {"home": "home consult", "virtual": "video consult", "hospital": "OPD"}
 
+# Localised fragments for the caregiver reason line, so the reason always
+# follows the user's language (en / hi / hinglish).
+_LANG_NAME = {
+    "en": {"Hindi": "Hindi", "English": "English"},
+    "hinglish": {"Hindi": "Hindi", "English": "English"},
+    "hi": {"Hindi": "हिंदी", "English": "अंग्रेज़ी"},
+}
+
+_VENUE_LABELS_HI = {"home consult": "होम कंसल्ट", "video consult": "वीडियो परामर्श", "OPD": "ओपीडी"}
+
+_DEPT_LABELS_HI = {
+    "orthopaedics": "हड्डी रोग",
+    "general medicine": "सामान्य चिकित्सा",
+    "paediatrics": "बाल रोग",
+    "gynaecology": "स्त्री रोग",
+}
+
+
+def _caregiver_reason(
+    lang: str,
+    *,
+    primary_lang: str,
+    care_type: str,
+    is_synthetic: bool,
+    dist_km: float,
+    free_from: str,
+    free_until: str,
+    rating: float,
+    venue_label: str = "",
+    dept_label: str = "",
+) -> str:
+    """One readable reason line in the user's language (en/hi/hinglish)."""
+    lang_key = lang if lang in ("hi", "hinglish") else "en"
+    lang_name = _LANG_NAME[lang_key].get(primary_lang, primary_lang)
+
+    if lang_key == "hi":
+        v_label = _VENUE_LABELS_HI.get(venue_label, venue_label) if venue_label else ""
+        d_label = _DEPT_LABELS_HI.get(dept_label, dept_label) if dept_label else ""
+        if care_type == "teleconsultation":
+            if is_synthetic:
+                return f"{lang_name} बोलने वाले, {v_label}" + (f" · {d_label}" if d_label else "") + f", ★{rating}"
+            return f"{lang_name} बोलने वाले, {free_from}–{free_until} उपलब्ध, ★{rating}"
+        if is_synthetic:
+            return f"{lang_name} बोलने वाले, {dist_km:.1f} किमी दूर, {v_label}" + (f" · {d_label}" if d_label else "") + f", {free_from}–{free_until} उपलब्ध"
+        return f"{lang_name} बोलने वाले, {dist_km:.1f} किमी दूर, {free_from}–{free_until} उपलब्ध"
+
+    if lang_key == "hinglish":
+        if care_type == "teleconsultation":
+            if is_synthetic:
+                return f"{primary_lang} bolne wale, {venue_label}" + (f" · {dept_label}" if dept_label else "") + f", ★{rating}"
+            return f"{primary_lang} bolne wale, {free_from}–{free_until} free, ★{rating}"
+        if is_synthetic:
+            return f"{primary_lang} bolne wale, {dist_km:.1f} km door, {venue_label}" + (f" · {dept_label}" if dept_label else "") + f", {free_from}–{free_until} free"
+        return f"{primary_lang} bolne wale, {dist_km:.1f} km door, {free_from}–{free_until} free"
+
+    # en
+    if care_type == "teleconsultation":
+        if is_synthetic:
+            return f"{primary_lang}-speaking, {venue_label}" + (f" · {dept_label}" if dept_label else "") + f", ★{rating}"
+        return f"{primary_lang}-speaking, free {free_from}–{free_until}, ★{rating}"
+    if is_synthetic:
+        return f"{primary_lang}-speaking, {dist_km:.1f} km away, {venue_label}" + (f" · {dept_label}" if dept_label else "") + f", free {free_from}–{free_until}"
+    return f"{primary_lang}-speaking, {dist_km:.1f} km away, free {free_from}–{free_until}"
+
 
 def _normalise_synthetic(row: dict) -> dict:
     """Synthetic rows use the official columns plus venue/facility/department.
@@ -296,19 +360,25 @@ def rank_caregivers(
             2,
         )
 
-        # Build readable reason text
-        if care_type == "teleconsultation":
-            reason = f"{primary_lang}-speaking, free {free_from}–{free_until}, ★{cg['rating']}"
-        else:
-            reason = f"{primary_lang}-speaking, {dist_km:.1f} km away, free {free_from}–{free_until}"
+        # Build readable reason text in the user's language.
         if is_synthetic:
             venue_label = VENUE_LABELS.get(cg.get("venue"), cg.get("venue") or "consult")
             dept_label = (cg.get("department") or "").replace("_", " ")
-            facility = cg.get("facility_name") or ""
-            if care_type == "teleconsultation":
-                reason = f"{primary_lang}-speaking, {venue_label}" + (f" · {dept_label}" if dept_label else "") + f", ★{cg['rating']}"
-            else:
-                reason = f"{primary_lang}-speaking, {dist_km:.1f} km away, {venue_label}" + (f" · {dept_label}" if dept_label else "") + f", free {free_from}–{free_until}"
+        else:
+            venue_label = ""
+            dept_label = ""
+        reason = _caregiver_reason(
+            user_language,
+            primary_lang=primary_lang,
+            care_type=care_type,
+            is_synthetic=is_synthetic,
+            dist_km=dist_km,
+            free_from=free_from,
+            free_until=free_until,
+            rating=float(cg["rating"]),
+            venue_label=venue_label,
+            dept_label=dept_label,
+        )
 
         candidates.append({
             "caregiver_id": cg["caregiver_id"],

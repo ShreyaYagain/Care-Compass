@@ -1,0 +1,22 @@
+metric,dataset,method,n,value,note
+emergency_recall_a+b,redflag_holdout,rules + confirm-yes (live DeepSeek),35,0.9714,
+question_rate,redflag_holdout,semantic screen,35,0.9143,
+accuracy_decided,redflag_holdout,pipeline first-turn,21,0.619,
+accuracy_null_counted,redflag_holdout,pipeline first-turn,53,0.2453,
+followup_rate,redflag_holdout,pipeline,53,0.6038,
+emergency_recall_a+b,unseen_tests,rules + confirm-yes (live DeepSeek),6,1.0,
+question_rate,unseen_tests,semantic screen,6,0.1667,
+accuracy_decided,unseen_tests,pipeline first-turn,29,0.5862,
+accuracy_null_counted,unseen_tests,pipeline first-turn,30,0.5667,
+followup_rate,unseen_tests,pipeline,30,0.0333,
+emergency_recall_a+b,official_340,rules + confirm-yes (live DeepSeek),56,1.0,
+question_rate,official_340,semantic screen,56,0.4643,
+accuracy_decided,official_340,pipeline first-turn,314,0.586,
+accuracy_null_counted,official_340,pipeline first-turn,340,0.5412,
+followup_rate,official_340,pipeline,340,0.0765,
+accuracy_allow_followup_false,holdout+unseen,pipeline no-followup,83,0.494,
+emergency_recall_allow_followup_false,holdout+unseen,rules only (no evidence),41,0.1951,
+classifier_only_cv_f1,official grouped CV,Model A,,0.879,recorded at selection
+provider,,live DeepSeek,,deepseek,model deepseek-v4-pro / fast deepseek-flash
+screen_lat_p50_p95_ms,,live DeepSeek,,0.3 / 3184,
+opinion_lat_p50_p95_ms,,live DeepSeek,,0.3 / 7046,

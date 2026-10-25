@@ -137,3 +137,25 @@ All "CV F1" figures below are the **Exact-Text Grouped CV (main figure)**; see `
 - **Leakage diagnostics**: a complete-linkage agglomerative small-cluster split (E5 ≥ 0.88 / TF ≥ 0.90 within language, E5 ≥ 0.92 cross-language, capped ≤ 8) and a naive random split are also reported but marked **leaky** (95.8% of held-out small clusters have an exact duplicate in training) and are **not used for selection**; the strict loose-cluster holdout (mean max cosine 0.238) is the stress-test lower bound.
 - **Human Clinical Review Requirement**: The evaluation sets `unseen_tests.csv` and `redflag_tests.csv` carry a `reviewed_by_human` column (currently `false`), documented in `ml/data/README.md` for clinical validation by the medical team.
 - **Zero Data Leakage**: No synthetic LLM-augmented or pseudo-labelled data was included in validation folds.
+
+---
+
+### Verification Reconciliation (live DeepSeek, no tuning on holdouts)
+Evaluated with the **live** DeepSeek provider (`deepseek-v4-pro` main / `deepseek-flash` fast), 8-worker pool, 8 s timeout, disk-cached. All previous-provider (Groq/Llama) numbers are labelled and not quoted as current.
+
+| Metric | Dataset | n | Value |
+|---|---|---|---|
+| Emergency recall (a) immediate 112 + (b) confirmation-then-Yes | redflag_holdout | 35 | **0.971** (34/35) |
+| — question rate (b) among emergencies | redflag_holdout | 35 | 0.914 |
+| Emergency recall (a+b) | unseen_tests | 6 | 1.000 |
+| Emergency recall (a+b) | official 340 | 56 | 1.000 |
+| Pipeline first-turn accuracy (among decided rows) | official 340 | 314 | 0.586 |
+| Pipeline first-turn accuracy (follow-ups counted as null) | official 340 | 340 | 0.541 |
+| Pipeline follow-up rate | official 340 | 340 | 0.076 |
+| `allow_followup=false` accuracy (best-guess, no question) | holdout+unseen | 83 | 0.494 |
+| `allow_followup=false` emergency recall (rules only, no evidence ⇒ no 112) | holdout+unseen | 41 | 0.195 |
+
+- **Classifier-only grouped CV (main figure)**: 0.879 — the ML classifier alone on exact-text grouped folds.
+- **Pipeline first-turn accuracy**: 0.586 among decided rows — lower than CV because the pipeline (rules + modules) deliberately asks a follow-up on ambiguous rows instead of guessing, and the official ground truth has many paraphrases.
+- **Pipeline with `allow_followup=false`**: 0.494 accuracy / 0.195 emergency recall — it must return a label for every row without asking, so emergency recall drops to the deterministic rules only ("never emergency without evidence"); this is the honest cost of suppressing follow-ups.
+- **Live DeepSeek latency**: semantic screen p50/p95 = 0.3 / 3184 ms; second opinion p50/p95 = 0.3 / 7046 ms (p50 is cache-dominated; p95 is the live API call).

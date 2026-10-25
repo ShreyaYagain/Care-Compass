@@ -1,0 +1,316 @@
+{
+ "datasets": {
+  "redflag_holdout": {
+   "n": 53,
+   "emergency_a": 2,
+   "emergency_b": 32,
+   "emergency_c": 1,
+   "followup": 32,
+   "decided": 21,
+   "correct_decided": 13,
+   "correct_null_counted": 13,
+   "flag_recall": {
+    "chest_pain": {
+     "rules": 0,
+     "ml": 4,
+     "sem": 4,
+     "union": 4,
+     "pos": 4
+    },
+    "breathlessness": {
+     "rules": 0,
+     "ml": 1,
+     "sem": 4,
+     "union": 4,
+     "pos": 4
+    },
+    "unconsciousness": {
+     "rules": 2,
+     "ml": 1,
+     "sem": 2,
+     "union": 2,
+     "pos": 3
+    },
+    "severe_bleeding": {
+     "rules": 0,
+     "ml": 1,
+     "sem": 4,
+     "union": 4,
+     "pos": 4
+    },
+    "stroke_symptoms": {
+     "rules": 0,
+     "ml": 1,
+     "sem": 4,
+     "union": 4,
+     "pos": 4
+    },
+    "seizure": {
+     "rules": 0,
+     "ml": 2,
+     "sem": 4,
+     "union": 4,
+     "pos": 4
+    },
+    "high_fever_infant": {
+     "rules": 0,
+     "ml": 0,
+     "sem": 4,
+     "union": 4,
+     "pos": 4
+    },
+    "suicidal_ideation": {
+     "rules": 0,
+     "ml": 0,
+     "sem": 4,
+     "union": 4,
+     "pos": 4
+    },
+    "severe_dehydration": {
+     "rules": 0,
+     "ml": 3,
+     "sem": 4,
+     "union": 4,
+     "pos": 4
+    }
+   }
+  },
+  "unseen_tests": {
+   "n": 30,
+   "emergency_a": 5,
+   "emergency_b": 1,
+   "emergency_c": 0,
+   "followup": 1,
+   "decided": 29,
+   "correct_decided": 17,
+   "correct_null_counted": 17,
+   "flag_recall": {
+    "chest_pain": {
+     "rules": 0,
+     "ml": 0,
+     "sem": 0,
+     "union": 0,
+     "pos": 0
+    },
+    "breathlessness": {
+     "rules": 0,
+     "ml": 0,
+     "sem": 0,
+     "union": 0,
+     "pos": 0
+    },
+    "unconsciousness": {
+     "rules": 0,
+     "ml": 0,
+     "sem": 0,
+     "union": 0,
+     "pos": 0
+    },
+    "severe_bleeding": {
+     "rules": 0,
+     "ml": 0,
+     "sem": 0,
+     "union": 0,
+     "pos": 0
+    },
+    "stroke_symptoms": {
+     "rules": 0,
+     "ml": 0,
+     "sem": 0,
+     "union": 0,
+     "pos": 0
+    },
+    "seizure": {
+     "rules": 0,
+     "ml": 0,
+     "sem": 0,
+     "union": 0,
+     "pos": 0
+    },
+    "high_fever_infant": {
+     "rules": 0,
+     "ml": 0,
+     "sem": 0,
+     "union": 0,
+     "pos": 0
+    },
+    "suicidal_ideation": {
+     "rules": 0,
+     "ml": 0,
+     "sem": 0,
+     "union": 0,
+     "pos": 0
+    },
+    "severe_dehydration": {
+     "rules": 0,
+     "ml": 0,
+     "sem": 0,
+     "union": 0,
+     "pos": 0
+    }
+   }
+  },
+  "redflag_negatives_v2": {
+   "n": 60,
+   "emergency_a": 0,
+   "emergency_b": 0,
+   "emergency_c": 0,
+   "followup": 2,
+   "decided": 58,
+   "correct_decided": 0,
+   "correct_null_counted": 0,
+   "flag_recall": {
+    "chest_pain": {
+     "rules": 0,
+     "ml": 0,
+     "sem": 0,
+     "union": 0,
+     "pos": 0
+    },
+    "breathlessness": {
+     "rules": 0,
+     "ml": 0,
+     "sem": 0,
+     "union": 0,
+     "pos": 0
+    },
+    "unconsciousness": {
+     "rules": 0,
+     "ml": 0,
+     "sem": 0,
+     "union": 0,
+     "pos": 0
+    },
+    "severe_bleeding": {
+     "rules": 0,
+     "ml": 0,
+     "sem": 0,
+     "union": 0,
+     "pos": 0
+    },
+    "stroke_symptoms": {
+     "rules": 0,
+     "ml": 0,
+     "sem": 0,
+     "union": 0,
+     "pos": 0
+    },
+    "seizure": {
+     "rules": 0,
+     "ml": 0,
+     "sem": 0,
+     "union": 0,
+     "pos": 0
+    },
+    "high_fever_infant": {
+     "rules": 0,
+     "ml": 0,
+     "sem": 0,
+     "union": 0,
+     "pos": 0
+    },
+    "suicidal_ideation": {
+     "rules": 0,
+     "ml": 0,
+     "sem": 0,
+     "union": 0,
+     "pos": 0
+    },
+    "severe_dehydration": {
+     "rules": 0,
+     "ml": 0,
+     "sem": 0,
+     "union": 0,
+     "pos": 0
+    }
+   }
+  },
+  "official_340": {
+   "n": 340,
+   "emergency_a": 30,
+   "emergency_b": 26,
+   "emergency_c": 0,
+   "followup": 26,
+   "decided": 314,
+   "correct_decided": 184,
+   "correct_null_counted": 184,
+   "flag_recall": {
+    "chest_pain": {
+     "rules": 18,
+     "ml": 18,
+     "sem": 18,
+     "union": 18,
+     "pos": 56
+    },
+    "breathlessness": {
+     "rules": 18,
+     "ml": 9,
+     "sem": 18,
+     "union": 18,
+     "pos": 56
+    },
+    "unconsciousness": {
+     "rules": 0,
+     "ml": 0,
+     "sem": 0,
+     "union": 0,
+     "pos": 0
+    },
+    "severe_bleeding": {
+     "rules": 0,
+     "ml": 0,
+     "sem": 0,
+     "union": 0,
+     "pos": 0
+    },
+    "stroke_symptoms": {
+     "rules": 0,
+     "ml": 0,
+     "sem": 0,
+     "union": 0,
+     "pos": 0
+    },
+    "seizure": {
+     "rules": 0,
+     "ml": 0,
+     "sem": 0,
+     "union": 0,
+     "pos": 0
+    },
+    "high_fever_infant": {
+     "rules": 0,
+     "ml": 0,
+     "sem": 0,
+     "union": 0,
+     "pos": 0
+    },
+    "suicidal_ideation": {
+     "rules": 0,
+     "ml": 0,
+     "sem": 0,
+     "union": 0,
+     "pos": 0
+    },
+    "severe_dehydration": {
+     "rules": 0,
+     "ml": 0,
+     "sem": 0,
+     "union": 0,
+     "pos": 0
+    }
+   }
+  }
+ },
+ "provider": "deepseek",
+ "model": "deepseek-v4-pro",
+ "screen_mode": {
+  "llm_ok": 480,
+  "fallback_local": 0,
+  "failsafe_question": 2,
+  "skip": 1
+ },
+ "screen_lat_p50": 0.3,
+ "screen_lat_p95": 3184.3,
+ "opinion_lat_p50": 0.3,
+ "opinion_lat_p95": 7046.1
+}

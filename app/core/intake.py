@@ -982,6 +982,30 @@ def has_question_been_asked(history: list[dict], pattern_words: list[str]) -> bo
     return False
 
 
+def has_informative_context(slots: dict, norm_text: str = "") -> bool:
+    """True when the message already carries enough to decide directly (no
+    follow-up card/question): a symptom or service request PLUS a context marker
+    (duration / severity / age / relation / pain location / service word), or
+    8+ words. Follow-ups are reserved for very sparse messages such as
+    "mujhe bukhar hai", "I fell down", "pet dard"."""
+    nt = (norm_text or "").strip()
+    has_symptom = bool(slots.get("symptoms"))
+    has_service = slots.get("service_requested") in ("nursing", "lab")
+    if not (has_symptom or has_service):
+        return False
+    if len(nt.split()) >= 8:
+        return True
+    if slots.get("duration") or slots.get("severity") or slots.get("age_group"):
+        return True
+    if slots.get("patient_relation") not in (None, "self", ""):
+        return True
+    if slots.get("pregnancy") or slots.get("chronic_conditions"):
+        return True
+    if has_service:
+        return True
+    return False
+
+
 def _select_question_id(slots: dict, history: list[dict] | None, context: dict | None = None) -> str | None:
     """
     Returns the next question bank id to ask, or None if no question is needed.

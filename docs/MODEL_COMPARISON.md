@@ -1,5 +1,7 @@
 # Care Type Model Comparison and Benchmarks
 
+> **Provider note**: the "Groq LLM" rows below (Model F, Hybrid) are **previous provider** numbers — the LLM is now DeepSeek (`LLM_PROVIDER=deepseek`) and is a second opinion, not the primary classifier.
+
 ### 1. Cross-Validation Range and Bound Hierarchy Analysis
 The official triage dataset (`ml/data/official/triage_dataset.jsonl`) contains 301 labeled rows but only 54 unique normalized strings (82.1% of rows have an identical duplicate elsewhere). This templated, synthetic structure means grouped-CV is a **lower/upper bound range**, not a single number:
 1. **Exact-Text Grouped CV (Main Figure)**: groups identical normalized strings into one fold; zero identical strings cross folds (Model A $0.879$, Model B $0.736$). **This is the metric used for model selection.**

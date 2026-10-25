@@ -14,12 +14,15 @@ This system is trained and benchmarked on the official dataset:
 ---
 
 ## 2. LLM as Second Opinion (DeepSeek) & On-Device Speech
-- **DeepSeek (`deepseek-chat`)** — the LLM is a **second opinion**, never the primary decision-maker:
-  - The deterministic rules and the ML models decide `care_type` and the nine red flags first; the LLM runs in parallel and returns its own `care_type`, red flags, and a one-line reason (strict JSON with evidence quotes).
-  - Reconcile policy (safety invariant): the LLM can only **raise** severity — if it agrees, confidence goes up; if it is more severe, the system asks one confirmation question (never decides); if it is less severe, it is ignored. The LLM can never lower urgency or remove a red flag.
+- **DeepSeek (provider-agnostic `LLM_PROVIDER=deepseek|groq`)** — the LLM is used for three jobs, never as the primary decision-maker:
+  1. **Second opinion** (`deepseek-v4-pro`): after the ML models decide, it returns its own `care_type`, red flags, and a one-line reason (strict JSON with evidence quotes).
+  2. **Semantic red-flag screen** (`deepseek-flash`, the fast model): meaning-based detection of the nine flags, gated on evidence quotes present in the message.
+  3. **Fallback slot extraction** (`deepseek-flash`): runs only when the lexicon/regex finds no symptom/service.
+  - Reconcile policy (safety invariant): the LLM can only **raise** severity — agree → confidence up; more severe → one confirmation question (never decides); less severe → ignored. The LLM can never lower urgency or remove a red flag.
   - `LLM_ROLE=second_opinion` (default) enables this; `LLM_ROLE=off` runs rules + ML only.
-  - Fallback order: ML result $\rightarrow$ deterministic rule/regex layer (never crashes); a failed LLM call leaves the ML result unchanged.
-- **On-Device `SpeechRecognizer`** (`hi-IN` / `en-IN`): voice input is transcribed on-device and the transcript is validated/normalised by the LLM before triage (no server-side audio upload; `/transcribe` takes text).
+  - **The system works without the LLM** (rules + ML) — with lower emergency recall on paraphrases; a failed/absent LLM call leaves the ML result unchanged.
+- **Privacy**: user text is masked for personal details (phone numbers, email) by the input guard before any LLM call, and only the synthetic demo data is stored. The dataset is 100% synthetic (no real patients, no PII).
+- **On-Device `SpeechRecognizer`** (`hi-IN` / `en-IN`): voice is transcribed on-device and the transcript is validated/normalised by the LLM (`/transcribe` text path). Server-side STT (`groq_whisper` / `local_whisper`) is behind `STT_PROVIDER`, defaulting to `android_only` when no Groq key is set.
 
 ---
 

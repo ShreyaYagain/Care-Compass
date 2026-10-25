@@ -59,12 +59,12 @@ Selected strictly per the project model selection rules documented in [MODEL_COM
    - Model C **failed to qualify**, establishing Model A as the winning classifier.
 2. **Deterministic Safety Invariant**:
    - With the 9-flag clinical safety rule layer, Model A delivers **1.000 (100%) recall** across the 137 emergency rows of our own test set (`ml/data/redflag_tests.csv`), with a **0.000 false-alarm rate** on 80 negated/near-miss rows.
-   - **Honest generalization caveat**: on a separate, freshly-drafted holdout (`ml/data/redflag_holdout.csv`, 35 new phrasings) the same rules catch only **~6% (2/35)**. The rule layer memorizes known phrasings; genuinely new paraphrases need the Groq intake layer and ongoing rule strengthening. The safety claim is therefore *"the rules catch 98% of our own test set; we are validating on human-written cases"* (see `docs/DATA_AUDIT.md`).
+    - **Honest generalization caveat**: on a separate, freshly-drafted holdout (`ml/data/redflag_holdout.csv`, 35 new phrasings) the same rules catch only **~6% (2/35)**. The rule layer memorizes known phrasings; genuinely new paraphrases need the ML red-flag model + the LLM (DeepSeek) semantic screen/second opinion and ongoing rule strengthening. The safety claim is therefore *"the rules catch 98% of our own test set; we are validating on human-written cases"* (see `docs/DATA_AUDIT.md`).
 3. **Ultra-Low Latency & Serving Efficiency**:
    - Removing the ~471 MB `multilingual-e5-small` SentenceTransformer embedding model from the runtime serving path reduces inference latency from ~12 ms to **< 0.5 ms** per query on commodity CPU.
    - The production artifact footprint is **1.2 MB**, allowing immediate zero-warmup container starts and minimal memory consumption.
-4. **Hybrid Decision Enhancement (Optional)**:
-   - For ambiguous queries where Model A's calibrated confidence drops below 0.60, an optional Groq LLM verification step restricted strictly to Model A's top-2 (non-emergency) predictions can lift unseen Macro-F1. Emergencies are still decided **only** by the rules (or a user "Yes"). The hybrid is gated on Groq availability, so its gain varies per run.
+4. **LLM Second Opinion (Optional)**:
+   - For ambiguous queries where Model A's calibrated confidence drops below 0.60, an optional LLM verification step (previous provider: Groq; now DeepSeek `LLM_PROVIDER=deepseek`) restricted strictly to Model A's top-2 (non-emergency) predictions can lift unseen Macro-F1. Emergencies are still decided **only** by the rules (or a user "Yes"). The hybrid is gated on LLM availability, so its gain varies per run.
 5. **Code-Mixed Language Robustness**:
    - Character n-grams (2–5) capture phonetic vernacular variations in transliterated Hinglish (`bukhar`, `buhar`, `bukhaar`), Hindi Devanagari morphology, and clinical English keywords without tokenization mismatch.
 
@@ -96,6 +96,25 @@ Extracted from `ml/results/comparison.json`:
 - **CPU Inference Latency**: < 0.5 ms / request
 - **Model Size on Disk**: 1.2 MB
 - **Hardware Requirements**: Commodity CPU (Zero GPU requirement)
+
+---
+
+### Override Audit (final care_type vs raw ML argmax)
+
+`ml/audit_overrides.py` runs `unseen_tests.csv`, `redflag_holdout.csv` and the official dataset rows (raw = exact-text grouped CV out-of-fold predictions, recomputed exactly as the main CV figure) through the full pipeline as the app drives it: closed red-flag screen questions are answered truthfully ("Yes" only for true emergencies); rows that need module/intake information are counted as undecided, never answered with fabricated facts. The LLM is disabled (it never changes `care_type`). **No thresholds were tuned.**
+
+- **Overall override rate**: **26/205 decided rows = 12.7%** (final care_type $\ne$ raw ML argmax)
+  - `unseen_tests.csv`: 2/14 = 14.3%
+  - `redflag_holdout.csv`: 7/22 = 31.8%
+  - official dataset (vs exact-text CV OOF): 17/169 = 10.1%; vs the deployed model argmax directly: 30/169 = 17.8% (the gap is the production model vs fold-model difference, not a pipeline stage)
+- **Per-stage attribution of the 26 overrides**:
+  - Stage 2 red-flag emergency bypass (rules): 16 — all correct (the rules catch emergencies the raw model missed)
+  - Production model vs CV fold model (not a pipeline stage): 8 — 4 correct, 4 wrong (`"dadaji weak hain, ghar pe checkup chahiye"` duplicated rows: the deployed model itself predicts `lab_test_home`, the fold models said `paramedic_home_visit`)
+  - Injury module head-hit decision: 1 — correct
+  - Stage 6.6 injury sanity: 1 — **wrong** (`HLD_005` `"I ran out of air just climbing one flight of stairs"`: raw model correctly says `emergency_112`, but the stage-5 keyword rule `"stairs"` routes it to `paramedic_home_visit` and stage 6.6 demotes it to `teleconsultation`)
+- **Override correctness**: 21 fixed a raw-model error, 5 broke a correct raw decision (4 of those 5 are production-vs-fold model differences, not pipeline stages), 0 both-wrong.
+- **Raw model alone vs full pipeline accuracy (decided rows)**: pipeline **1.000** vs raw **0.643** (unseen, n=14); pipeline **0.955** vs raw **0.045** (holdout, n=22); pipeline **0.976** vs raw **0.923** (official, n=169). The pipeline is strictly more accurate than the raw model on every set — the one hurting override is the stage-6.6/stage-5 `"stairs"` rule on fresh breathlessness phrasings (reported, not yet retuned).
+- Full per-row trail: `ml/results/override_audit_rows.csv`; summary sheet of `ml/results/verification.xlsx` (regenerated by `ml/make_verification_workbook.py`).
 
 ---
 

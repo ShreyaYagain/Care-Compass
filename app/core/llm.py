@@ -13,6 +13,7 @@ second_opinion, intake) and are unchanged.
 import hashlib
 import json
 import logging
+import os
 import re
 import threading
 from pathlib import Path
@@ -59,10 +60,12 @@ def _load_cache() -> None:
         logger.warning(f"Could not load LLM cache: {e}")
 
 
-def _cache_key(system: str, user: str, model: str, schema: Type[T] | None) -> str:
+def _cache_key(system: str, user: str, model: str, schema: Type[T] | None, effort: str | None = None) -> str:
     prompt_id = hashlib.sha1((system + "|" + (schema.__name__ if schema else "none")).encode()).hexdigest()[:16]
     text_id = hashlib.sha1((user or "").encode()).hexdigest()[:16]
-    return f"{llm_provider()}|{model}|{prompt_id}|{text_id}"
+    # The effort setting is part of the key so results from different effort
+    # levels are never mixed.
+    return f"{llm_provider()}|{model}|effort={effort or 'default'}|{prompt_id}|{text_id}"
 
 
 def _read_cache(key: str) -> str | None:
@@ -134,6 +137,17 @@ def llm_fast_model() -> str:
     return (settings.LLM_FAST_MODEL or "").strip() or llm_model()
 
 
+def llm_fast_effort() -> str:
+    """Reasoning effort for the fast calls (screen / intake mapper / second
+    opinion). DeepSeek documents none|low|high|max (default high); the default
+    here is 'none' (thinking off) so real prompts return quickly.
+    Override with LLM_FAST_REASONING_EFFORT."""
+    val = (os.getenv("LLM_FAST_REASONING_EFFORT", "none") or "none").strip().lower()
+    if val in ("", "off", "disabled"):
+        return "none"
+    return val
+
+
 _FAILURE_STATE = {"consecutive": 0, "total": 0, "last_error": None}
 _FAILURE_LOCK = threading.Lock()
 
@@ -175,6 +189,8 @@ def _chat_completion(
     timeout: float | None = None,
     json_mode: bool = True,
     temperature: float = 0.0,
+    reasoning_effort: str | None = None,
+    max_tokens: int | None = None,
 ) -> tuple[str | None, int]:
     """Single chat-completions call. Returns (content_or_None, http_status)."""
     if not is_llm_available():
@@ -191,6 +207,13 @@ def _chat_completion(
     }
     if json_mode:
         payload["response_format"] = {"type": "json_object"}
+    # DeepSeek documents `reasoning_effort` = none|low|high|max (default high);
+    # "none" disables thinking mode. Only send it when explicitly set so other
+    # OpenAI-compatible providers are unaffected.
+    if reasoning_effort is not None:
+        payload["reasoning_effort"] = reasoning_effort
+    if max_tokens is not None:
+        payload["max_tokens"] = max_tokens
     try:
         resp = requests.post(
             _endpoint(), headers=_headers(), json=payload,
@@ -275,11 +298,14 @@ def llm_json(
     model: str | None = None,
     timeout: float | None = None,
     retries: int = 1,
+    reasoning_effort: str | None = None,
+    max_tokens: int | None = None,
 ) -> T | dict | None:
     """JSON-mode call with strict Pydantic validation, backed by a disk cache.
-    `retries` extra attempts are made ONLY on 429 / 5xx / timeout."""
+    `retries` extra attempts are made ONLY on 429 / 5xx / timeout. The cache key
+    includes model + effort + prompt version so different settings never mix."""
     model_name = model or llm_model()
-    key = _cache_key(system, user, model_name, schema)
+    key = _cache_key(system, user, model_name, schema, reasoning_effort)
     cached = _read_cache(key)
     if cached is not None:
         data = _parse_json(cached)
@@ -287,7 +313,10 @@ def llm_json(
             return _schema_result(data, schema)
 
     for attempt in range(retries + 1):
-        raw, status = _chat_completion(system, user, model_name, timeout, True)
+        raw, status = _chat_completion(
+            system, user, model_name, timeout, True,
+            reasoning_effort=reasoning_effort, max_tokens=max_tokens,
+        )
         if raw is None:
             if status not in _RETRYABLE_STATUS or attempt >= retries:
                 return None

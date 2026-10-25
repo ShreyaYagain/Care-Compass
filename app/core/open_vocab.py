@@ -191,7 +191,7 @@ def llm_map_symptom(text: str) -> Optional[dict]:
     """Strict-enum DeepSeek symptom mapper. Returns
     {"symptom", "evidence_quote", "other_text"} or None when unavailable."""
     from pydantic import BaseModel
-    from app.core.llm import llm_json, is_llm_available, llm_fast_model
+    from app.core.llm import llm_json, is_llm_available, llm_fast_model, llm_fast_effort
     from app.core.language import normalise_text
 
     if not is_llm_available():
@@ -207,7 +207,9 @@ def llm_map_symptom(text: str) -> Optional[dict]:
 
     system = _MAPPER_SYSTEM.format(symptom_ids=", ".join(ids))
     try:
-        out = llm_json(system=system, user=f"Patient message: \"{text}\"", schema=SymptomMap, model=llm_fast_model())
+        out = llm_json(system=system, user=f"Patient message: \"{text}\"", schema=SymptomMap,
+                       model=llm_fast_model(), reasoning_effort=llm_fast_effort(),
+                       max_tokens=256)
     except Exception as e:
         logger.warning(f"DeepSeek symptom mapper failed: {e}")
         return None

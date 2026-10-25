@@ -22,7 +22,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from app.config import settings
 from app.core.language import normalise_text
-from app.core.llm import llm_json, is_llm_available, llm_fast_model
+from app.core.llm import llm_json, is_llm_available, llm_fast_model, llm_fast_effort
 
 logger = logging.getLogger(__name__)
 
@@ -150,7 +150,8 @@ def _llm_screen(text: str) -> list[str] | None:
     try:
         out = llm_json(system=SYSTEM_PROMPT, user=f"Patient message: \"{text}\"",
                         schema=SemanticScreenOut, model=llm_fast_model(),
-                        timeout=settings.SCREEN_TIMEOUT_S, retries=1)
+                        timeout=settings.SCREEN_TIMEOUT_S, retries=1,
+                        reasoning_effort=llm_fast_effort(), max_tokens=600)
         if out is not None:
             return _validate(text, out)
     except Exception as e:

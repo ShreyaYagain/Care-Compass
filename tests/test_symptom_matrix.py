@@ -293,6 +293,24 @@ class TestSymptomMatrix(unittest.TestCase):
                     break
             self.assertTrue(decided, f"no decision after 2 turns for {text!r}")
 
+    def test_ambiguous_peet_is_generic_pain_not_back_or_stomach(self):
+        """'peet' is ambiguous (pet=stomach vs peeth=back); it must resolve to
+        generic pain (unknown location) and let the classifier decide — never a
+        hard map to back or stomach, never emergency_112."""
+        slots = extract_slots("mera peet bohot dard kr raha he", [])
+        self.assertIn("joint_pain", slots.get("symptoms", []))
+        self.assertNotIn("stomach_pain", slots.get("symptoms", []))
+        resp = _run_pipeline("mera peet bohot dard kr raha he", lang="hinglish")
+        self.assertNotEqual(resp.care_type, "emergency_112",
+                            "ambiguous 'peet' pain must never escalate")
+
+    def test_peeth_back_pet_stomach_stay_distinct(self):
+        back = extract_slots("peeth mein dard", [])["symptoms"]
+        self.assertIn("joint_pain", back)
+        self.assertNotIn("stomach_pain", back)
+        stomach = extract_slots("pet mein dard", [])["symptoms"]
+        self.assertIn("stomach_pain", stomach)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -344,7 +344,7 @@ _BODY_PAIN_TO_SYMPTOM = {
 _BODY_PART_SYNONYMS = {
     "head": ["head", "sir", "sar", "sira"],
     "stomach": ["stomach", "pet", "peta", "abdomen"],
-    "back": ["back", "kamar", "kamara", "peeth", "pith", "pitha", "peed", "pith", "peet"],
+    "back": ["back", "kamar", "kamara", "peeth", "pith", "pitha", "peed", "pith"],
     "body": ["body", "badan", "sharir", "sarir", "whole body", "pura badan", "pura sharir"],
     "muscle": ["muscle", "muscles", "machhli"],
     "joint": ["joint", "joints", "jodon", "jodo", "jod"],
@@ -361,6 +361,12 @@ _PAIN_WORDS = [
     "pain", "ache", "aches", "aching", "ached", "hurt", "hurts", "hurting", "sore",
     "dard", "dukh", "dukha", "dukhta", "dukta", "dukhna", "takleef", "taklif",
 ]
+
+# Ambiguous body words: "peet" can mean "pet" (stomach) or "peeth" (back), so it
+# is NEVER hard-mapped to either. Paired with a pain word it is treated as pain
+# with an UNKNOWN location and mapped to the generic joint_pain bucket, letting
+# the classifier decide (teleconsultation / paramedic_home_visit, never 112).
+_AMBIGUOUS_PAIN_BODY_WORDS = {"peet"}
 
 _JOINED_BODY_PAIN = [
     ("backpain", "back pain"), ("bodypain", "body pain"), ("bodyache", "body ache"),
@@ -387,6 +393,13 @@ def detect_body_pain(norm: str) -> Optional[str]:
         if any(re.search(rf"\b{re.escape(s)}\b", n) for s in syns):
             if any(re.search(rf"\b{re.escape(w)}\b", n) for w in _PAIN_WORDS):
                 return _BODY_PAIN_TO_SYMPTOM[part]
+
+    # Ambiguous body word + pain word -> pain with unknown location (generic
+    # joint_pain), so the classifier decides. "peet dard" is never back nor
+    # stomach.
+    if any(re.search(rf"\b{re.escape(w)}\b", n) for w in _AMBIGUOUS_PAIN_BODY_WORDS):
+        if any(re.search(rf"\b{re.escape(w)}\b", n) for w in _PAIN_WORDS):
+            return "joint_pain"
 
     # Typo tolerance for 6+ char tokens: fuzzy-match tokens against the body-part
     # synonyms and pain words (similarity >= 0.88).

@@ -1,3 +1,4 @@
+import logging
 import re
 import yaml
 from typing import Optional
@@ -6,6 +7,8 @@ from pathlib import Path
 from app.config import settings
 from app.core.language import normalise_text, is_phrase_negated
 from app.core.llm import llm_json, is_llm_available, llm_fast_model
+
+logger = logging.getLogger(__name__)
 
 _SYMPTOMS_CONFIG: dict = {}
 
@@ -112,6 +115,7 @@ def default_slots() -> dict:
         "unfamiliar_care_type_mapped": None,
         "unfamiliar_reason": None,
         "extraction_source": "lexicon",
+        "intake_error": None,
     }
 
 
@@ -846,15 +850,18 @@ def extract_slots(text: str, history: list[dict] = None) -> dict:
             schema=SlotExtraction,
             model=llm_fast_model(),
         )
-        if llm_result:
-            # Merge LLM extractions into slots. Every LLM-returned symptom is
-            # validated against the canonical lexicon; junk fragments
-            # (substrings like "tin"/"ting") are dropped.
-            llm_symptoms = canonicalise_symptom_list(llm_result.symptoms)
-            merged_symptoms = list(set(rule_slots["symptoms"] + llm_symptoms))
-            rule_slots["symptoms"] = merged_symptoms
-            if llm_symptoms:
-                rule_slots["extraction_source"] = "llm"
+        if llm_result is None:
+            rule_slots["extraction_source"] = "llm_failed"
+            rule_slots["intake_error"] = "llm returned no result"
+            return rule_slots
+        # Merge LLM extractions into slots. Every LLM-returned symptom is
+        # validated against the canonical lexicon; junk fragments
+        # (substrings like "tin"/"ting") are dropped.
+        llm_symptoms = canonicalise_symptom_list(llm_result.symptoms)
+        merged_symptoms = list(set(rule_slots["symptoms"] + llm_symptoms))
+        rule_slots["symptoms"] = merged_symptoms
+        if llm_symptoms:
+            rule_slots["extraction_source"] = "llm"
 
             if llm_result.service_requested != "none":
                 rule_slots["service_requested"] = llm_result.service_requested
@@ -884,8 +891,10 @@ def extract_slots(text: str, history: list[dict] = None) -> dict:
                     rule_slots["breathing_difficulty"] = True
                 elif rf == "chest_pain" and rule_slots.get("chest_pain") is None:
                     rule_slots["chest_pain"] = True
-    except Exception:
-        pass
+    except Exception as e:
+        rule_slots["extraction_source"] = "llm_failed"
+        rule_slots["intake_error"] = f"{type(e).__name__}: {e}"
+        logger.warning(f"LLM intake fallback failed: {e}")
 
     return rule_slots
 

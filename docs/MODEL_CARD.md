@@ -125,9 +125,9 @@ All "CV F1" figures below are the **Exact-Text Grouped CV (main figure)**; see `
 - **Model C_stack (Concatenation)**: Exact-Text CV F1 0.841, Unseen F1 0.898, Size 472.5 MB (level with Model A on exact-text, but Model A wins on size/latency).
 - **Model D (LightGBM on E5)**: Exact-Text CV F1 0.405, Unseen F1 0.478, Size 474.5 MB.
 - **Model E (Fine-tuned MuRIL)**: `NOT RUN (Skipped on CPU; no CUDA GPU available)`.
-- **Model F (Zero-shot Groq LLM)**: Unseen F1 0.126 (rate-limited in the latest run), ~2,150 ms (API model with external cloud dependency).
+- **Model F (Zero-shot LLM, previous provider: Groq)**: Unseen F1 0.126 (rate-limited in the latest run), ~2,150 ms (API model with external cloud dependency).
 - **Model G (Rule/Keyword Baseline)**: Exact-Text CV F1 0.578, Unseen F1 0.491.
-- **Model Hybrid (Model A + Groq on Low Confidence)**: Unseen F1 0.866 (no gain in the latest rate-limited run; gated on Groq availability).
+- **Model Hybrid (Model A + LLM on Low Confidence, previous provider: Groq)**: Unseen F1 0.866 (no gain in the latest rate-limited run; gated on LLM availability).
 
 ---
 

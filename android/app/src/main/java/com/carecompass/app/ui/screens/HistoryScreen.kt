@@ -173,7 +173,7 @@ fun HistoryCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val (chipText, chipTextColor, chipBgColor) = when (item.outcome.lowercase()) {
+    val (chipText, chipTextColor, chipBgColor) = when (item.outcome.orEmpty().lowercase()) {
         "emergency" -> Triple(
             when (selectedLanguage) {
                 "hi" -> stringResource(R.string.outcome_emergency_hi)
@@ -212,13 +212,16 @@ fun HistoryCard(
         )
     }
 
-    val plainCareType = when (item.careType.lowercase()) {
+    val careType = item.careType.orEmpty()
+    val plainCareType = when (careType.lowercase()) {
         "home_nursing" -> "Home nursing"
         "paramedic_home_visit" -> "Medic home visit"
         "lab_test_home" -> "Lab test at home"
         "teleconsultation" -> "Doctor teleconsultation"
         "emergency_112" -> "Emergency (112)"
-        else -> item.careType.replace("_", " ").replaceFirstChar { it.uppercase() }
+        else -> careType.replace("_", " ")
+            .replaceFirstChar { it.uppercase() }
+            .ifBlank { "General care" }
     }
 
     val formattedTime = DateTimeFormatterHelper.formatHistoryTime(item.createdAt, selectedLanguage)
@@ -237,7 +240,7 @@ fun HistoryCard(
         ) {
             // First line: User's first message (max 2 lines, min 18sp)
             Text(
-                text = item.firstMessage,
+                text = item.firstMessage.orEmpty(),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = TextDark,

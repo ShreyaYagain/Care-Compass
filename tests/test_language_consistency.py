@@ -44,15 +44,23 @@ class TestLanguageConsistency(unittest.TestCase):
             self.assertIsNone(_LATIN.search(m.reason), f"Latin script in hi reason: {m.reason!r}")
 
     def test_module_card_exposes_real_question_and_options(self):
+        from app.schemas import ChatMessage
+        # A history that already answered the medication question lets the
+        # fever module card fire directly (it is asked first otherwise).
+        med_hing = "Kya aap iske liye koi dawai le rahe hain?"
+        med_hi = "क्या आप इसके लिए कोई दवा ले रहे हैं?"
+        med_en = "Are you taking any medication for this?"
         resp = run_triage_pipeline(
-            TriageRequest(user_input="mujhe bukhar hai", language="hinglish", location=LOC)
+            TriageRequest(user_input="mujhe bukhar hai", language="hinglish", location=LOC,
+                          conversation_history=[ChatMessage(role="assistant", text=med_hing)])
         )
         self.assertIsNotNone(resp.module_card)
         self.assertEqual(resp.follow_up_question, "Bukhar kitne samay se hai?")
         self.assertEqual(resp.follow_up_options, ["Aaj se", "2-3 din se", "Ek hafte se zyada"])
 
         resp_hi = run_triage_pipeline(
-            TriageRequest(user_input="mujhe bukhar hai", language="hi", location=LOC)
+            TriageRequest(user_input="mujhe bukhar hai", language="hi", location=LOC,
+                          conversation_history=[ChatMessage(role="assistant", text=med_hi)])
         )
         self.assertEqual(resp_hi.follow_up_question, "बुखार कितने समय से है?")
         for opt in resp_hi.follow_up_options:
@@ -60,7 +68,8 @@ class TestLanguageConsistency(unittest.TestCase):
             self.assertIsNone(_LATIN.search(opt), f"Latin script in hi option: {opt!r}")
 
         resp_en = run_triage_pipeline(
-            TriageRequest(user_input="I have a fever", language="en", location=LOC)
+            TriageRequest(user_input="I have a fever", language="en", location=LOC,
+                          conversation_history=[ChatMessage(role="assistant", text=med_en)])
         )
         self.assertEqual(resp_en.follow_up_question, "How long has the fever lasted?")
         for opt in resp_en.follow_up_options:

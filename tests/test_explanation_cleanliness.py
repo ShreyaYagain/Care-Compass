@@ -107,9 +107,9 @@ class TestNoJunkSymptoms(unittest.TestCase):
 
     def test_explanation_language_consistency(self):
         # English request -> English explanation; Hinglish -> Hinglish symptom names.
-        resp_en = _triage("fever and cough", language="en")
+        resp_en = _triage("fever and cough since 2 days", language="en")
         self.assertIn("fever", resp_en.reasoning.lower())
-        resp_hinglish = _triage("bukhar aur khansi", language="hinglish")
+        resp_hinglish = _triage("bukhar aur khansi do din se", language="hinglish")
         self.assertIn("bukhar", resp_hinglish.reasoning.lower())
         self.assertNotIn(" because you mentioned ", resp_hinglish.reasoning.lower())
 

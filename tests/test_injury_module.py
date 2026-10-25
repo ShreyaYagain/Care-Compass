@@ -277,7 +277,7 @@ class TestInjuryModule(unittest.TestCase):
         self.assertEqual(resp.care_type, "paramedic_home_visit")
 
     def test_headache_never_emergency_nor_injury_card(self):
-        for text in ("I have a headache", "mere ko sir dard hai", "headache"):
+        for text in ("I have a headache since morning", "mere ko sir dard hai", "headache"):
             resp = _triage(text)
             self.assertNotEqual(resp.care_type, "emergency_112", text)
             self.assertNotIn("unconsciousness", resp.red_flags, text)
@@ -286,7 +286,7 @@ class TestInjuryModule(unittest.TestCase):
                 self.assertNotIn("hosh", (resp.follow_up_question or ""), text)
 
     def test_headache_decides_teleconsultation(self):
-        resp = _triage("I have a headache")
+        resp = _triage("I have a headache since morning")
         self.assertEqual(resp.care_type, "teleconsultation")
 
     def test_similar_injuries_get_injury_module_or_sane_outcome(self):
@@ -307,7 +307,7 @@ class TestInjuryModule(unittest.TestCase):
         fake_out = type("Out", (), {"module_id": "injury", "answered_field_ids": []})()
         with mock.patch("app.core.llm.is_llm_available", return_value=True), \
              mock.patch("app.core.llm.llm_json", return_value=fake_out):
-            chosen = llm_select_module("I have a headache", {"symptoms": ["headache"]})
+            chosen = llm_select_module("I have a headache since morning", {"symptoms": ["headache"]})
         self.assertIsNone(chosen)
 
 

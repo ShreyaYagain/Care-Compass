@@ -75,7 +75,15 @@ class TestFollowUpCard(unittest.TestCase):
                     self.assertIsNone(_DEVANAGARI.search(q + " " + opts), f"Devanagari in {lang} card: {q!r} {opts!r}")
 
     def test_hinglish_fever_options_are_hinglish(self):
-        resp = _triage("mujhe bukhar hai", "hinglish")
+        from app.schemas import ChatMessage
+        # The medication question is asked first; a history where it was
+        # already answered lets the fever card fire directly.
+        med_q = "Kya aap iske liye koi dawai le rahe hain?"
+        resp = run_triage_pipeline(
+            TriageRequest(user_input="mujhe bukhar hai", language="hinglish", location=LOC,
+                          context_consent=False,
+                          conversation_history=[ChatMessage(role="assistant", text=med_q)])
+        )
         self.assertEqual(resp.follow_up_options, ["Aaj se", "2-3 din se", "Ek hafte se zyada"])
         self.assertEqual(resp.follow_up_question, "Bukhar kitne samay se hai?")
 

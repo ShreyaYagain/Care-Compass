@@ -195,18 +195,22 @@ def output_guard(
                 break
 
         # 2. Medicine / Drug names & dosage patterns
+        # The closed follow-up question bank may legitimately ask "are you
+        # taking any medication?" (a factual question, never a recommendation),
+        # so the drug-name scan is skipped for vetted bank questions.
         drugs = _LEXICON.get("drugs_and_medicines", [])
-        for drug in drugs:
-            pattern = rf'(?i)\b{re.escape(drug)}\b'
-            if re.search(pattern, text):
-                violations.append(f"drug_named:{drug}")
-                break
+        if field_name != "follow_up_question":
+            for drug in drugs:
+                pattern = rf'(?i)\b{re.escape(drug)}\b'
+                if re.search(pattern, text):
+                    violations.append(f"drug_named:{drug}")
+                    break
 
-        dosage_pats = _LEXICON.get("dosage_patterns", [])
-        for dpat in dosage_pats:
-            if re.search(dpat, text):
-                violations.append("dosage_pattern_named")
-                break
+            dosage_pats = _LEXICON.get("dosage_patterns", [])
+            for dpat in dosage_pats:
+                if re.search(dpat, text):
+                    violations.append("dosage_pattern_named")
+                    break
 
         # 3. False reassurance
         reassurance = _LEXICON.get("false_reassurance_phrases", [])

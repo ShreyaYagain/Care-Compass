@@ -853,6 +853,43 @@ def run_triage_pipeline(
         if pregnancy_risk.reason:
             slots["pregnancy_reason"] = pregnancy_risk.reason
 
+    # 3.4 Medication follow-up (non-emergency symptoms only; emergencies already
+    # returned above). Asked once, before any module card, so fever/pain/cough
+    # etc. get the "are you taking any medication?" context question. Service
+    # requests (injection / lab / consult) and injuries (which ask medication
+    # via their own card field) are skipped.
+    _service_symptoms = {"nursing_procedure", "lab_test", "teleconsultation_query"}
+    _med_symptoms = [s for s in slots.get("symptoms", []) if s not in _service_symptoms]
+    if (
+        request.allow_followup
+        and history_turns < settings.MAX_FOLLOWUPS
+        and _med_symptoms
+        and "injury" not in _med_symptoms
+        and not slots.get("pregnancy")
+        and "medication" not in get_asked_ids(history_dicts)
+        and not has_informative_context(slots, norm_text)
+        # Never let the medication question pre-empt a red-flag escalation
+        # (e.g. the user just answered "Yes" to a breathing/chest question).
+        and slots.get("breathing_difficulty") is not True
+        and slots.get("chest_pain") is not True
+        and slots.get("consciousness") not in ("unconscious", "drowsy")
+        and slots.get("bleeding") is not True
+    ):
+        med_q, med_opts = get_question_by_id("medication", lang)
+        med_q = enforce_question_bank(med_q, lang)
+        guard_q = output_guard(med_q, lang=lang, is_emergency=False, care_type="teleconsultation", field_name="follow_up_question")
+        if not guard_q["ok"]:
+            output_violations.extend(guard_q["violations"])
+            template_replaced = True
+        safe_opts = [output_guard(o, lang=lang, is_emergency=False, care_type="teleconsultation", field_name="follow_up_options")["safe_text"] for o in med_opts]
+        return TriageResponse(
+            follow_up_question=guard_q["safe_text"],
+            follow_up_options=safe_opts,
+            care_type=None, urgency=None, red_flags=[], reasoning=None,
+            matched_caregivers=[], emergency_steps=[], context_used=None,
+            debug={"medication_question": True, "slots": slots} if debug else None,
+        )
+
     # 3.5 Symptom-specific follow-up MODULE (injury/fall, fever, abdominal, cough).
     # Follow-ups are asked ONE question per turn, at most MODULE_MAX_QUESTIONS;
     # the flow stops as soon as the case is determined.

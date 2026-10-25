@@ -78,6 +78,8 @@ class TestResultCard(unittest.TestCase):
             for text in SAMPLES:
                 with self.subTest(lang=lang, text=text):
                     resp = self._run(text, lang)
+                    if resp.follow_up_question:
+                        continue  # follow-up turn (e.g. medication question)
                     self.assertIsNotNone(resp.care_type, f"expected a decision for {text!r}")
                     self.assertIsNotNone(resp.card_lines)
                     text_card = card_text(resp.card_lines)
@@ -87,6 +89,8 @@ class TestResultCard(unittest.TestCase):
         for text in SAMPLES:
             with self.subTest(text=text):
                 resp_en = self._run(text, "en")
+                if resp_en.follow_up_question:
+                    continue  # follow-up turn (e.g. medication question)
                 self.assertIsNone(_DEVANAGARI.search(card_text(resp_en.card_lines)))
                 resp_hing = self._run(text, "hinglish")
                 self.assertIsNone(_DEVANAGARI.search(card_text(resp_hing.card_lines)))
@@ -109,6 +113,10 @@ class TestResultCard(unittest.TestCase):
                     resp = self._run(text, lang)
                     if resp.care_type == "emergency_112":
                         continue
+                    if resp.follow_up_question:
+                        # A follow-up turn (e.g. the medication question) has no
+                        # result card; the safety line is checked on decisions.
+                        continue
                     self.assertIsNotNone(resp.card_lines)
                     self.assertIn("112", resp.card_lines.get("watch_for", ""))
 
@@ -124,7 +132,7 @@ class TestResultCard(unittest.TestCase):
             self.assertEqual(resp.matched_caregivers, [])
 
     def test_card_lines_have_all_short_fields(self):
-        resp = self._run("I have a headache", "en")
+        resp = self._run("I have a headache since morning", "en")
         lines = resp.card_lines
         self.assertTrue(lines["why"])
         self.assertTrue(lines["next"])

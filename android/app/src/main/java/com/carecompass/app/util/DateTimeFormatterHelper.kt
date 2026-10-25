@@ -35,7 +35,8 @@ object DateTimeFormatterHelper {
     /**
      * Format a session date/time for History list (e.g. "Today, 3:40 PM", "Yesterday, 8:15 PM", "20 Oct, 9:00 AM")
      */
-    fun formatHistoryTime(isoString: String, lang: String = "en"): String {
+    fun formatHistoryTime(isoString: String?, lang: String = "en"): String {
+        if (isoString.isNullOrBlank()) return ""
         val zdt = parseIsoToZoned(isoString)
         if (zdt != null) {
             val now = ZonedDateTime.now(kolkataZoneId)

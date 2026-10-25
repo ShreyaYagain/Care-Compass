@@ -117,6 +117,7 @@ def default_slots() -> dict:
         "unfamiliar_reason": None,
         "extraction_source": "lexicon",
         "intake_error": None,
+        "medication": None,
     }
 
 
@@ -439,6 +440,7 @@ ALLOWED_QUESTION_IDS = [
     "duration_days",
     "infant_fever_age_check",
     "dehydration_check",
+    "medication",
 ]
 
 # Keyword fallback used to derive asked_ids from historical assistant texts that
@@ -453,6 +455,7 @@ _BANK_ID_KEYWORDS = {
     "duration_days": ["kab se", "how long", "duration", "kitne din", "kitne samay"],
     "infant_fever_age_check": ["3 mahine", "3 months", "newborn", "navjat"],
     "dehydration_check": ["peshab", "urine", "dehydration", "paani"],
+    "medication": ["medication", "medicine", "dawai", "dawa", "davai"],
 }
 
 
@@ -645,6 +648,15 @@ def rule_based_extract(text: str, history: list[dict] = None) -> dict:
                         slots["patient_relation"] = "senior"
                         slots["age_group"] = "senior"
 
+                # Medication follow-up
+                if any(w in q_text for w in ["medication", "medicine", "dawai", "dawa", "davai"]):
+                    if is_pos:
+                        slots["medication"] = True
+                    elif is_neg:
+                        slots["medication"] = False
+                    elif is_unsure:
+                        slots["medication"] = None
+
     user_texts = []
     if history:
         for msg in history:
@@ -666,6 +678,7 @@ def rule_based_extract(text: str, history: list[dict] = None) -> dict:
         "mummy": "mother", "mataji": "mother", "maa": "mother", "mother": "mother",
         "dadi": "grandmother", "nani": "grandmother", "dada": "grandfather", "nanaji": "grandfather",
         "bachha": "child", "bachhe": "child", "beta": "child", "beti": "child", "baby": "child", "child": "child",
+        "bhai": "brother", "bhaiya": "brother", "behen": "sister", "behan": "sister", "didi": "sister",
         "patni": "wife", "wife": "wife", "pati": "husband", "husband": "husband"
     }
     for word, rel in relations.items():

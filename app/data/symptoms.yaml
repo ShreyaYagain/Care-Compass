@@ -5,8 +5,10 @@
 # from this bank and localises it into the user's language.
 #
 # Allowed ids are a closed set. Nothing about choosing a service, a treatment,
-# scheduling/time of treatment, medicines, or "what the doctor should do" is
-# permitted here. Severity questions are forbidden.
+# scheduling/time of treatment, or "what the doctor should do" is permitted
+# here. Severity questions are forbidden. One factual medication question
+# ("are you taking any medication for this?") is allowed, for non-emergency
+# symptoms only; it never prescribes or recommends a medicine.
 #
 # Schema per entry:
 #   id            : stable bank id (closed set below)
@@ -98,6 +100,17 @@ question_bank:
       - { en: "Today", hi: "आज से", hinglish: "Today" }
       - { en: "2-3 days", hi: "2-3 दिन", hinglish: "2-3 days" }
       - { en: "More than a week", hi: "एक हफ्ते से अधिक", hinglish: "More than a week" }
+
+  - id: medication
+    slot: medication
+    purpose: medication
+    text_en: "Are you taking any medication for this?"
+    text_hi: "क्या आप इसके लिए कोई दवा ले रहे हैं?"
+    text_hinglish: "Kya aap iske liye koi dawai le rahe hain?"
+    options:
+      - { en: "Yes", hi: "हाँ", hinglish: "Haan" }
+      - { en: "No", hi: "नहीं", hinglish: "Nahi" }
+      - { en: "Not sure", hi: "पक्का नहीं", hinglish: "Pata nahi" }
 
   - id: infant_fever_age_check
     slot: high_fever_infant

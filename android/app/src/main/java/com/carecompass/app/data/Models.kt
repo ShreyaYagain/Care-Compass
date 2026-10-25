@@ -201,11 +201,11 @@ data class Booking(
 
 data class HistorySummary(
     @SerializedName("id") val id: String = "",
-    @SerializedName("first_message") val firstMessage: String = "",
+    @SerializedName("first_message") val firstMessage: String? = null,
     @SerializedName("via_voice") val viaVoice: Boolean = false,
-    @SerializedName("outcome") val outcome: String = "scheduled", // "emergency", "same_day", "scheduled", "needs_more_info"
-    @SerializedName("care_type") val careType: String = "",
-    @SerializedName("created_at") val createdAt: String = "" // ISO-8601 UTC
+    @SerializedName("outcome") val outcome: String? = null, // "emergency", "same_day", "scheduled", "needs_more_info"
+    @SerializedName("care_type") val careType: String? = null,
+    @SerializedName("created_at") val createdAt: String? = null // ISO-8601 UTC
 )
 
 data class HistoryStep(

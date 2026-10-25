@@ -31,7 +31,7 @@ LEXICON = _lexicon_words()
 
 SAMPLES = [
     "mujhe 2 din se bukhar hai",
-    "I have a headache",
+    "I have a headache since morning",
     "papa ko do din se bukhar hai aur khansi bhi",
     "mujhe khansi hai ek hafte se",
     "sir dard hai kal se",
@@ -71,7 +71,7 @@ class TestMlFeatures(unittest.TestCase):
         self.assertNotIn("ver", terms)
 
         resp = run_triage_pipeline(
-            TriageRequest(user_input="I have a headache", language="auto", location=LOC)
+            TriageRequest(user_input="I have a headache since morning", language="auto", location=LOC)
         )
         features = (resp.details or {}).get("ml_features") or []
         terms = [f["term"] for f in features]

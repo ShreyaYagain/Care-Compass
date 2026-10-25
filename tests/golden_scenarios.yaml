@@ -13,9 +13,7 @@
   message: "I am dizzy"
   language: en
   screen: skip
-  expect_care_type: teleconsultation
-  expect_urgency: same_day
-  expect_question: false
+  expect_question: true
 
 - id: dad_cant_breath
   message: "dad cant breath"
@@ -39,9 +37,7 @@
   message: "I have backpain"
   language: en
   screen: skip
-  expect_care_type: teleconsultation
-  expect_urgency: same_day
-  expect_question: false
+  expect_question: true
   forbid_emergency: true
 
 - id: kamar_dard
@@ -162,9 +158,7 @@
   message: "mujhe ulti ho rahi hai"
   language: hinglish
   screen: skip
-  expect_care_type: teleconsultation
-  expect_urgency: same_day
-  expect_question: false
+  expect_question: true
 
 - id: moch
   message: "pair mein moch aa gayi"
@@ -239,9 +233,7 @@
   message: "mujhe chakkar aa rahe hain"
   language: hinglish
   screen: skip
-  expect_care_type: teleconsultation
-  expect_urgency: same_day
-  expect_question: false
+  expect_question: true
 
 - id: papa_bukhar
   message: "papa ko bukhar hai do din se"
@@ -278,18 +270,14 @@
   message: "haath mein dard"
   language: hinglish
   screen: skip
-  expect_care_type: teleconsultation
-  expect_urgency: same_day
-  expect_question: false
+  expect_question: true
   forbid_emergency: true
 
 - id: ghutna_dard
   message: "ghutne mein dard"
   language: hinglish
   screen: skip
-  expect_care_type: teleconsultation
-  expect_urgency: same_day
-  expect_question: false
+  expect_question: true
   forbid_emergency: true
 
 - id: ghabrahat
@@ -327,7 +315,5 @@
   message: "pura badan dard kar raha hai"
   language: hinglish
   screen: skip
-  expect_care_type: teleconsultation
-  expect_urgency: same_day
-  expect_question: false
+  expect_question: true
   forbid_emergency: true
